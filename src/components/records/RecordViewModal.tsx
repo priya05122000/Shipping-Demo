@@ -47,7 +47,7 @@ export function RecordViewModal<T extends BaseRecord>({ config, record, onClose,
         </div>
         <div>
           <dt className="text-xs text-slate-500">Name</dt>
-          <dd className="mt-1 text-sm font-semibold break-words text-slate-900">{record.name}</dd>
+          <dd className="mt-1 text-sm font-semibold wrap-break-words text-slate-900">{record.name}</dd>
         </div>
         <div>
           <dt className="text-xs text-slate-500">Created</dt>

@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     // The child app has its own toolchain (type-checked by `tsc -b` in its build); public/child is its build output.
     "child/**",
     "public/child/**",
+    // Monaco's prebuilt files, copied from node_modules by scripts/copy-monaco.mjs.
+    "public/monaco/**",
   ]),
 ]);
 

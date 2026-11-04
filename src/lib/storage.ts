@@ -1,4 +1,5 @@
 import { COLLECTIONS, type CollectionSlug } from "@/lib/collection-defs";
+import { request } from "@/lib/request";
 import type { BaseRecord, CollectionSnapshot } from "@/types/records";
 
 export interface CollectionState<T extends BaseRecord> {
@@ -23,18 +24,6 @@ export interface CollectionStore<T extends BaseRecord> {
 }
 
 const LOADING = { data: null, error: null } as const;
-
-async function request<R>(url: string, init?: RequestInit): Promise<R> {
-  let response: Response;
-  try {
-    response = await fetch(url, { cache: "no-store", ...init });
-  } catch {
-    throw new Error("Couldn't reach the local server. Is `npm run dev` still running?");
-  }
-  const body = await response.json().catch(() => null);
-  if (!response.ok) throw new Error(body?.error ?? `Request failed (${response.status}).`);
-  return body as R;
-}
 
 /** Client-side cache of one collection, kept in sync with the local data folder through the API. */
 export function createCollectionStore<T extends BaseRecord>(slug: CollectionSlug): CollectionStore<T> {

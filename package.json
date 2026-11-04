@@ -11,9 +11,12 @@
     "dev:child": "npm run dev -w child",
     "build": "npm run build -w child && next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "node scripts/copy-monaco.mjs"
   },
   "dependencies": {
+    "@monaco-editor/loader": "^1.7.0",
+    "monaco-editor": "^0.57.0",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0"

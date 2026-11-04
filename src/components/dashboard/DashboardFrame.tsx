@@ -1,11 +1,12 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-type Page = "library" | "viewer";
+type Page = "library" | "viewer" | "editor";
 
 const NAV: { id: Page; href: string; label: string }[] = [
   { id: "library", href: "/", label: "Library" },
   { id: "viewer", href: "/viewer", label: "Viewer" },
+  { id: "editor", href: "/editor", label: "Editor" },
 ];
 
 interface DashboardFrameProps {
@@ -17,7 +18,7 @@ interface DashboardFrameProps {
   children: ReactNode;
 }
 
-/** Page chrome shared by the dashboard, the viewer and their loading fallbacks. */
+/** Page chrome shared by the dashboard, the viewer, the editor and their loading fallbacks. */
 export function DashboardFrame({
   current = "library",
   title = "Library",

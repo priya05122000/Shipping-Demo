@@ -133,6 +133,20 @@ export const DocumentIcon = (p: IconProps) => (
   </Icon>
 );
 
+export const FolderIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />
+  </Icon>
+);
+
+/** Source file in the editor's file tree. */
+export const FileIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z" />
+    <path d="M14 3v5h5" />
+  </Icon>
+);
+
 export const DatabaseIcon = (p: IconProps) => (
   <Icon {...p}>
     <ellipse cx="12" cy="5" rx="8" ry="3" />
