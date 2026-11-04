@@ -20,6 +20,10 @@ interface FileUploadProps {
   /** Error from the parent form, e.g. "required". */
   error?: string | null;
   disabled?: boolean;
+  /** The existing file is marked to be removed on save. */
+  removed?: boolean;
+  /** Offers removing the existing file (for optional files). Picking a new file should clear `removed`. */
+  onRemovedChange?: (removed: boolean) => void;
 }
 
 export function FileUpload({
@@ -31,6 +35,8 @@ export function FileUpload({
   onFileChange,
   error,
   disabled,
+  removed = false,
+  onRemovedChange,
 }: FileUploadProps) {
   const inputId = useId();
   const messageId = `${inputId}-message`;
@@ -96,7 +102,7 @@ export function FileUpload({
             name={file.name}
             extension={getExtension(file.name)}
             size={file.size}
-            badge={existing ? "Replacement" : "Selected"}
+            badge={existing && !removed ? "Replacement" : "Selected"}
             badgeClass="bg-indigo-50 text-indigo-700 ring-indigo-200"
             actions={
               <>
@@ -112,7 +118,30 @@ export function FileUpload({
                   }}
                   disabled={disabled}
                 >
-                  {existing ? "Keep current" : "Remove"}
+                  {existing && !removed ? "Keep current" : "Remove"}
+                </Button>
+              </>
+            }
+          />
+        ) : existing && removed ? (
+          <FileCard
+            thumbnail={
+              <div className="opacity-40">
+                <FileThumbnail src={existing.url} name={existing.name} extension={existing.extension} />
+              </div>
+            }
+            name={existing.name}
+            extension={existing.extension}
+            size={existing.size}
+            badge="Will be removed"
+            badgeClass="bg-red-50 text-red-700 ring-red-200"
+            actions={
+              <>
+                <Button size="sm" variant="secondary" onClick={openPicker} disabled={disabled}>
+                  <UploadIcon className="size-4" /> Upload new
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => onRemovedChange?.(false)} disabled={disabled}>
+                  Undo
                 </Button>
               </>
             }
@@ -126,9 +155,16 @@ export function FileUpload({
             badge="Current file"
             badgeClass="bg-emerald-50 text-emerald-700 ring-emerald-200"
             actions={
-              <Button size="sm" variant="secondary" onClick={openPicker} disabled={disabled}>
-                <UploadIcon className="size-4" /> Replace
-              </Button>
+              <>
+                <Button size="sm" variant="secondary" onClick={openPicker} disabled={disabled}>
+                  <UploadIcon className="size-4" /> Replace
+                </Button>
+                {onRemovedChange && (
+                  <Button size="sm" variant="ghost" onClick={() => onRemovedChange(true)} disabled={disabled}>
+                    Remove
+                  </Button>
+                )}
+              </>
             }
           />
         ) : (

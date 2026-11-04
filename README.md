@@ -1,7 +1,11 @@
 # Ship Docs: Document & Diagram Management
 
-A three-tab admin UI for **Line Diagrams**, **Objects** (3D model + line diagram) and **Manuals** (PDF).
-Built with Next.js (App Router), TypeScript and Tailwind CSS. Records and uploaded files are saved to a **local `data/` folder** on the machine running the app. There's no database and no cloud.
+An admin UI for **Sections** and **Objects**:
+
+- A **section** is one drawing. It holds **one line diagram**, **one manual** (PDF), and the objects it uses.
+- An **object** (3D model + line diagram) is **shared**, so any section can use it.
+
+Built with Next.js (App Router), TypeScript and Tailwind CSS. Sections and objects are saved as **folders inside the child app** (`child/`) on the machine running the app, so the viewer can show them. There's no database and no cloud.
 
 ```bash
 npm install     # installs the parent and the child (npm workspace in ./child), and copies Monaco to public/monaco
@@ -16,7 +20,7 @@ npm run lint
 
 The repo holds two apps:
 
-- **Parent** (this folder): the Next.js admin, which owns the `/api` routes and the `data/` folder.
+- **Parent** (this folder): the Next.js admin, which owns the `/api` routes and saves sections and objects into the child.
 - **Child** (`child/`): a React + Vite **viewer** for interactive line diagrams.
 
 The parent shows the child on `/viewer` in an `<iframe>`. Both are served from the same origin under `/child`:
@@ -35,14 +39,11 @@ The child also runs on its own at `/child/index.html`, or at `http://localhost:5
 
 Both sides ignore messages from any other window or origin. The parent keeps the open drawing in `/viewer?section=<id>`.
 
-**Adding a drawing.** No drawings ship with the viewer yet. To add one, create a folder in `child/src/sections/` holding:
-- `index.ts`: exports `defineSection({...})` (from `@/shared/diagram`)
-- `diagram.ts`: hotspot rectangles in PNG pixels
-- `data.json`: details per item ID
-- `Icon.tsx`
-- `line-diagram.png`
+**Adding a drawing.** Add a section in the Library (`/`). That creates its folder in `child/src/sections/`, and the viewer finds it on its own (`import.meta.glob` in `child/src/sections/index.ts`). While `npm run dev` runs, the viewer updates as soon as a section or object is saved. After `npm run build`, rebuild to see changes.
 
-Then list the new folder in `child/src/sections/index.ts`.
+The viewer shows a section's line diagram (**2D**), its objects (**3D**; rendering the models is still to come) and its **Manual**. To make parts of a line diagram clickable, add two files to the section's folder, e.g. in the editor:
+- `diagram.ts`: `export default defineDiagram({ width, height, items })` (from `@/shared/diagram`). `width`/`height` are the image's pixel size; each item is a hotspot rectangle in those pixels.
+- `data.json`: `{ "items": { "<item id>": { "description": "…", "specs": { "Label": "Value" } } } }`
 
 ## Editor
 
@@ -59,22 +60,31 @@ Then list the new folder in `child/src/sections/index.ts`.
 ## Where data is stored
 
 ```
-data/
-  line-diagrams.json     records + ID counter for each tab
-  objects.json
-  manuals.json
-  uploads/
-    line-diagrams/LD-001-image-9f2c1a7b.png
-    objects/OBJ-001-model-3be0d14c.glb
-    manuals/MAN-001-pdf-a1c2e3f4.pdf
+child/src/sections/
+  next-id.json                     ID counter for sections
+  engine-room/                     one folder per section, named from its name when created
+    section.json                   its ID (SEC-001), name, dates, files, and the IDs of the objects it uses
+    lineDiagram-9f2c1a7b.png       its line diagram (at most one)
+    manual-a1c2e3f4.pdf            its manual (at most one)
+    diagram.ts, data.json          optional hotspots, written by hand
+child/src/shared/objects/
+  next-id.json                     ID counter for objects
+  OBJ-001/
+    object.json                    name, dates and files
+    model-3be0d14c.glb
+    lineDiagram-77aa01ff.png
 ```
 
-- To back up or move the data, copy the `data/` folder. To start fresh, stop the server and delete it.
-- `data/` is git-ignored.
-- Set `SHIP_DATA_DIR` to store it somewhere else.
-- **IDs:** `LD-001`, `OBJ-001`, `MAN-001`, generated separately per tab. The counter in each JSON file only increases, so IDs are never reused.
-- **Writes:** each tab's writes are queued so two saves can't get the same ID. JSON files are replaced in one step, so a crash can't leave a half-written file.
-- Replaced and deleted files are removed from `uploads/`.
+- Everything is a normal file in the child app, so it shows up in the editor and in `git status`. Commit it to share it, or add the folders to `.gitignore` to keep it local.
+- **IDs:** each section gets a unique ID when it's created (`SEC-001`, `SEC-002`…), and each object too (`OBJ-001`…). Each collection's counter only increases, so IDs are never reused, even after a delete. The ID is used in the API and in viewer links (`/viewer?section=SEC-001`).
+- **Section folders** are made from the name when the section is created: "Engine Room" becomes `engine-room`, and its ID is saved in `section.json`. Renaming a section changes only its name; the ID and folder stay. Two sections can't have names that make the same folder.
+- **Object folders** are named after the object's ID.
+- A section's line diagram and manual are optional, and either can be replaced or removed later. An object needs both of its files.
+- An object can't be deleted while a section uses it. Remove it from those sections first.
+- Deleting a section deletes its whole folder, including any files you added there in the editor.
+- **Writes:** each collection's writes are queued, so two saves can't get the same ID. Each metadata file is replaced in one step and written after the files it lists, so the viewer never sees a half-saved record.
+- Replaced and removed files are deleted from the record's folder.
+- A metadata file that can't be read (e.g. after a bad hand edit) is skipped by the Library, with a warning in the server log.
 
 ## Upload rules (checked in the browser and again on the server)
 
@@ -90,11 +100,11 @@ The limits are `MAX_FILE_SIZE` and `MAX_PDF_SIZE` in `src/lib/files.ts`.
 
 | Method & path | Purpose |
 | --- | --- |
-| `GET /api/:collection` | List records (`line-diagrams`, `objects`, `manuals`) |
-| `POST /api/:collection` | Create a record (multipart: `name` plus file fields) |
-| `PUT /api/:collection/:id` | Update the name and/or replace files; omitted files are kept |
-| `DELETE /api/:collection/:id` | Delete a record and its files |
-| `GET /api/files/:collection/:file` | Serve an uploaded file |
+| `GET /api/:collection` | List records (`sections`, `objects`) |
+| `POST /api/:collection` | Create a record (multipart: `name`, file fields, and for sections one `objectIds` value per object) |
+| `PUT /api/:collection/:id` (e.g. `/api/sections/SEC-001`) | Update the name and/or replace files; omitted files are kept, `remove=<field>` clears an optional one. `objectIds` replaces the section's list (send none to clear it) |
+| `DELETE /api/:collection/:id` | Delete a record's folder; 409 for an object a section still uses |
+| `GET /api/files/:collection/:folder/:file` | Serve a file from a record's folder |
 | `GET /api/child-files` | The child app's files, as a tree (editor) |
 | `GET /api/child-files/:path*` | Open a file: `{ path, content, version }` |
 | `POST /api/child-files/:path*` | Create a file from JSON `{ content }`; 409 if it exists |
@@ -105,19 +115,20 @@ The limits are `MAX_FILE_SIZE` and `MAX_PDF_SIZE` in `src/lib/files.ts`.
 
 | Path | Purpose |
 | --- | --- |
-| `src/types/records.ts` | `LineDiagram`, `ObjectRecord`, `Manual`, `StoredFile` interfaces |
-| `src/lib/collection-defs.ts` | Per-tab ID prefix and file fields, shared by the UI and the server |
-| `src/server/storage.ts` | Reads and writes the `data/` folder |
+| `src/types/records.ts` | `Section`, `ObjectRecord`, `StoredFile` interfaces |
+| `src/lib/collection-defs.ts` | Per-collection folder, IDs, file fields and links, shared by the UI and the server |
+| `src/server/storage.ts` | Reads and writes section and object folders in the child app |
 | `src/app/api/` | Route handlers for the API above |
 | `src/lib/storage.ts` | Client-side store that calls the API and caches results |
-| `src/components/records/` | Shared CRUD UI: table, add/edit form, view modal, tab panel |
+| `src/components/records/` | Shared CRUD UI: table, add/edit form (with the object picker), view modal, tab panel |
 | `src/components/ui/` | Reusable modal, confirm dialog, inputs, file upload, toasts, pagination |
 | `src/app/viewer/`, `src/components/viewer/` | `/viewer` page and the iframe host that drives the child |
 | `src/lib/viewer-bridge.ts`, `src/hooks/useViewerEvents.ts` | Parent side of the message bridge |
 | `src/app/editor/`, `src/components/editor/` | `/editor` page: file tree, open-file tabs, Monaco |
-| `src/server/child-files.ts` | Reads and writes `child/`, refusing anything outside it |
+| `src/server/child-files.ts`, `src/server/child-dir.ts` | Reads and writes `child/` for the editor, refusing anything outside it; shared helpers |
 | `src/lib/child-files.ts`, `src/lib/child-files-api.ts` | Editor rules and types (shared), and the client for its API |
 | `src/lib/monaco.ts`, `scripts/copy-monaco.mjs` | Loads Monaco from `public/monaco`, which is copied there on install |
 | `child/src/app/` | Child shell, message bridge and protocol |
-| `child/src/sections/` | One folder per drawing, plus the registry in `index.ts` |
-| `child/src/shared/` | Child building blocks: `catalog`, `diagram`, `data`, `operations` (viewer state), `view2d`, `view3d`, `ui`, `components`, `assets` |
+| `child/src/sections/` | One folder per section, plus the registry in `index.ts` that finds them |
+| `child/src/shared/objects/` | One folder per shared object, plus the registry in `index.ts` |
+| `child/src/shared/` | Child building blocks: `catalog`, `diagram`, `data`, `records` (reads Library folders), `operations` (viewer state), `view2d`, `view3d`, `manual`, `ui`, `components`, `assets` |

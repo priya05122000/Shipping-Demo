@@ -1,4 +1,5 @@
 import type { Section } from "@/shared/diagram";
+import { DiagramIcon } from "@/shared/ui";
 
 interface SectionNavProps {
   sections: Section[];
@@ -14,7 +15,6 @@ export function SectionNav({ sections, activeId, onSelect }: SectionNavProps) {
       <ul className="flex gap-1 overflow-x-auto md:flex-col">
         {sections.map((section) => {
           const active = section.id === activeId;
-          const Icon = section.Icon;
           return (
             <li key={section.id}>
               <button
@@ -25,7 +25,7 @@ export function SectionNav({ sections, activeId, onSelect }: SectionNavProps) {
                   active ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                 }`}
               >
-                <Icon className="size-4 shrink-0" />
+                <DiagramIcon className="size-4 shrink-0" />
                 {section.title}
               </button>
             </li>

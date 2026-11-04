@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from "react";
 import { CATALOG } from "@/shared/catalog";
 import type { Section } from "@/shared/diagram";
+import { DiagramIcon, EmptyState } from "@/shared/ui";
 
 interface View2DProps {
   section: Section;
@@ -10,12 +11,23 @@ interface View2DProps {
 }
 
 /**
- * The section's line-diagram.png with a hotspot over each item. Image and hotspots share one
- * viewBox (the PNG's pixel size), so they stay aligned at any zoom. Hotspot styles are in styles.css.
+ * The section's line diagram with a hotspot over each item from its diagram.ts. Image and hotspots share one
+ * viewBox (the image's pixel size), so they stay aligned at any zoom. Hotspot styles are in styles.css.
+ * Without a diagram.ts, the image is shown on its own.
  */
 export function View2D({ section, selectedId, onSelect }: View2DProps) {
-  const { width, height, items } = section.diagram;
+  if (!section.image) {
+    return (
+      <EmptyState icon={<DiagramIcon className="size-6" />} title="No line diagram yet">
+        Add one to {section.title} in the Library.
+      </EmptyState>
+    );
+  }
+  if (!section.diagram) {
+    return <img src={section.image} alt={`${section.title} line diagram`} className="size-full object-contain" />;
+  }
 
+  const { width, height, items } = section.diagram;
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}

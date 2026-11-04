@@ -1,13 +1,13 @@
 import { parseSlug, respond } from "@/server/respond";
 import { readUpload } from "@/server/storage";
 
-type Context = { params: Promise<{ collection: string; file: string }> };
+type Context = { params: Promise<{ collection: string; folder: string; file: string }> };
 
-/** Serve an uploaded file. Stored names are unique per upload, so responses can be cached forever. */
+/** Serve a file from a record's folder. Stored names are unique per upload, so responses can be cached forever. */
 export async function GET(_request: Request, { params }: Context) {
   return respond(async () => {
-    const { collection, file } = await params;
-    const { bytes, contentType } = await readUpload(parseSlug(collection), file);
+    const { collection, folder, file } = await params;
+    const { bytes, contentType } = await readUpload(parseSlug(collection), folder, file);
     const headers = new Headers({
       "Content-Type": contentType,
       "Cache-Control": "private, max-age=31536000, immutable",

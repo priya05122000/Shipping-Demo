@@ -1,6 +1,5 @@
 import { createCollectionStore } from "@/lib/storage";
-import type { LineDiagram, Manual, ObjectRecord } from "@/types/records";
+import type { ObjectRecord, Section } from "@/types/records";
 
-export const lineDiagramStore = createCollectionStore<LineDiagram>("line-diagrams");
+export const sectionStore = createCollectionStore<Section>("sections");
 export const objectStore = createCollectionStore<ObjectRecord>("objects");
-export const manualStore = createCollectionStore<Manual>("manuals");

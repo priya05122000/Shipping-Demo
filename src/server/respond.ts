@@ -37,7 +37,7 @@ export async function readJson(request: Request): Promise<Record<string, unknown
 /** Runs a handler and turns errors into JSON `{ error }` responses. `failure` is shown for unexpected errors. */
 export async function respond(
   handler: () => Promise<Response>,
-  failure = "Something went wrong while saving to the local data folder.",
+  failure = "Something went wrong while saving to the child app's folder.",
 ): Promise<Response> {
   try {
     return await handler();

@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
-import { getFile, type ResourceConfig } from "@/components/records/types";
+import { LinkPicker } from "@/components/records/LinkPicker";
+import { getFile, getLinks, type ResourceConfig } from "@/components/records/types";
 import { Button } from "@/components/ui/Button";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { AlertIcon, LockIcon } from "@/components/ui/icons";
@@ -9,7 +10,7 @@ import { Modal } from "@/components/ui/Modal";
 import { TextInput } from "@/components/ui/TextInput";
 import { useToast } from "@/components/ui/Toast";
 import { useCollection } from "@/hooks/useCollection";
-import { formatId } from "@/lib/ids";
+import { formatId, slugify } from "@/lib/ids";
 import type { BaseRecord, FileKey } from "@/types/records";
 
 const NAME_MAX = 100;
@@ -30,6 +31,11 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
   const { data } = useCollection(config.store);
   const [name, setName] = useState(record?.name ?? "");
   const [files, setFiles] = useState<Partial<Record<FileKey<T>, File>>>({});
+  // Optional existing files to remove on save.
+  const [removed, setRemoved] = useState<Partial<Record<FileKey<T>, boolean>>>({});
+  const [links, setLinks] = useState<Record<string, string[]>>(() =>
+    Object.fromEntries((config.links ?? []).map((field) => [field.key, record ? getLinks(record, field.key) : []])),
+  );
   const [errors, setErrors] = useState<Errors<T>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -37,15 +43,27 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
   const savingRef = useRef(false);
 
   const isEdit = Boolean(record);
-  const nextId = data ? formatId(config.store.idPrefix, data.nextSeq) : "";
+  const { idPrefix, folderFromName, dir } = config.store;
+  const shownId = record?.id ?? (data ? formatId(idPrefix, data.nextSeq) : "");
+  // Records whose folder is named from the name show where it will be (or is); the folder never changes after that.
+  const folder = record?.folder ?? slugify(name);
+  const nameHint = folderFromName ? (
+    <>
+      Folder: <code className="font-mono">child/{dir}/{folder || "…"}</code>
+      {isEdit && " · stays the same when renamed"}
+    </>
+  ) : undefined;
 
   function validate(): Errors<T> {
     const result: Errors<T> = {};
     const trimmed = name.trim();
     if (!trimmed) result.name = "Name is required.";
     else if (trimmed.length > NAME_MAX) result.name = `Name must be ${NAME_MAX} characters or fewer.`;
+    else if (folderFromName && !record && !slugify(trimmed)) {
+      result.name = "Use at least one letter or digit (A–Z, 0–9), so the name can become a folder name.";
+    }
     for (const field of config.fileFields) {
-      if (!files[field.key] && !record) result[field.key] = `${field.viewLabel} file is required.`;
+      if (field.required && !files[field.key] && !record) result[field.key] = `${field.viewLabel} file is required.`;
     }
     return result;
   }
@@ -68,6 +86,11 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
       for (const field of config.fileFields) {
         const picked = files[field.key];
         if (picked) form.set(field.key, picked);
+        else if (removed[field.key]) form.append("remove", field.key);
+      }
+      // Links are always sent in full: the server replaces the stored list.
+      for (const [key, ids] of Object.entries(links)) {
+        for (const id of ids) form.append(key, id);
       }
       const saved = record ? await config.store.update(record.id, form) : await config.store.create(form);
       onSaved(saved, isEdit ? "edit" : "add");
@@ -88,7 +111,7 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
       onClose={onClose}
       busy={saving}
       title={isEdit ? `Edit ${config.label}` : `Add ${config.label}`}
-      description={isEdit ? "Update the name or replace files. Files you don't replace are kept." : config.description}
+      description={isEdit ? "Update the name or files. Files you don't change are kept." : config.description}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={saving}>
@@ -111,7 +134,9 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
         <div className="grid gap-5 sm:grid-cols-[10rem_1fr]">
           <TextInput
             label="ID"
-            value={record?.id ?? nextId}
+            value={shownId}
+            title={shownId}
+            placeholder="—"
             locked
             tabIndex={-1}
             icon={<LockIcon className="size-4" />}
@@ -125,9 +150,10 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
               setName(event.target.value);
               if (errors.name) setErrors((e) => ({ ...e, name: undefined }));
             }}
-            placeholder={`e.g. ${config.id === "manuals" ? "Pump maintenance guide" : "Main pump assembly"}`}
+            placeholder={`e.g. ${config.namePlaceholder}`}
             maxLength={NAME_MAX}
             error={errors.name}
+            hint={nameHint}
             disabled={saving}
             data-autofocus
           />
@@ -138,15 +164,33 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
             key={field.key}
             label={field.label}
             rule={field.rule}
-            required
+            required={field.required}
             file={files[field.key] ?? null}
             existing={record ? getFile(record, field.key) : null}
             error={errors[field.key]}
             disabled={saving}
+            removed={Boolean(removed[field.key])}
+            onRemovedChange={
+              field.required ? undefined : (value) => setRemoved((current) => ({ ...current, [field.key]: value }))
+            }
             onFileChange={(file) => {
               setFiles((current) => ({ ...current, [field.key]: file ?? undefined }));
-              if (file) setErrors((e) => ({ ...e, [field.key]: undefined }));
+              if (file) {
+                setErrors((e) => ({ ...e, [field.key]: undefined }));
+                // A new file replaces the current one, so it's no longer "to be removed".
+                setRemoved((current) => ({ ...current, [field.key]: false }));
+              }
             }}
+          />
+        ))}
+
+        {config.links?.map((field) => (
+          <LinkPicker
+            key={field.key}
+            field={field}
+            value={links[field.key] ?? []}
+            onChange={(ids) => setLinks((current) => ({ ...current, [field.key]: ids }))}
+            disabled={saving}
           />
         ))}
       </form>

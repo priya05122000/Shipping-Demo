@@ -1,4 +1,4 @@
-export type ViewMode = "2d" | "3d";
+export type ViewMode = "2d" | "3d" | "manual";
 
 export interface ViewerState {
   sectionId: string;

@@ -4,7 +4,8 @@ import type { SelectedItem } from "@/app/protocol";
 import { findSection, sections } from "@/sections";
 import logo from "@/shared/assets/logo.svg";
 import { ItemDetails, SectionNav } from "@/shared/components";
-import type { DiagramItem } from "@/shared/diagram";
+import type { DiagramItem, Section } from "@/shared/diagram";
+import { ManualView } from "@/shared/manual";
 import { initialViewerState, viewerReducer, type ViewMode } from "@/shared/operations";
 import { SegmentedControl } from "@/shared/ui";
 import { View2D } from "@/shared/view2d";
@@ -13,7 +14,18 @@ import { View3D } from "@/shared/view3d";
 const VIEW_OPTIONS = [
   { value: "2d", label: "2D" },
   { value: "3d", label: "3D" },
+  { value: "manual", label: "Manual" },
 ] as const satisfies readonly { value: ViewMode; label: string }[];
+
+/** What the section holds, e.g. "Line diagram · Manual · 3 objects". */
+function summarize(section: Section): string {
+  const count = section.objects.length;
+  return [
+    section.image ? "Line diagram" : "No line diagram",
+    section.manual ? "Manual" : "No manual",
+    count === 0 ? "No objects" : `${count} object${count === 1 ? "" : "s"}`,
+  ].join(" · ");
+}
 
 function toSelectedItem(item: DiagramItem | null | undefined, sectionId: string): SelectedItem | null {
   return item ? { id: item.id, label: item.label, sectionId } : null;
@@ -23,7 +35,7 @@ export function App() {
   const [state, dispatch] = useReducer(viewerReducer, sections.at(0)?.id ?? "", initialViewerState);
   // Undefined only when src/sections lists no drawings.
   const section = findSection(state.sectionId) ?? sections.at(0);
-  const selectedItem = section?.diagram.items.find((item) => item.id === state.selectedItemId) ?? null;
+  const selectedItem = section?.diagram?.items.find((item) => item.id === state.selectedItemId) ?? null;
 
   // Events go to the parent from these handlers (not from effects) so each one is sent once per change.
   function openSection(sectionId: string) {
@@ -35,7 +47,7 @@ export function App() {
   function selectItem(itemId: string | null) {
     if (!section) return;
     dispatch({ type: "select-item", itemId });
-    const item = section.diagram.items.find((i) => i.id === itemId);
+    const item = section.diagram?.items.find((i) => i.id === itemId);
     postToParent({ type: "item-selected", item: toSelectedItem(item, section.id) });
   }
 
@@ -77,7 +89,7 @@ export function App() {
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
                   <h1 className="text-base font-semibold text-slate-900">{section.title}</h1>
-                  <p className="text-sm text-slate-500">{section.description}</p>
+                  <p className="text-sm text-slate-500">{summarize(section)}</p>
                 </div>
                 <SegmentedControl
                   label="View"
@@ -91,22 +103,27 @@ export function App() {
                 <div className="min-h-64 flex-1 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
                   {state.view === "2d" ? (
                     <View2D section={section} selectedId={state.selectedItemId} onSelect={selectItem} />
-                  ) : (
+                  ) : state.view === "3d" ? (
                     <View3D section={section} />
+                  ) : (
+                    <ManualView section={section} />
                   )}
                 </div>
-                <aside
-                  aria-label="Component details"
-                  aria-live="polite"
-                  className="shrink-0 overflow-y-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200 lg:w-72"
-                >
-                  <ItemDetails section={section} item={selectedItem} />
-                </aside>
+                {/* Details only apply to hotspots, which come from the section's optional diagram.ts. */}
+                {state.view === "2d" && section.image && section.diagram && (
+                  <aside
+                    aria-label="Component details"
+                    aria-live="polite"
+                    className="shrink-0 overflow-y-auto rounded-xl bg-white shadow-sm ring-1 ring-slate-200 lg:w-72"
+                  >
+                    <ItemDetails section={section} item={selectedItem} />
+                  </aside>
+                )}
               </div>
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center rounded-xl bg-white p-6 text-center text-sm text-slate-500 shadow-sm ring-1 ring-slate-200">
-              No drawings yet. Add a section folder in src/sections and list it in src/sections/index.ts.
+              No drawings yet. Add a section in the Library, and it will show up here.
             </div>
           )}
         </main>

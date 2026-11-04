@@ -1,4 +1,4 @@
-import { COLLECTIONS, type CollectionSlug } from "@/lib/collection-defs";
+import { collectionDef, type CollectionSlug } from "@/lib/collection-defs";
 import { request } from "@/lib/request";
 import type { BaseRecord, CollectionSnapshot } from "@/types/records";
 
@@ -11,21 +11,26 @@ export interface CollectionState<T extends BaseRecord> {
 
 export interface CollectionStore<T extends BaseRecord> {
   slug: CollectionSlug;
+  /** IDs are this prefix plus a number, e.g. "SEC-001". */
   idPrefix: string;
+  /** Each record's folder in the child app (see `dir`) is named from its name when it's created, e.g. "engine-room". */
+  folderFromName: boolean;
+  /** Folder in the child app that holds the records' folders, e.g. "src/sections". */
+  dir: string;
   subscribe: (onChange: () => void) => () => void;
   getSnapshot: () => CollectionState<T>;
   getServerSnapshot: () => CollectionState<T>;
   reload: () => Promise<void>;
-  /** `form` holds `name` plus one File per file field. */
+  /** `form` holds `name`, one File per file field, and one value per linked ID (e.g. `objectIds`). */
   create: (form: FormData) => Promise<T>;
-  /** File fields left out of `form` keep their existing file. */
+  /** File fields left out of `form` keep their existing file; `remove` values clear optional ones. Links are replaced. */
   update: (id: string, form: FormData) => Promise<T>;
   remove: (id: string) => Promise<void>;
 }
 
 const LOADING = { data: null, error: null } as const;
 
-/** Client-side cache of one collection, kept in sync with the local data folder through the API. */
+/** Client-side cache of one collection, kept in sync with the child app's folder through the API. */
 export function createCollectionStore<T extends BaseRecord>(slug: CollectionSlug): CollectionStore<T> {
   const url = `/api/${slug}`;
   const listeners = new Set<() => void>();
@@ -52,7 +57,9 @@ export function createCollectionStore<T extends BaseRecord>(slug: CollectionSlug
 
   return {
     slug,
-    idPrefix: COLLECTIONS[slug].idPrefix,
+    idPrefix: collectionDef(slug).idPrefix,
+    folderFromName: Boolean(collectionDef(slug).folderFromName),
+    dir: collectionDef(slug).dir,
     subscribe(onChange) {
       listeners.add(onChange);
       if (listeners.size === 1) {

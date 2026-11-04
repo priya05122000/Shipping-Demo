@@ -132,7 +132,7 @@ export function ResourceTab<T extends BaseRecord>({ config }: { config: Resource
         <EmptyState
           icon={<Icon className="size-6" />}
           title={`No ${config.singular}s yet`}
-          description={`Add your first ${config.singular} to get started. Files are saved to the local data folder.`}
+          description={`Add your first ${config.singular} to get started. Files are saved in the child app's folder.`}
           action={addButton}
         />
       ) : filtered.length === 0 ? (
@@ -182,7 +182,7 @@ export function ResourceTab<T extends BaseRecord>({ config }: { config: Resource
               <span className="font-medium text-slate-900">
                 {active.id} · {active.name}
               </span>{" "}
-              and its uploaded files will be permanently removed from this browser. This can&apos;t be undone.
+              {config.deleteWarning(active)} This can&apos;t be undone.
             </>
           )
         }

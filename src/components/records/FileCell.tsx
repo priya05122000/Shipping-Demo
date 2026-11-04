@@ -2,8 +2,14 @@ import { FileThumbnail } from "@/components/files/FileThumbnail";
 import { formatBytes } from "@/lib/files";
 import type { StoredFile } from "@/types/records";
 
+/** Shown in place of an optional file that hasn't been added. */
+export function MissingFileCell() {
+  return <span className="text-sm text-slate-400">Not added</span>;
+}
+
 /** Clickable thumbnail (opens the View modal). */
-export function ThumbnailCell({ file, onClick }: { file: StoredFile; onClick: () => void }) {
+export function ThumbnailCell({ file, onClick }: { file: StoredFile | undefined; onClick: () => void }) {
+  if (!file) return <MissingFileCell />;
   return (
     <button
       type="button"
@@ -16,7 +22,8 @@ export function ThumbnailCell({ file, onClick }: { file: StoredFile; onClick: ()
   );
 }
 
-export function FileNameCell({ file }: { file: StoredFile }) {
+export function FileNameCell({ file }: { file: StoredFile | undefined }) {
+  if (!file) return <MissingFileCell />;
   return (
     <div className="min-w-0">
       <p className="max-w-56 truncate text-sm text-slate-700" title={file.name}>
@@ -30,7 +37,8 @@ export function FileNameCell({ file }: { file: StoredFile }) {
 }
 
 /** Thumbnail + file name side by side, for columns that represent a single file. */
-export function FileSummaryCell({ file, onClick }: { file: StoredFile; onClick: () => void }) {
+export function FileSummaryCell({ file, onClick }: { file: StoredFile | undefined; onClick: () => void }) {
+  if (!file) return <MissingFileCell />;
   return (
     <div className="flex min-w-0 items-center gap-3">
       <ThumbnailCell file={file} onClick={onClick} />

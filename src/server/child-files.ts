@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { CHILD_FILE_MAX_BYTES, isHiddenName, type ChildEntry, type ChildFile } from "@/lib/child-files";
 import { formatBytes } from "@/lib/files";
+import { CHILD_DIR, errorCode, writeAtomic } from "@/server/child-dir";
 import { ApiError } from "@/server/storage";
 
 /**
@@ -13,7 +14,6 @@ import { ApiError } from "@/server/storage";
  *   - each path's real location (after symlinks, junctions and short names) must still be inside ./child
  *   - node_modules and .git are never listed, read or written
  */
-const CHILD_DIR = path.join(process.cwd(), "child");
 const NAME_MAX = 255;
 
 /** Shown for unexpected errors (see respond()). */
@@ -47,10 +47,6 @@ function isListed(name: string): boolean {
 
 function notFound(relPath: string) {
   return new ApiError(404, `${relPath} wasn't found in the child app.`);
-}
-
-function errorCode(error: unknown) {
-  return (error as NodeJS.ErrnoException).code;
 }
 
 function isInside(root: string, target: string): boolean {
@@ -108,28 +104,6 @@ function decodeText(bytes: Buffer, relPath: string): string {
     }
   }
   throw new ApiError(415, `${relPath} isn't a text file, so it can't be edited here.`);
-}
-
-/** Replaces a file in one step, so the child's dev server never reloads a half-written file. */
-async function writeAtomic(target: string, bytes: Buffer, mode: number) {
-  const temp = path.join(path.dirname(target), `.${path.basename(target)}.${crypto.randomBytes(4).toString("hex")}.tmp`);
-  await fs.writeFile(temp, bytes, { mode });
-  try {
-    // On Windows a virus scanner or file watcher can hold the file for a moment; retry briefly before giving up.
-    for (let attempt = 1; ; attempt++) {
-      try {
-        await fs.rename(temp, target);
-        return;
-      } catch (error) {
-        const busy = ["EPERM", "EACCES", "EBUSY"].includes(errorCode(error) ?? "");
-        if (!busy || attempt === 5) throw error;
-        await new Promise((resolve) => setTimeout(resolve, attempt * 50));
-      }
-    }
-  } catch (error) {
-    await fs.rm(temp, { force: true });
-    throw error;
-  }
 }
 
 async function listFolder(dir: string, prefix: string): Promise<ChildEntry[]> {

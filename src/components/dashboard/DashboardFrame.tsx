@@ -22,7 +22,7 @@ interface DashboardFrameProps {
 export function DashboardFrame({
   current = "library",
   title = "Library",
-  description = "Manage line diagrams, 3D objects and manuals.",
+  description = "Manage sections (each with a line diagram and a manual) and the 3D objects they share.",
   meter,
   children,
 }: DashboardFrameProps) {

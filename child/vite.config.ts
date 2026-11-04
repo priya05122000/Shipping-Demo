@@ -23,5 +23,7 @@ export default defineConfig({
   build: {
     outDir: "../public/child",
     emptyOutDir: true,
+    // Manuals and 3D models stay files, however small: browsers won't show a data: URL PDF in an iframe.
+    assetsInlineLimit: (filePath) => (/\.(pdf|glb|gltf|obj|fbx|stl|blend)$/i.test(filePath) ? false : undefined),
   },
 });

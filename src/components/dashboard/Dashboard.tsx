@@ -5,13 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { DashboardFrame } from "@/components/dashboard/DashboardFrame";
 import { StorageSummary } from "@/components/dashboard/StorageSummary";
 import { Tabs, type TabItem } from "@/components/dashboard/Tabs";
-import { lineDiagramConfig, manualConfig, objectConfig } from "@/components/records/configs";
+import { objectConfig, sectionConfig } from "@/components/records/configs";
 import { ResourceTab } from "@/components/records/ResourceTab";
 import type { TabId } from "@/components/records/types";
 import { ToastProvider } from "@/components/ui/Toast";
 import { useCollection } from "@/hooks/useCollection";
 
-const TAB_IDS: TabId[] = ["line-diagrams", "objects", "manuals"];
+const TAB_IDS: TabId[] = ["sections", "objects"];
 
 function isTabId(value: string | null): value is TabId {
   return TAB_IDS.includes(value as TabId);
@@ -20,18 +20,15 @@ function isTabId(value: string | null): value is TabId {
 export function Dashboard() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const activeTab: TabId = isTabId(tabParam) ? tabParam : "line-diagrams";
+  const activeTab: TabId = isTabId(tabParam) ? tabParam : "sections";
 
-  const lineDiagrams = useCollection(lineDiagramConfig.store).data;
+  const sections = useCollection(sectionConfig.store).data;
   const objects = useCollection(objectConfig.store).data;
-  const manuals = useCollection(manualConfig.store).data;
-  const loaded = lineDiagrams && objects && manuals;
-  const totalBytes = loaded ? lineDiagrams.totalBytes + objects.totalBytes + manuals.totalBytes : null;
+  const totalBytes = sections && objects ? sections.totalBytes + objects.totalBytes : null;
 
   const tabs: TabItem<TabId>[] = [
-    { id: "line-diagrams", label: lineDiagramConfig.label, icon: lineDiagramConfig.icon, count: lineDiagrams?.items.length },
+    { id: "sections", label: sectionConfig.label, icon: sectionConfig.icon, count: sections?.items.length },
     { id: "objects", label: objectConfig.label, icon: objectConfig.icon, count: objects?.items.length },
-    { id: "manuals", label: manualConfig.label, icon: manualConfig.icon, count: manuals?.items.length },
   ];
 
   function selectTab(id: TabId) {
@@ -47,14 +44,11 @@ export function Dashboard() {
         <Tabs tabs={tabs} activeId={activeTab} onChange={selectTab} />
         {/* Panels stay mounted so each tab keeps its search and page while hidden. */}
         <div className="mt-6">
-          <TabPanel id="line-diagrams" active={activeTab}>
-            <ResourceTab config={lineDiagramConfig} />
+          <TabPanel id="sections" active={activeTab}>
+            <ResourceTab config={sectionConfig} />
           </TabPanel>
           <TabPanel id="objects" active={activeTab}>
             <ResourceTab config={objectConfig} />
-          </TabPanel>
-          <TabPanel id="manuals" active={activeTab}>
-            <ResourceTab config={manualConfig} />
           </TabPanel>
         </div>
       </DashboardFrame>

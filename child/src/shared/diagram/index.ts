@@ -1,1 +1,1 @@
-export { defineSection, type Diagram, type DiagramItem, type Section } from "./section";
+export { defineDiagram, type Diagram, type DiagramItem, type Section } from "./section";
