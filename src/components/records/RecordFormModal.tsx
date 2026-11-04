@@ -111,7 +111,7 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
       onClose={onClose}
       busy={saving}
       title={isEdit ? `Edit ${config.label}` : `Add ${config.label}`}
-      description={isEdit ? "Update the name or files. Files you don't change are kept." : config.description}
+      description={isEdit ? "Update the name or files. Files you don't change are kept." : undefined}
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={saving}>

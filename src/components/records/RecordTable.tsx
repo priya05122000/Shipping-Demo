@@ -34,40 +34,40 @@ export function RecordTable<T extends BaseRecord>({
   return (
     <>
       <div className="hidden overflow-x-auto md:block">
-        <table className="min-w-full divide-y divide-slate-200">
-          <thead className="bg-slate-50">
+        <table className="min-w-full">
+          <thead className="border-b border-slate-100 bg-slate-50/60">
             <tr>
               {["ID", "Name", ...columns.map((c) => c.header)].map((header) => (
                 <th
                   key={header}
                   scope="col"
-                  className="px-4 py-3 text-left text-xs font-semibold tracking-wide whitespace-nowrap text-slate-500 uppercase first:pl-6"
+                  className="px-4 py-3 text-left text-[11px] font-semibold tracking-wider whitespace-nowrap text-slate-400 uppercase first:pl-6"
                 >
                   {header}
                 </th>
               ))}
-              <th scope="col" className="px-4 py-3 pr-6 text-right text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              <th scope="col" className="px-4 py-3 pr-6 text-right text-[11px] font-semibold tracking-wider text-slate-400 uppercase">
                 Actions
               </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
             {records.map((record) => (
-              <tr key={record.id} className="transition-colors hover:bg-slate-50/70">
-                <td className="py-3 pr-4 pl-6 whitespace-nowrap">
+              <tr key={record.id} className="transition-colors hover:bg-indigo-50/30">
+                <td className="py-4 pr-4 pl-6 whitespace-nowrap">
                   <IdBadge id={record.id} />
                 </td>
-                <td className="px-4 py-3">
-                  <span className="block max-w-64 truncate text-sm font-medium text-slate-900" title={record.name}>
+                <td className="px-4 py-4">
+                  <span className="block max-w-64 truncate text-sm font-semibold text-slate-900" title={record.name}>
                     {record.name}
                   </span>
                 </td>
                 {columns.map((column) => (
-                  <td key={column.header} className={`px-4 py-3 ${column.className ?? ""}`}>
+                  <td key={column.header} className={`px-4 py-4 ${column.className ?? ""}`}>
                     {column.cell(record, context)}
                   </td>
                 ))}
-                <td className="py-3 pr-6 pl-4">{actions(record)}</td>
+                <td className="py-4 pr-6 pl-4">{actions(record)}</td>
               </tr>
             ))}
           </tbody>
@@ -101,7 +101,7 @@ export function RecordTable<T extends BaseRecord>({
 
 export function IdBadge({ id }: { id: string }) {
   return (
-    <span className="inline-flex rounded-md bg-slate-100 px-2 py-1 font-mono text-xs font-medium text-slate-700 ring-1 ring-slate-200 ring-inset">
+    <span className="inline-flex rounded-lg bg-slate-50 px-2 py-1 font-mono text-xs font-medium tracking-tight text-slate-600 ring-1 ring-slate-200/80 ring-inset">
       {id}
     </span>
   );
@@ -121,9 +121,9 @@ function RowActions({
   onDelete: () => void;
 }) {
   const base =
-    "inline-flex size-8 items-center justify-center rounded-md transition-colors focus-visible:outline-2 focus-visible:outline-indigo-600";
+    "inline-flex size-8 items-center justify-center rounded-lg transition-colors focus-visible:outline-2 focus-visible:outline-indigo-600";
   return (
-    <div className="flex shrink-0 justify-end gap-1">
+    <div className="ml-auto flex w-fit shrink-0 gap-0.5 rounded-xl bg-white p-0.5 shadow-[0_0_0_1px_rgb(15_23_42/0.06),0_1px_2px_rgb(15_23_42/0.08)]">
       <button type="button" onClick={onView} className={`${base} text-slate-500 hover:bg-slate-100 hover:text-slate-900`} aria-label={`View ${singular} ${name}`} title="View">
         <EyeIcon className="size-4" />
       </button>
@@ -142,9 +142,9 @@ export function TableSkeleton({ rows = 4 }: { rows?: number }) {
     <div className="divide-y divide-slate-100" aria-busy="true" aria-label="Loading records">
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex animate-pulse items-center gap-4 px-6 py-4">
-          <div className="h-6 w-16 rounded bg-slate-200" />
-          <div className="h-4 w-40 rounded bg-slate-200" />
-          <div className="size-12 rounded-lg bg-slate-200" />
+          <div className="h-6 w-16 rounded-lg bg-slate-100" />
+          <div className="h-4 w-40 rounded bg-slate-100" />
+          <div className="size-12 rounded-xl bg-slate-100" />
           <div className="hidden h-4 w-32 rounded bg-slate-100 sm:block" />
         </div>
       ))}

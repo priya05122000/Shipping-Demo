@@ -32,7 +32,7 @@ export function RecordViewModal<T extends BaseRecord>({ config, record, onClose,
           {viewLink && (
             <Link
               href={viewLink.href}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-slate-700 shadow-sm ring-1 ring-slate-300 ring-inset hover:bg-slate-50 sm:mr-auto"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-white px-4 text-sm font-medium text-slate-700 shadow-[0_0_0_1px_rgb(15_23_42/0.06),0_1px_2px_rgb(15_23_42/0.08)] transition-colors hover:bg-slate-50 hover:text-slate-900 sm:mr-auto"
             >
               <ExternalIcon className="size-4" /> {viewLink.label}
             </Link>
@@ -49,7 +49,7 @@ export function RecordViewModal<T extends BaseRecord>({ config, record, onClose,
         </>
       }
     >
-      <dl className="grid gap-4 rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200 sm:grid-cols-2">
+      <dl className="grid gap-4 rounded-2xl bg-slate-50/70 p-5 ring-1 ring-slate-200/70 sm:grid-cols-2">
         <div>
           <dt className="text-xs text-slate-500">ID</dt>
           <dd className="mt-1">

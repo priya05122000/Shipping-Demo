@@ -18,11 +18,13 @@ import type { BaseRecord } from "@/types/records";
 const PAGE_SIZE = 10;
 
 type ModalState =
-  | { type: "add" }
-  | { type: "view" | "edit" | "delete"; id: string }
-  | null;
+  { type: "add" } | { type: "view" | "edit" | "delete"; id: string } | null;
 
-export function ResourceTab<T extends BaseRecord>({ config }: { config: ResourceConfig<T> }) {
+export function ResourceTab<T extends BaseRecord>({
+  config,
+}: {
+  config: ResourceConfig<T>;
+}) {
   const toast = useToast();
   const { data: snapshot, error: loadError } = useCollection(config.store);
   const [query, setQuery] = useState("");
@@ -36,16 +38,24 @@ export function ResourceTab<T extends BaseRecord>({ config }: { config: Resource
     const list = [...(items ?? [])].reverse();
     const q = query.trim().toLowerCase();
     if (!q) return list;
-    return list.filter((r) => r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q));
+    return list.filter(
+      (r) => r.name.toLowerCase().includes(q) || r.id.toLowerCase().includes(q),
+    );
   }, [items, query]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   // Clamp instead of resetting state, e.g. after deleting the last record on the last page.
   const currentPage = Math.min(page, pageCount);
-  const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pageItems = filtered.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
 
   // Look records up by ID from the live list so modals reflect the latest data.
-  const active = modal && modal.type !== "add" ? items?.find((r) => r.id === modal.id) : undefined;
+  const active =
+    modal && modal.type !== "add"
+      ? items?.find((r) => r.id === modal.id)
+      : undefined;
   const close = () => setModal(null);
 
   function handleSaved(record: T, mode: "add" | "edit") {
@@ -69,7 +79,10 @@ export function ResourceTab<T extends BaseRecord>({ config }: { config: Resource
       toast.success(`${config.label} deleted`, `${target.id} · ${target.name}`);
       close();
     } catch (error) {
-      toast.error(`Couldn't delete ${config.singular}`, error instanceof Error ? error.message : undefined);
+      toast.error(
+        `Couldn't delete ${config.singular}`,
+        error instanceof Error ? error.message : undefined,
+      );
     } finally {
       setDeleting(false);
     }
@@ -83,23 +96,26 @@ export function ResourceTab<T extends BaseRecord>({ config }: { config: Resource
   );
 
   return (
-    <section aria-labelledby={`${config.id}-heading`} className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-      <div className="flex flex-col gap-4 border-b border-slate-200 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+    <section
+      aria-labelledby={`${config.id}-heading`}
+      className="overflow-hidden rounded-2xl bg-white shadow-[0_0_0_1px_rgb(15_23_42/0.08),0_2px_4px_rgb(15_23_42/0.06),0_8px_24px_rgb(15_23_42/0.10),0_20px_40px_-12px_rgb(15_23_42/0.20)]"
+    >
+      <div className="flex flex-col gap-4 border-b border-slate-100 px-4 py-5 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
+          <div className="flex size-10 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-violet-600 text-white shadow-md ring-1 shadow-indigo-500/25 ring-white/20 ring-inset">
             <Icon className="size-5" />
           </div>
-          <div>
-            <h2 id={`${config.id}-heading`} className="text-base font-semibold text-slate-900">
-              {config.label}s
-              {snapshot && (
-                <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 align-middle text-xs font-medium text-slate-600">
-                  {snapshot.items.length}
-                </span>
-              )}
-            </h2>
-            <p className="text-sm text-slate-500">{config.description}</p>
-          </div>
+          <h2
+            id={`${config.id}-heading`}
+            className="text-lg font-semibold tracking-tight text-slate-950"
+          >
+            {config.label}s
+            {snapshot && (
+              <span className="ml-2 rounded-full bg-slate-100 px-2 py-0.5 align-middle text-xs font-medium text-slate-500 tabular-nums ring-1 ring-slate-200/70 ring-inset">
+                {snapshot.items.length}
+              </span>
+            )}
+          </h2>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <SearchInput
@@ -121,7 +137,10 @@ export function ResourceTab<T extends BaseRecord>({ config }: { config: Resource
           title={`Couldn't load ${config.singular}s`}
           description={loadError}
           action={
-            <Button variant="secondary" onClick={() => void config.store.reload()}>
+            <Button
+              variant="secondary"
+              onClick={() => void config.store.reload()}
+            >
               Try again
             </Button>
           }
@@ -156,13 +175,29 @@ export function ResourceTab<T extends BaseRecord>({ config }: { config: Resource
             onEdit={(r) => setModal({ type: "edit", id: r.id })}
             onDelete={(r) => setModal({ type: "delete", id: r.id })}
           />
-          <Pagination page={currentPage} pageSize={PAGE_SIZE} total={filtered.length} onPageChange={setPage} />
+          <Pagination
+            page={currentPage}
+            pageSize={PAGE_SIZE}
+            total={filtered.length}
+            onPageChange={setPage}
+          />
         </>
       )}
 
-      {modal?.type === "add" && <RecordFormModal config={config} onClose={close} onSaved={handleSaved} />}
+      {modal?.type === "add" && (
+        <RecordFormModal
+          config={config}
+          onClose={close}
+          onSaved={handleSaved}
+        />
+      )}
       {modal?.type === "edit" && active && (
-        <RecordFormModal config={config} record={active} onClose={close} onSaved={handleSaved} />
+        <RecordFormModal
+          config={config}
+          record={active}
+          onClose={close}
+          onSaved={handleSaved}
+        />
       )}
       {modal?.type === "view" && active && (
         <RecordViewModal

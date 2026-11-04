@@ -4,7 +4,11 @@ import type { StoredFile } from "@/types/records";
 
 /** Shown in place of an optional file that hasn't been added. */
 export function MissingFileCell() {
-  return <span className="text-sm text-slate-400">Not added</span>;
+  return (
+    <span className="inline-flex items-center rounded-full border border-dashed border-slate-300 px-2.5 py-0.5 text-xs font-medium text-slate-400">
+      Not added
+    </span>
+  );
 }
 
 /** Clickable thumbnail (opens the View modal). */
@@ -14,7 +18,7 @@ export function ThumbnailCell({ file, onClick }: { file: StoredFile | undefined;
     <button
       type="button"
       onClick={onClick}
-      className="rounded-lg transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+      className="rounded-xl transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
       aria-label={`Preview ${file.name}`}
     >
       <FileThumbnail src={file.url} name={file.name} extension={file.extension} />
@@ -26,7 +30,7 @@ export function FileNameCell({ file }: { file: StoredFile | undefined }) {
   if (!file) return <MissingFileCell />;
   return (
     <div className="min-w-0">
-      <p className="max-w-56 truncate text-sm text-slate-700" title={file.name}>
+      <p className="max-w-56 truncate text-sm font-medium text-slate-700" title={file.name}>
         {file.name}
       </p>
       <p className="text-xs text-slate-400">

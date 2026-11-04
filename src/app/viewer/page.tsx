@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function ViewerPage() {
   // ViewerHost reads ?section= via useSearchParams, which needs a Suspense boundary when prerendered.
   return (
-    <DashboardFrame current="viewer" title="Viewer" description="Interactive line diagrams.">
+    <DashboardFrame current="viewer">
       <Suspense fallback={<div className="h-[calc(70vh+3.75rem)] min-h-135 animate-pulse rounded-xl bg-slate-200/60" />}>
         <ViewerHost />
       </Suspense>

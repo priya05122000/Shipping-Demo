@@ -101,7 +101,7 @@ function ModalPanel({
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center sm:items-center sm:p-6">
       <div
-        className="animate-fade-in absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+        className="animate-fade-in absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
         aria-hidden="true"
         onClick={() => !busy && onClose()}
       />
@@ -112,11 +112,11 @@ function ModalPanel({
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
-        className={`animate-modal-in relative flex max-h-[92dvh] w-full flex-col rounded-t-2xl bg-white shadow-xl outline-none sm:rounded-2xl ${SIZES[size]}`}
+        className={`animate-modal-in relative flex max-h-[92dvh] w-full flex-col rounded-t-3xl bg-white shadow-2xl ring-1 shadow-slate-950/20 ring-slate-950/5 outline-none sm:rounded-2xl ${SIZES[size]}`}
       >
-        <div className="flex items-start gap-4 border-b border-slate-200 px-5 py-4 sm:px-6">
+        <div className="flex items-start gap-4 border-b border-slate-100 px-5 py-5 sm:px-6">
           <div className="min-w-0 flex-1">
-            <h2 id={titleId} className="text-base font-semibold text-slate-900">
+            <h2 id={titleId} className="text-lg font-semibold tracking-tight text-slate-950">
               {title}
             </h2>
             {description && (
@@ -129,7 +129,7 @@ function ModalPanel({
             type="button"
             onClick={onClose}
             disabled={busy}
-            className="-m-1.5 rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:opacity-40"
+            className="-m-1.5 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:opacity-40"
             aria-label="Close"
           >
             <XIcon className="size-5" />
@@ -137,7 +137,7 @@ function ModalPanel({
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-5 sm:px-6">{children}</div>
         {footer && (
-          <div className="flex flex-col-reverse gap-2 border-t border-slate-200 bg-slate-50 px-5 py-3 sm:flex-row sm:justify-end sm:rounded-b-2xl sm:px-6">
+          <div className="flex flex-col-reverse gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-4 sm:flex-row sm:justify-end sm:rounded-b-2xl sm:px-6">
             {footer}
           </div>
         )}

@@ -10,11 +10,7 @@ export const metadata: Metadata = {
 export default function EditorPage() {
   // EditorWorkspace reads ?file= via useSearchParams, which needs a Suspense boundary when prerendered.
   return (
-    <DashboardFrame
-      current="editor"
-      title="Editor"
-      description="Edit the viewer app's source code. Only files in the child folder are available."
-    >
+    <DashboardFrame current="editor">
       <Suspense fallback={<div className="h-[calc(70vh+3.5rem)] min-h-134 animate-pulse rounded-xl bg-slate-200/60" />}>
         <EditorWorkspace />
       </Suspense>

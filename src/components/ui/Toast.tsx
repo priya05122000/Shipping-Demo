@@ -58,15 +58,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           <div
             key={toast.id}
             role={toast.variant === "error" ? "alert" : "status"}
-            className="animate-toast-in pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-xl bg-white p-4 shadow-lg ring-1 ring-slate-900/10"
+            className="animate-toast-in pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-2xl bg-white/95 p-4 shadow-2xl ring-1 shadow-slate-950/15 ring-slate-900/10 backdrop-blur"
           >
             {toast.variant === "success" ? (
-              <CheckCircleIcon className="size-5 shrink-0 text-emerald-600" />
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-emerald-200/70">
+                <CheckCircleIcon className="size-4.5 text-emerald-600" />
+              </span>
             ) : (
-              <AlertIcon className="size-5 shrink-0 text-red-600" />
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-red-50 ring-1 ring-red-200/70">
+                <AlertIcon className="size-4.5 text-red-600" />
+              </span>
             )}
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-slate-900">{toast.title}</p>
+            <div className="min-w-0 flex-1 pt-1">
+              <p className="text-sm font-semibold text-slate-900">{toast.title}</p>
               {toast.message && <p className="mt-1 text-sm text-slate-500">{toast.message}</p>}
             </div>
             <button

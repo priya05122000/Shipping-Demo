@@ -37,13 +37,14 @@ export function Tabs<Id extends string>({ tabs, activeId, onChange }: TabsProps<
     refs.current[tabs[next].id]?.focus();
   }
 
+  // Scrolls sideways on phones; the padding keeps the shadow from being clipped.
   return (
-    <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+    <div className="-mx-4 -my-3 overflow-x-auto px-4 py-3 sm:mx-0 sm:my-0 sm:overflow-visible sm:px-0 sm:py-0">
       <div
         role="tablist"
         aria-label="Record types"
         onKeyDown={onKeyDown}
-        className="inline-flex min-w-full gap-1 rounded-xl bg-slate-200/60 p-1 sm:min-w-0"
+        className="inline-flex min-w-full gap-1 rounded-2xl bg-white p-1 shadow-[0_0_0_1px_rgb(15_23_42/0.08),0_2px_4px_rgb(15_23_42/0.06),0_8px_24px_rgb(15_23_42/0.10),0_20px_40px_-12px_rgb(15_23_42/0.20)] sm:min-w-0"
       >
         {tabs.map((tab) => {
           const selected = tab.id === activeId;
@@ -61,8 +62,8 @@ export function Tabs<Id extends string>({ tabs, activeId, onChange }: TabsProps<
               aria-controls={`panel-${tab.id}`}
               tabIndex={selected ? 0 : -1}
               onClick={() => onChange(tab.id)}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 sm:gap-2 sm:px-4 text-sm font-medium whitespace-nowrap transition-all focus-visible:outline-2 focus-visible:outline-indigo-600 sm:flex-none ${
-                selected ? "bg-white text-indigo-700 shadow-sm" : "text-slate-600 hover:bg-white/60 hover:text-slate-900"
+              className={`flex flex-1 items-center justify-center gap-1.5 rounded-xl px-2.5 py-2 text-sm font-medium whitespace-nowrap transition-all focus-visible:outline-2 focus-visible:outline-indigo-600 sm:flex-none sm:gap-2 sm:px-5 ${
+                selected ? "bg-slate-950 text-white shadow-sm" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
               }`}
             >
               <Icon className="hidden size-4 sm:block" />
@@ -70,7 +71,7 @@ export function Tabs<Id extends string>({ tabs, activeId, onChange }: TabsProps<
               {tab.count !== undefined && (
                 <span
                   className={`rounded-full px-1.5 py-0.5 text-xs leading-none tabular-nums ${
-                    selected ? "bg-indigo-100 text-indigo-700" : "bg-slate-300/60 text-slate-600"
+                    selected ? "bg-white/20 text-white" : "bg-slate-100 text-slate-500"
                   }`}
                 >
                   {tab.count}

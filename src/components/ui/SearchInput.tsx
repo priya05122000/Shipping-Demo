@@ -17,7 +17,7 @@ export function SearchInput({ value, onChange, placeholder = "Search…", label 
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         aria-label={label}
-        className="block h-10 w-full rounded-lg border border-slate-300 bg-white pr-9 pl-9 text-sm text-slate-900 shadow-xs placeholder:text-slate-400 focus:outline-2 focus:-outline-offset-1 focus:outline-indigo-600 [&::-webkit-search-cancel-button]:hidden"
+        className="block h-10 w-full rounded-xl border border-slate-200 bg-slate-50/60 pr-9 pl-9 text-sm text-slate-900 transition placeholder:text-slate-400 hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
       />
       {value && (
         <button

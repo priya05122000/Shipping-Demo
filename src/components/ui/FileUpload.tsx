@@ -172,12 +172,14 @@ export function FileUpload({
             type="button"
             onClick={openPicker}
             disabled={disabled}
-            className={`flex w-full flex-col items-center rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors hover:border-indigo-400 hover:bg-indigo-50/40 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-60 ${
-              message ? "border-red-300 bg-red-50/40" : "border-slate-300"
+            className={`group flex w-full flex-col items-center rounded-2xl border border-dashed px-4 py-7 text-center transition-all hover:border-indigo-400 hover:bg-linear-to-b hover:from-indigo-50/60 hover:to-violet-50/30 focus-visible:outline-2 focus-visible:outline-indigo-600 disabled:cursor-not-allowed disabled:opacity-60 ${
+              message ? "border-red-300 bg-red-50/40" : "border-slate-300 bg-slate-50/50"
             }`}
           >
-            <UploadIcon className="size-7 text-slate-400" />
-            <span className="mt-2 text-sm font-medium text-indigo-600">Click to upload</span>
+            <span className="flex size-11 items-center justify-center rounded-xl bg-white text-slate-500 shadow-[0_0_0_1px_rgb(15_23_42/0.06),0_1px_2px_rgb(15_23_42/0.08)] transition-colors group-hover:text-indigo-600">
+              <UploadIcon className="size-5" />
+            </span>
+            <span className="mt-3 text-sm font-semibold text-indigo-600">Click to upload</span>
             <span className="text-sm text-slate-500"> or drag and drop</span>
             <span className="mt-1 text-xs text-slate-400">{hint}</span>
           </button>
@@ -209,7 +211,7 @@ function FileCard({
   actions: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-3 rounded-2xl bg-white p-3 shadow-[0_0_0_1px_rgb(15_23_42/0.06),0_1px_2px_rgb(15_23_42/0.08)] sm:flex-row sm:items-center">
       <div className="flex min-w-0 flex-1 items-center gap-3">
         {thumbnail}
         <div className="min-w-0">
@@ -217,7 +219,7 @@ function FileCard({
             {name}
           </p>
           <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-            <span className="rounded bg-slate-100 px-1.5 py-0.5 font-medium text-slate-600 uppercase">{extension}</span>
+            <span className="rounded-md bg-slate-100 px-1.5 py-0.5 font-medium text-slate-600 uppercase">{extension}</span>
             <span>{formatBytes(size)}</span>
             <span className={`rounded-full px-2 py-0.5 font-medium ring-1 ring-inset ${badgeClass}`}>{badge}</span>
           </p>

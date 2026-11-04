@@ -47,7 +47,6 @@ export interface ResourceConfig<T extends BaseRecord> {
   label: string;
   /** Lower-case noun for messages, e.g. "section". */
   singular: string;
-  description: string;
   /** Placeholder for the Name field. */
   namePlaceholder: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;

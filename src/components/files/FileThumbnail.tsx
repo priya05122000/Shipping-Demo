@@ -9,9 +9,9 @@ const SIZES = {
 };
 
 const KIND_STYLES = {
-  model3d: { bg: "bg-violet-50 text-violet-600 ring-violet-200", Icon: CubeIcon },
-  pdf: { bg: "bg-red-50 text-red-600 ring-red-200", Icon: DocumentIcon },
-  image: { bg: "bg-slate-50 text-slate-500 ring-slate-200", Icon: DiagramIcon },
+  model3d: { bg: "bg-linear-to-br from-violet-50 to-indigo-100 text-violet-600 ring-violet-200/70", Icon: CubeIcon },
+  pdf: { bg: "bg-linear-to-br from-rose-50 to-red-100 text-red-600 ring-red-200/70", Icon: DocumentIcon },
+  image: { bg: "bg-linear-to-br from-slate-50 to-slate-100 text-slate-500 ring-slate-200/70", Icon: DiagramIcon },
 };
 
 interface FileThumbnailProps {
@@ -30,7 +30,7 @@ export function FileThumbnail({ src, name, extension, size = "sm" }: FileThumbna
   if (kind === "image" && src) {
     return (
       <div
-        className={`relative shrink-0 overflow-hidden rounded-lg bg-[repeating-conic-gradient(#f1f5f9_0%_25%,#fff_0%_50%)] bg-size-[16px_16px] ring-1 ring-slate-200 ${s.box}`}
+        className={`relative shrink-0 overflow-hidden rounded-xl bg-[repeating-conic-gradient(#f1f5f9_0%_25%,#fff_0%_50%)] bg-size-[16px_16px] shadow-xs ring-1 ring-slate-200/70 ${s.box}`}
       >
         <Image src={src} alt={name} fill sizes={s.sizes} unoptimized className="object-contain" />
       </div>
@@ -40,7 +40,7 @@ export function FileThumbnail({ src, name, extension, size = "sm" }: FileThumbna
   const { bg, Icon } = KIND_STYLES[kind];
   return (
     <div
-      className={`flex shrink-0 flex-col items-center justify-center gap-0.5 rounded-lg ring-1 ring-inset ${bg} ${s.box}`}
+      className={`flex shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl shadow-xs ring-1 ring-inset ${bg} ${s.box}`}
       role="img"
       aria-label={`${extension.toUpperCase()} file`}
     >

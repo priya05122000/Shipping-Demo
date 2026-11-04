@@ -85,7 +85,7 @@ export function ViewerHost() {
   }
 
   return (
-    <section aria-label="Viewer" className="overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
+    <section aria-label="Viewer" className="overflow-hidden rounded-2xl bg-white shadow-[0_0_0_1px_rgb(15_23_42/0.08),0_2px_4px_rgb(15_23_42/0.06),0_8px_24px_rgb(15_23_42/0.10),0_20px_40px_-12px_rgb(15_23_42/0.20)]">
       <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:gap-6 sm:px-6">
         <label className="flex items-center gap-2 text-sm font-medium text-slate-700">
           Drawing

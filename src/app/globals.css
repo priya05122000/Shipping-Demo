@@ -41,5 +41,9 @@
 /* The dashboard is light-only; keep the canvas light even when the OS prefers dark mode. */
 html {
   color-scheme: light;
-  background-color: var(--color-slate-50);
+  background-color: #f6f7fb;
+}
+
+::selection {
+  background-color: rgb(99 102 241 / 0.2);
 }

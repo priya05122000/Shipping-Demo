@@ -22,12 +22,12 @@ export function Pagination({ page, pageSize, total, onPageChange }: PaginationPr
   const end = Math.min(page * pageSize, total);
 
   const button =
-    "inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-sm font-medium ring-1 ring-inset ring-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40";
+    "inline-flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-sm font-medium tabular-nums ring-1 ring-inset ring-slate-200 transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40";
 
   return (
     <nav
       aria-label="Pagination"
-      className="flex flex-col items-center justify-between gap-3 border-t border-slate-200 px-4 py-3 sm:flex-row sm:px-6"
+      className="flex flex-col items-center justify-between gap-3 border-t border-slate-100 px-4 py-3.5 sm:flex-row sm:px-6"
     >
       <p className="text-sm text-slate-500">
         Showing <span className="font-medium text-slate-700">{start}</span>–
@@ -56,7 +56,7 @@ export function Pagination({ page, pageSize, total, onPageChange }: PaginationPr
             onClick={() => onPageChange(n)}
             aria-current={n === page ? "page" : undefined}
             className={`${button} ${
-              n === page ? "bg-indigo-600 text-white ring-indigo-600 hover:bg-indigo-500" : "text-slate-700"
+              n === page ? "bg-slate-950 text-white ring-slate-950 hover:bg-slate-800" : "text-slate-700"
             }`}
           >
             {n}

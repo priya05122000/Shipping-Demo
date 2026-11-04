@@ -146,10 +146,3 @@ export const FileIcon = (p: IconProps) => (
     <path d="M14 3v5h5" />
   </Icon>
 );
-
-export const DatabaseIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <ellipse cx="12" cy="5" rx="8" ry="3" />
-    <path d="M4 5v14c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
-  </Icon>
-);

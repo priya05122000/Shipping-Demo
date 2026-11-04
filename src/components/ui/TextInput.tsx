@@ -26,12 +26,12 @@ export function TextInput({ label, error, hint, required, locked, icon, classNam
           readOnly={locked || props.readOnly}
           aria-invalid={error ? true : undefined}
           aria-describedby={message ? messageId : undefined}
-          className={`block h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 shadow-xs placeholder:text-slate-400 focus:outline-2 focus:-outline-offset-1 ${
+          className={`block h-10 w-full rounded-xl border bg-white px-3.5 text-sm text-slate-900 shadow-xs transition placeholder:text-slate-400 focus:ring-4 focus:outline-none ${
             icon ? "pr-9" : ""
           } ${
             error
-              ? "border-red-400 focus:outline-red-500"
-              : "border-slate-300 focus:outline-indigo-600"
+              ? "border-red-400 focus:border-red-500 focus:ring-red-500/10"
+              : "border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/10"
           } ${locked ? "cursor-not-allowed bg-slate-50 font-mono text-slate-600" : ""}`}
           {...props}
         />

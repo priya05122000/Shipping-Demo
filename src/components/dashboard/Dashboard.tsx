@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { DashboardFrame } from "@/components/dashboard/DashboardFrame";
-import { StorageSummary } from "@/components/dashboard/StorageSummary";
 import { Tabs, type TabItem } from "@/components/dashboard/Tabs";
 import { objectConfig, sectionConfig } from "@/components/records/configs";
 import { ResourceTab } from "@/components/records/ResourceTab";
@@ -24,7 +23,6 @@ export function Dashboard() {
 
   const sections = useCollection(sectionConfig.store).data;
   const objects = useCollection(objectConfig.store).data;
-  const totalBytes = sections && objects ? sections.totalBytes + objects.totalBytes : null;
 
   const tabs: TabItem<TabId>[] = [
     { id: "sections", label: sectionConfig.label, icon: sectionConfig.icon, count: sections?.items.length },
@@ -40,7 +38,7 @@ export function Dashboard() {
 
   return (
     <ToastProvider>
-      <DashboardFrame meter={<StorageSummary totalBytes={totalBytes} />}>
+      <DashboardFrame>
         <Tabs tabs={tabs} activeId={activeTab} onChange={selectTab} />
         {/* Panels stay mounted so each tab keeps its search and page while hidden. */}
         <div className="mt-6">
