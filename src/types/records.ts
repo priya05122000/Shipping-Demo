@@ -31,10 +31,22 @@ export interface BaseRecord {
   updatedAt: string;
 }
 
+/** What was read from a section's manual into its manual-data.json when the manual was uploaded. */
+export interface ManualData {
+  /** Components found in the manual's tables; 0 if none could be read. */
+  components: number;
+  /** ISO timestamp. */
+  extractedAt: string;
+  /** Why nothing was read, e.g. the PDF has no component tables. Set only when there's no manual-data.json. */
+  error?: string;
+}
+
 /** A drawing: at most one line diagram and one manual, plus the shared objects it uses. Saved in child/src/sections/<folder>/. */
 export interface Section extends BaseRecord {
   lineDiagram?: StoredFile;
   manual?: StoredFile;
+  /** Set when a manual is uploaded, and cleared when it's removed. */
+  manualData?: ManualData;
   /** IDs of objects, e.g. ["OBJ-001"], in the order they were picked. */
   objectIds: string[];
 }

@@ -1,0 +1,2108 @@
+[
+  {
+    "id": "FA546",
+    "component_name": "FA546 - STOP VALVE (GLOBE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA546"
+    },
+    "specifications": {
+      "valve_type": "STOP VALVE (GLOBE)",
+      "nominal_diameter": 50,
+      "material": "Body: cast steel; disc/stem: stainless steel; packing: graphite",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 8,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Stop Valve (Globe) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA546_F001",
+      "failure_condition": "Disc-seat leakage / stem packing leakage",
+      "symptoms": "Seat leakage, gland leakage, stiff handwheel, vibration/noise, unexpected pressure drop.",
+      "possible_causes": "Disc/seat wear, packing damage, deposits, bent stem, incorrect operation.",
+      "diagnostic_steps": "Check valve position, inspect bonnet and gland, verify smooth travel, compare upstream/downstream readings.",
+      "immediate_action": "Notify engineer, do not tighten or dismantle under pressure, follow approved isolation procedure.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect packing and seating surfaces, operate smoothly, maintain per maker recommendations.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA546_IN, PIPE_FA546_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA582",
+    "component_name": "FA582 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA582"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 65,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 18,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA582_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop.",
+      "diagnostic_steps": "Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA582_IN, PIPE_FA582_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA572",
+    "component_name": "FA572 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA572"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 80,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 24,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA572_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop.",
+      "diagnostic_steps": "Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA572_IN, PIPE_FA572_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA512",
+    "component_name": "FA512 - BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA512"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+      "nominal_diameter": 100,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Lug type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 39,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Lug, Gearbox Type) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA512_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA512_IN, PIPE_FA512_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA542",
+    "component_name": "FA542 - GATE VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA542"
+    },
+    "specifications": {
+      "valve_type": "GATE VALVE",
+      "nominal_diameter": 100,
+      "material": "Body: cast steel; gate: stainless steel; seat: metal",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 52,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Gate Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA542_F001",
+      "failure_condition": "Wedge stuck / seat passing",
+      "symptoms": "Valve passing when closed, handwheel hard to turn, stem leakage, high pressure drop when open.",
+      "possible_causes": "Wedge or seat wear, deposits, stem/nut wear, packing deterioration, corrosion.",
+      "diagnostic_steps": "Verify fully open/closed indication, inspect stem and gland, check travel without excessive force, compare line readings.",
+      "immediate_action": "Do not force handwheel or use as a throttling valve, inform engineer and isolate/depressurize before repair.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Maintain stem and packing, avoid prolonged throttling, inspect and exercise periodically when permitted.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA542_IN, PIPE_FA542_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA541",
+    "component_name": "FA541 - GATE VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA541"
+    },
+    "specifications": {
+      "valve_type": "GATE VALVE",
+      "nominal_diameter": 125,
+      "material": "Body: cast steel; gate: stainless steel; seat: metal",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 20,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Gate Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA541_F001",
+      "failure_condition": "Wedge stuck / seat passing",
+      "symptoms": "Valve passing when closed, handwheel hard to turn, stem leakage, high pressure drop when open.",
+      "possible_causes": "Wedge or seat wear, deposits, stem/nut wear, packing deterioration, corrosion.",
+      "diagnostic_steps": "Verify fully open/closed indication, inspect stem and gland, check travel without excessive force, compare line readings.",
+      "immediate_action": "Do not force handwheel or use as a throttling valve, inform engineer and isolate/depressurize before repair.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Maintain stem and packing, avoid prolonged throttling, inspect and exercise periodically when permitted.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA541_IN, PIPE_FA541_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA511",
+    "component_name": "FA511 - BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA511"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+      "nominal_diameter": 150,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Lug type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 18,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Lug, Gearbox Type) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA511_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA511_IN, PIPE_FA511_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA581",
+    "component_name": "FA581 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA581"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 50,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 24,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA581_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop.",
+      "diagnostic_steps": "Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA581_IN, PIPE_FA581_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA571",
+    "component_name": "FA571 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA571"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 65,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 30,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA571_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop.",
+      "diagnostic_steps": "Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA571_IN, PIPE_FA571_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA545",
+    "component_name": "FA545 - STOP VALVE (GLOBE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA545"
+    },
+    "specifications": {
+      "valve_type": "STOP VALVE (GLOBE)",
+      "nominal_diameter": 80,
+      "material": "Body: cast steel; disc/stem: stainless steel; packing: graphite",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 28,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Stop Valve (Globe) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA545_F001",
+      "failure_condition": "Disc-seat leakage / stem packing leakage",
+      "symptoms": "Seat leakage, gland leakage, stiff handwheel, vibration/noise, unexpected pressure drop.",
+      "possible_causes": "Disc/seat wear, packing damage, deposits, bent stem, incorrect operation.",
+      "diagnostic_steps": "Check valve position, inspect bonnet and gland, verify smooth travel, compare upstream/downstream readings.",
+      "immediate_action": "Notify engineer, do not tighten or dismantle under pressure, follow approved isolation procedure.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect packing and seating surfaces, operate smoothly, maintain per maker recommendations.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA545_IN, PIPE_FA545_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA515",
+    "component_name": "FA515 - BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA515"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+      "nominal_diameter": 100,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Wafer type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 46,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Wafer, Gearbox Type) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA515_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA515_IN, PIPE_FA515_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA544",
+    "component_name": "FA544 - GATE VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA544"
+    },
+    "specifications": {
+      "valve_type": "GATE VALVE",
+      "nominal_diameter": 100,
+      "material": "Body: cast steel; gate: stainless steel; seat: metal",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 28,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Gate Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA544_F001",
+      "failure_condition": "Wedge stuck / seat passing",
+      "symptoms": "Valve passing when closed, handwheel hard to turn, stem leakage, high pressure drop when open.",
+      "possible_causes": "Wedge or seat wear, deposits, stem/nut wear, packing deterioration, corrosion.",
+      "diagnostic_steps": "Verify fully open/closed indication, inspect stem and gland, check travel without excessive force, compare line readings.",
+      "immediate_action": "Do not force handwheel or use as a throttling valve, inform engineer and isolate/depressurize before repair.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Maintain stem and packing, avoid prolonged throttling, inspect and exercise periodically when permitted.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA544_IN, PIPE_FA544_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA514",
+    "component_name": "FA514 - BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA514"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+      "nominal_diameter": 125,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Lug type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 18,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Lug, Gearbox Type) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA514_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA514_IN, PIPE_FA514_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA574",
+    "component_name": "FA574 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA574"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 150,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 30,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA574_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop.",
+      "diagnostic_steps": "Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA574_IN, PIPE_FA574_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA584",
+    "component_name": "FA584 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA584"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 50,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 36,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA584_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop.",
+      "diagnostic_steps": "Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA584_IN, PIPE_FA584_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA548",
+    "component_name": "FA548 - STOP VALVE (GLOBE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA548"
+    },
+    "specifications": {
+      "valve_type": "STOP VALVE (GLOBE)",
+      "nominal_diameter": 65,
+      "material": "Body: cast steel; disc/stem: stainless steel; packing: graphite",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 8,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Stop Valve (Globe) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA548_F001",
+      "failure_condition": "Disc-seat leakage / stem packing leakage",
+      "symptoms": "Seat leakage, gland leakage, stiff handwheel, vibration/noise, unexpected pressure drop.",
+      "possible_causes": "Disc/seat wear, packing damage, deposits, bent stem, incorrect operation.",
+      "diagnostic_steps": "Check valve position, inspect bonnet and gland, verify smooth travel, compare upstream/downstream readings.",
+      "immediate_action": "Notify engineer, do not tighten or dismantle under pressure, follow approved isolation procedure.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect packing and seating surfaces, operate smoothly, maintain per maker recommendations.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA548_IN, PIPE_FA548_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA543",
+    "component_name": "FA543 - GATE VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA543"
+    },
+    "specifications": {
+      "valve_type": "GATE VALVE",
+      "nominal_diameter": 80,
+      "material": "Body: cast steel; gate: stainless steel; seat: metal",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 28,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Gate Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA543_F001",
+      "failure_condition": "Wedge stuck / seat passing",
+      "symptoms": "Valve passing when closed, handwheel hard to turn, stem leakage, high pressure drop when open.",
+      "possible_causes": "Wedge or seat wear, deposits, stem/nut wear, packing deterioration, corrosion.",
+      "diagnostic_steps": "Verify fully open/closed indication, inspect stem and gland, check travel without excessive force, compare line readings.",
+      "immediate_action": "Do not force handwheel or use as a throttling valve, inform engineer and isolate/depressurize before repair.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Maintain stem and packing, avoid prolonged throttling, inspect and exercise periodically when permitted.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA543_IN, PIPE_FA543_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA513",
+    "component_name": "FA513 - BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA513"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+      "nominal_diameter": 100,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Lug type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 53,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Lug, Gearbox Type) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA513_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA513_IN, PIPE_FA513_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA583",
+    "component_name": "FA583 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA583"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 100,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 30,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA583_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop.",
+      "diagnostic_steps": "Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA583_IN, PIPE_FA583_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA573",
+    "component_name": "FA573 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA573"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 125,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 36,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA573_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop.",
+      "diagnostic_steps": "Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA573_IN, PIPE_FA573_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA547",
+    "component_name": "FA547 - STOP VALVE (GLOBE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA547"
+    },
+    "specifications": {
+      "valve_type": "STOP VALVE (GLOBE)",
+      "nominal_diameter": 150,
+      "material": "Body: cast steel; disc/stem: stainless steel; packing: graphite",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 8,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Stop Valve (Globe) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA547_F001",
+      "failure_condition": "Disc-seat leakage / stem packing leakage",
+      "symptoms": "Seat leakage, gland leakage, stiff handwheel, vibration/noise, unexpected pressure drop.",
+      "possible_causes": "Disc/seat wear, packing damage, deposits, bent stem, incorrect operation.",
+      "diagnostic_steps": "Check valve position, inspect bonnet and gland, verify smooth travel, compare upstream/downstream readings.",
+      "immediate_action": "Notify engineer, do not tighten or dismantle under pressure, follow approved isolation procedure.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect packing and seating surfaces, operate smoothly, maintain per maker recommendations.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA547_IN, PIPE_FA547_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FB544",
+    "component_name": "FB544 - STOP VALVE (GLOBE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FB544"
+    },
+    "specifications": {
+      "valve_type": "STOP VALVE (GLOBE)",
+      "nominal_diameter": 50,
+      "material": "Body: cast steel; disc/stem: stainless steel; packing: graphite",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 13,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Stop Valve (Globe) for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB544_F001",
+      "failure_condition": "Disc-seat leakage / stem packing leakage",
+      "symptoms": "Seat leakage, gland leakage, stiff handwheel, vibration/noise, unexpected pressure drop.",
+      "possible_causes": "Disc/seat wear, packing damage, deposits, bent stem, incorrect operation.",
+      "diagnostic_steps": "Check valve position, inspect bonnet and gland, verify smooth travel, compare upstream/downstream readings.",
+      "immediate_action": "Notify engineer, do not tighten or dismantle under pressure, follow approved isolation procedure.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect packing and seating surfaces, operate smoothly, maintain per maker recommendations.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB544_IN, PIPE_FB544_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FB582",
+    "component_name": "FB582 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FB582"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 65,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 24,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB582_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop.",
+      "diagnostic_steps": "Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB582_IN, PIPE_FB582_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FB572",
+    "component_name": "FB572 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FB572"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 80,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 30,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB572_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop.",
+      "diagnostic_steps": "Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB572_IN, PIPE_FB572_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FB512",
+    "component_name": "FB512 - BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FB512"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+      "nominal_diameter": 100,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Lug type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 18,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Lug, Gearbox Type) for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB512_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB512_IN, PIPE_FB512_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FB542",
+    "component_name": "FB542 - GATE VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FB542"
+    },
+    "specifications": {
+      "valve_type": "GATE VALVE",
+      "nominal_diameter": 100,
+      "material": "Body: cast steel; gate: stainless steel; seat: metal",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 20,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Gate Valve for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB542_F001",
+      "failure_condition": "Wedge stuck / seat passing",
+      "symptoms": "Valve passing when closed, handwheel hard to turn, stem leakage, high pressure drop when open.",
+      "possible_causes": "Wedge or seat wear, deposits, stem/nut wear, packing deterioration, corrosion.",
+      "diagnostic_steps": "Verify fully open/closed indication, inspect stem and gland, check travel without excessive force, compare line readings.",
+      "immediate_action": "Do not force handwheel or use as a throttling valve, inform engineer and isolate/depressurize before repair.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Maintain stem and packing, avoid prolonged throttling, inspect and exercise periodically when permitted.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB542_IN, PIPE_FB542_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FB541",
+    "component_name": "FB541 - GATE VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FB541"
+    },
+    "specifications": {
+      "valve_type": "GATE VALVE",
+      "nominal_diameter": 125,
+      "material": "Body: cast steel; gate: stainless steel; seat: metal",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 28,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Gate Valve for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB541_F001",
+      "failure_condition": "Wedge stuck / seat passing",
+      "symptoms": "Valve passing when closed, handwheel hard to turn, stem leakage, high pressure drop when open.",
+      "possible_causes": "Wedge or seat wear, deposits, stem/nut wear, packing deterioration, corrosion.",
+      "diagnostic_steps": "Verify fully open/closed indication, inspect stem and gland, check travel without excessive force, compare line readings.",
+      "immediate_action": "Do not force handwheel or use as a throttling valve, inform engineer and isolate/depressurize before repair.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Maintain stem and packing, avoid prolonged throttling, inspect and exercise periodically when permitted.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB541_IN, PIPE_FB541_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FB511",
+    "component_name": "FB511 - BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FB511"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+      "nominal_diameter": 150,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Lug type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 39,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Lug, Gearbox Type) for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB511_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB511_IN, PIPE_FB511_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FB571",
+    "component_name": "FB571 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FB571"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 50,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 30,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB571_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop.",
+      "diagnostic_steps": "Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB571_IN, PIPE_FB571_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FB581",
+    "component_name": "FB581 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FB581"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 65,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 36,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB581_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop.",
+      "diagnostic_steps": "Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB581_IN, PIPE_FB581_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FB543",
+    "component_name": "FB543 - STOP VALVE (GLOBE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FB543"
+    },
+    "specifications": {
+      "valve_type": "STOP VALVE (GLOBE)",
+      "nominal_diameter": 80,
+      "material": "Body: cast steel; disc/stem: stainless steel; packing: graphite",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 8,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Stop Valve (Globe) for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB543_F001",
+      "failure_condition": "Disc-seat leakage / stem packing leakage",
+      "symptoms": "Seat leakage, gland leakage, stiff handwheel, vibration/noise, unexpected pressure drop.",
+      "possible_causes": "Disc/seat wear, packing damage, deposits, bent stem, incorrect operation.",
+      "diagnostic_steps": "Check valve position, inspect bonnet and gland, verify smooth travel, compare upstream/downstream readings.",
+      "immediate_action": "Notify engineer, do not tighten or dismantle under pressure, follow approved isolation procedure.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect packing and seating surfaces, operate smoothly, maintain per maker recommendations.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB543_IN, PIPE_FB543_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA516",
+    "component_name": "FA516 - BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA516"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+      "nominal_diameter": 100,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Wafer type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 25,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Wafer, Gearbox Type) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA516_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA516_IN, PIPE_FA516_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA521",
+    "component_name": "FA521 - BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA521"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+      "nominal_diameter": 100,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Wafer type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 32,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Wafer, Gearbox Type) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA521_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA521_IN, PIPE_FA521_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA520",
+    "component_name": "FA520 - BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA520"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+      "nominal_diameter": 125,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Wafer type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 39,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Wafer, Gearbox Type) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA520_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA520_IN, PIPE_FA520_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA518",
+    "component_name": "FA518 - BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA518"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+      "nominal_diameter": 150,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Wafer type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 46,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Wafer, Gearbox Type) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA518_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA518_IN, PIPE_FA518_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA519",
+    "component_name": "FA519 - BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA519"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+      "nominal_diameter": 50,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Wafer type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 53,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Wafer, Gearbox Type) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA519_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA519_IN, PIPE_FA519_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA5 17",
+    "component_name": "FA575 - SELF - CLOSING VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Marine Diesel Oil transfer branch (mock assignment; verify service)",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA575"
+    },
+    "specifications": {
+      "valve_type": "SELF-CLOSING VALVE",
+      "nominal_diameter": 65,
+      "material": "Body: bronze; stem: stainless steel; seat: PTFE",
+      "connection_type": "Flanged end",
+      "operation_type": "Spring-return self-closing mechanism",
+      "pressure_rating": 10,
+      "valve_opening": 100,
+      "flow_rate": 15,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Self-Closing Valve for Marine Diesel Oil transfer branch (mock assignment; verify service).",
+    "troubleshooting": {
+      "fault_code": "65A_F001",
+      "failure_condition": "Return spring failure / incomplete closure",
+      "symptoms": "Fails to close, slow return, seat leakage, mechanism sticks open.",
+      "possible_causes": "Weak/broken spring, fouled hinge or stem, damaged seat, corrosion, incorrect installation.",
+      "diagnostic_steps": "Verify tag and service, inspect return mechanism, test only by approved method, inspect for leakage and obstruction.",
+      "immediate_action": "Notify engineer, never wedge or bypass the self-closing action, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Keep mechanism clean, inspect spring and seat, follow maker instructions and planned maintenance.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_65A_IN, PIPE_65A_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FB112",
+    "component_name": "FB112 - BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FB112"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+      "nominal_diameter": 100,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Wafer type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 32,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Wafer, Gearbox Type) for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB112_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB112_IN, PIPE_FB112_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FB111",
+    "component_name": "F A002 - SAFETY / RELIEF VALVE (GLOBE / ANGLE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "F A002"
+    },
+    "specifications": {
+      "valve_type": "SAFETY / RELIEF VALVE (GLOBE / ANGLE)",
+      "nominal_diameter": 65,
+      "material": "Body: cast steel; spring: alloy steel; trim: stainless steel",
+      "connection_type": "Flanged inlet and discharge",
+      "operation_type": "Spring-loaded automatic",
+      "pressure_rating": 8,
+      "valve_opening": 100,
+      "flow_rate": 20,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Safety / Relief Valve (Globe / Angle) for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB104_F001",
+      "failure_condition": "Failure to lift / failure to reseat",
+      "symptoms": "Unwanted discharge, failure to lift at set pressure, failure to reseat, chatter or outlet leakage.",
+      "possible_causes": "Incorrect set pressure, contaminated seat, spring deterioration, blocked discharge path, damaged trim.",
+      "diagnostic_steps": "Treat discharge as a safety event, verify pressure indication and discharge route, compare against certified set-pressure record. Do not adjust in service.",
+      "immediate_action": "Alert responsible engineer immediately, keep clear of discharge, never gag, isolate or adjust except under authorized procedure.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Maintain certification and inspection records, keep discharge path clear, arrange authorized periodic testing.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": "null",
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB104_IN, PIPE_FB104_OUT",
+      "related_component_ids": ""
+    }
+  }
+]

@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  // PDF.js (which reads uploaded manuals) loads its worker from a file next to itself, so it's run from node_modules unbundled.
+  serverExternalPackages: ["pdfjs-dist"],
   turbopack: {
     rules: {
       "*.css": {

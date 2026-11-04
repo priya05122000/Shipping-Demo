@@ -66,6 +66,7 @@ child/src/sections/
     section.json                   its ID (SEC-001), name, dates, files, and the IDs of the objects it uses
     lineDiagram-9f2c1a7b.png       its line diagram (at most one)
     manual-a1c2e3f4.pdf            its manual (at most one)
+    manual-data.json               the component tables read from the manual, written on each manual upload
     diagram.ts, data.json          optional hotspots, written by hand
 child/src/shared/objects/
   next-id.json                     ID counter for objects
@@ -80,6 +81,15 @@ child/src/shared/objects/
 - **Section folders** are made from the name when the section is created: "Engine Room" becomes `engine-room`, and its ID is saved in `section.json`. Renaming a section changes only its name; the ID and folder stay. Two sections can't have names that make the same folder.
 - **Object folders** are named after the object's ID.
 - A section's line diagram and manual are optional, and either can be replaced or removed later. An object needs both of its files.
+- **Manual data:** each time a section's manual is uploaded, its component tables are read into `manual-data.json` in the section's folder, as a JSON array with one object per component. Each table has field names on the left (`id`, `pressure_rating`, `specs.material`…) and values on the right.
+  - An `id` row starts a component. A later table with the same ID, e.g. continued on the next page, adds to it.
+  - Dotted names become nested objects.
+  - A row with only a value continues the previous field's text.
+  - Numbers, `true`, `false` and `null` are converted, except in `id`, `fault_code`, `line_number` and `*_id(s)` fields.
+  - Other text, such as headings, is skipped.
+  - The count read, or why nothing could be read, is kept in `section.json` as `manualData` and shown under the manual in the Library.
+  - A PDF without such tables is still saved as the manual, just without `manual-data.json`.
+  - Removing the manual deletes the file. Replacing the manual writes the file again, which overwrites any hand edits.
 - An object can't be deleted while a section uses it. Remove it from those sections first.
 - Deleting a section deletes its whole folder, including any files you added there in the editor.
 - **Writes:** each collection's writes are queued, so two saves can't get the same ID. Each metadata file is replaced in one step and written after the files it lists, so the viewer never sees a half-saved record.
@@ -118,6 +128,7 @@ The limits are `MAX_FILE_SIZE` and `MAX_PDF_SIZE` in `src/lib/files.ts`.
 | `src/types/records.ts` | `Section`, `ObjectRecord`, `StoredFile` interfaces |
 | `src/lib/collection-defs.ts` | Per-collection folder, IDs, file fields and links, shared by the UI and the server |
 | `src/server/storage.ts` | Reads and writes section and object folders in the child app |
+| `src/server/manual-data.ts` | Reads a section manual's component tables (with PDF.js) for `manual-data.json` |
 | `src/app/api/` | Route handlers for the API above |
 | `src/lib/storage.ts` | Client-side store that calls the API and caches results |
 | `src/components/records/` | Shared CRUD UI: table, add/edit form (with the object picker), view modal, tab panel |

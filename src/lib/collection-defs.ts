@@ -57,6 +57,9 @@ export const COLLECTIONS = {
   },
 } as const satisfies Record<CollectionSlug, CollectionDef>;
 
+/** Written in a section's folder whenever its manual is uploaded: the component tables read from it (see src/server/manual-data.ts). */
+export const MANUAL_DATA_FILE = "manual-data.json";
+
 export function isCollectionSlug(value: string): value is CollectionSlug {
   return Object.hasOwn(COLLECTIONS, value);
 }

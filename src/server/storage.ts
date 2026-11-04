@@ -2,10 +2,11 @@ import crypto from "node:crypto";
 import type { Dirent } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { collectionDef, COLLECTIONS, type CollectionSlug } from "@/lib/collection-defs";
+import { collectionDef, COLLECTIONS, MANUAL_DATA_FILE, type CollectionSlug } from "@/lib/collection-defs";
 import { getExtension, validateFile } from "@/lib/files";
 import { formatId, parseSeq, SLUG_MAX, SLUG_PATTERN, slugify } from "@/lib/ids";
 import { CHILD_DIR, errorCode, writeAtomic } from "@/server/child-dir";
+import { buildManualData } from "@/server/manual-data";
 import type { BaseRecord, CollectionSnapshot, StoredFile } from "@/types/records";
 
 /**
@@ -14,6 +15,7 @@ import type { BaseRecord, CollectionSnapshot, StoredFile } from "@/types/records
  *   child/<dir>/<folder>/<file>       its uploaded files, e.g. lineDiagram-9f2c1a7b.png
  *   child/<dir>/next-id.json          ID counter, so IDs are never reused
  * A section's folder is named from its name and its ID ("SEC-001") is saved in section.json; an object's folder is its ID.
+ * A section's manual is also read into manual-data.json in its folder, each time one is uploaded.
  * Any other files in a record's folder (e.g. a diagram.ts written in the editor) are left alone, until the record is deleted.
  */
 const NAME_MAX = 100;
@@ -333,12 +335,43 @@ async function saveUploads(slug: CollectionSlug, folder: string, files: Map<stri
   return saved;
 }
 
+/** The section file field whose uploads are read into MANUAL_DATA_FILE. */
+const MANUAL_FIELD = "manual";
+
+/**
+ * A save's change to a section's manual data: read from a newly uploaded manual, or null when the manual is removed.
+ * Undefined when the manual isn't changing, and for other collections.
+ */
+async function readManualData(slug: CollectionSlug, files: Map<string, File>, removals: string[] = []) {
+  if (slug !== "sections") return undefined;
+  const manual = files.get(MANUAL_FIELD);
+  if (manual) return buildManualData(new Uint8Array(await manual.arrayBuffer()));
+  return removals.includes(MANUAL_FIELD) ? null : undefined;
+}
+
+/**
+ * Writes a section's MANUAL_DATA_FILE, or with null removes it (the manual is gone, or nothing could be read from it).
+ * Returns a function that puts the previous file back, for when the record then can't be saved.
+ */
+async function writeManualData(folder: string, json: string | null) {
+  const target = path.join(recordDir("sections", folder), MANUAL_DATA_FILE);
+  const previous = await fs.readFile(target).catch(() => null);
+  if (json === null) await fs.rm(target, { force: true });
+  else await writeAtomic(target, json);
+  return async () => {
+    if (previous) await writeAtomic(target, previous);
+    else await fs.rm(target, { force: true });
+  };
+}
+
 export async function createRecord(slug: CollectionSlug, form: FormData) {
   const def = collectionDef(slug);
   const name = parseName(form);
   const folderName = def.folderFromName ? folderNameFor(slug, name) : null;
   const files = parseFiles(slug, form, true);
   const links = await parseLinks(slug, form);
+  // Read before taking the lock, so a long manual doesn't hold up other saves.
+  const manualData = await readManualData(slug, files);
   return withLock(slug, async () => {
     const data = await readData(slug);
     const id = formatId(def.idPrefix, data.nextSeq);
@@ -358,8 +391,18 @@ export async function createRecord(slug: CollectionSlug, form: FormData) {
     }
     try {
       const saved = await saveUploads(slug, folder, files);
+      if (manualData?.json) await writeManualData(folder, manualData.json);
       const now = new Date().toISOString();
-      const record: StoredRecord = { id, folder, name, createdAt: now, updatedAt: now, ...saved, ...links };
+      const record: StoredRecord = {
+        id,
+        folder,
+        name,
+        createdAt: now,
+        updatedAt: now,
+        ...saved,
+        ...(manualData && { manualData: manualData.summary }),
+        ...links,
+      };
       await writeRecord(slug, record);
       const nextSeq = data.nextSeq + 1;
       await writeAtomic(path.join(rootDir(slug), COUNTER_FILE), `${JSON.stringify({ nextSeq })}\n`);
@@ -377,6 +420,8 @@ export async function updateRecord(slug: CollectionSlug, id: string, form: FormD
   const files = parseFiles(slug, form, false);
   const removals = parseRemovals(slug, form, files);
   const links = await parseLinks(slug, form);
+  // Read before taking the lock, so a long manual doesn't hold up other saves.
+  const manualData = await readManualData(slug, files, removals);
   return withLock(slug, async () => {
     const data = await readData(slug);
     const existing = data.items.find((item) => item.id === id);
@@ -386,10 +431,15 @@ export async function updateRecord(slug: CollectionSlug, id: string, form: FormD
     // Fields without a new upload keep their existing file.
     const record: StoredRecord = { ...existing, ...saved, ...links, id, folder, name, updatedAt: new Date().toISOString() };
     for (const key of removals) delete record[key];
+    if (manualData) record.manualData = manualData.summary;
+    else if (manualData === null) delete record.manualData;
+    let restoreManualData: (() => Promise<void>) | undefined;
     try {
+      if (manualData !== undefined) restoreManualData = await writeManualData(folder, manualData?.json ?? null);
       await writeRecord(slug, record);
     } catch (error) {
       await deleteUploads(slug, folder, Object.values(saved));
+      await restoreManualData?.();
       throw error;
     }
     // Only remove replaced files once the new record is safely written.
