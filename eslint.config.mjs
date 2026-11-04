@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The child app has its own toolchain (type-checked by `tsc -b` in its build); public/child is its build output.
+    "child/**",
+    "public/child/**",
   ]),
 ]);
 

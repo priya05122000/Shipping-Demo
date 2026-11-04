@@ -42,3 +42,7 @@ next-env.d.ts
 
 # uploaded files and records saved by the app
 /data
+
+# child (viewer) app: dependencies and build output served by Next
+/child/node_modules
+/public/child
