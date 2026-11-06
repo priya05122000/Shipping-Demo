@@ -12,6 +12,8 @@ Built with Next.js (App Router), TypeScript and Tailwind CSS. Each ship's sectio
 npm install     # installs the parent and the child toolchain (npm workspace in ./child), and copies Monaco to public/monaco
 npm run dev     # both apps: Next on http://localhost:3000, Vite (every ship's viewer) on :5173
 npm run build   # builds every ship into public/child/<ship>/, then the Next app
+npm run build:standalone                # builds every ship on its own, into child/ships/<ship>/dist/, to host separately
+npm run build:standalone -- mv-aurora   # only the named ships (folder names in child/ships)
 npm run lint
 ```
 
@@ -25,7 +27,7 @@ The repo holds two apps:
 - **Child** (`child/`): the ships' **viewers** for interactive line diagrams:
   - `child/template/`: the viewer project. Creating a ship copies it to `child/ships/<ship>/`.
   - `child/ships/<ship>/`: one **standalone project per ship** (its own `package.json`, `vite.config.ts`, `index.html` and `src/`), holding that ship's data. Each ship's code is its own copy: changing the template changes only ships created afterwards, and a ship's code can be changed on its own.
-  - `child/vite.config.ts`, `child/build-ships.mjs`: the shared toolchain. In development, one Vite server serves every ship. `npm run build` builds each ship with its own `vite.config.ts`.
+  - `child/vite.config.ts`, `child/build-ships.mjs`: the shared toolchain. In development, one Vite server serves every ship. `npm run build` and `npm run build:standalone` build each ship with its own `vite.config.ts`.
 
 | Page | What it shows |
 | --- | --- |
@@ -44,7 +46,11 @@ Both apps are served from the same origin, each ship's viewer at `/child/<ship>/
 
 Each viewer also runs on its own at the same URL, with its own header.
 
-**Moving a ship to production.** Copy its folder (`child/ships/<ship>/`, without `node_modules` and `dist`) anywhere, then run `npm install` and `npm run build`. The static site in `dist/` uses relative URLs, so it can be hosted at any path on any static file host. Each ship's own `README.md` says the same.
+**Hosting a ship on its own (production).** Run `npm run build:standalone` to build every ship, or `npm run build:standalone -- <ship>` (e.g. `-- mv-aurora`, or several names) for only some. Each ship becomes a static site in its own `child/ships/<ship>/dist/`. Upload that folder's contents to any static file host (Netlify, Vercel, S3/CloudFront, Nginx, GitHub Pages…), one site per ship. It needs no server or API: the ship's sections, objects, images and manuals are all bundled into it. It uses relative URLs, so it works at any path, and it has one page and no client-side routes, so no rewrite rules are needed. No `npm install` is needed per ship: the build uses the child toolchain in `child/node_modules`, and type-checks the ship first. `dist/` is in each ship's `.gitignore`. Rebuild after changing a ship in the Library or editor; a ship's site only shows what was in its folder when it was built.
+
+To build a ship outside this repo instead, copy its folder (`child/ships/<ship>/`, without `node_modules` and `dist`) anywhere, then run `npm install` and `npm run build` there. Each ship's own `README.md` says the same.
+
+When hosted on its own, a viewer shows its own header and drawing list. It doesn't work as a cross-origin embed: the message bridge only talks to a parent on the same origin, so Ship Docs embeds its viewers from its own `/child/<ship>/`.
 
 **Messages.** The apps talk only through `postMessage`. The contract is `src/app/protocol.ts` in each ship, a types-only file. The parent imports the template's copy as `@child/protocol`.
 
@@ -174,7 +180,7 @@ Code used by only one page lives next to that page in a `_components/` folder (f
 | `src/server/child-files.ts`, `src/server/child-dir.ts` | Reads and writes `child/` for the editors, refusing anything outside it or outside the editor's scope (shared files, or one ship); shared helpers |
 | `src/lib/child-files.ts`, `src/lib/child-files-api.ts` | Editor rules and types (shared), and the client for its API |
 | `src/lib/monaco.ts`, `scripts/copy-monaco.mjs` | Loads Monaco from `public/monaco`, which is copied there on install |
-| `child/vite.config.ts`, `child/build-ships.mjs` | Development server for every ship, and the build of every ship into `public/child/` |
+| `child/vite.config.ts`, `child/build-ships.mjs` | Development server for every ship, and the build of every ship (or the named ones) into `public/child/` for Next, or with `--standalone` into each ship's own `dist/` |
 | `child/template/` | The viewer project each new ship is copied from (its `ship.json` is a placeholder, so it can run on its own) |
 | `child/ships/<ship>/` | One ship's standalone viewer project, with its data |
 | `…/src/app/` | Viewer shell, message bridge and protocol; `src/ship.ts` reads the project's `ship.json` |

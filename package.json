@@ -10,6 +10,7 @@
     "dev:parent": "next dev",
     "dev:child": "npm run dev -w child",
     "build": "npm run build -w child && next build",
+    "build:standalone": "npm run build:standalone -w child --",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "node scripts/copy-monaco.mjs"

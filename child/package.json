@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -p tsconfig.json && node build-ships.mjs"
+    "build": "tsc -p tsconfig.json && node build-ships.mjs",
+    "build:standalone": "node build-ships.mjs --standalone"
   },
   "dependencies": {
     "react": "19.3.0",
