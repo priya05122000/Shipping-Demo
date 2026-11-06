@@ -30,13 +30,13 @@ export interface FrameProject {
 interface DashboardFrameProps {
   /** Which header link is highlighted. */
   current?: Page;
-  /** Shows the ship's breadcrumb and its Library / Viewer / Editor links. */
-  project?: FrameProject;
+  /** On a ship's pages: its <ProjectBar> (breadcrumb and Library / Viewer / Editor links), under the header. */
+  projectBar?: ReactNode;
   children: ReactNode;
 }
 
 /** Page chrome shared by the projects page, each ship's pages, the editor and their loading fallbacks. */
-export function DashboardFrame({ current = "projects", project, children }: DashboardFrameProps) {
+export function DashboardFrame({ current = "projects", projectBar, children }: DashboardFrameProps) {
   return (
     <div className="min-h-dvh">
       <header className="sticky top-0 z-30 border-b border-white/[0.06] bg-[#0b1020]">
@@ -50,7 +50,7 @@ export function DashboardFrame({ current = "projects", project, children }: Dash
               <Link
                 key={item.id}
                 href={item.href}
-                aria-current={item.id === current && !project ? "page" : undefined}
+                aria-current={item.id === current && !projectBar ? "page" : undefined}
                 className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-indigo-400 ${
                   item.id === current ? "bg-white text-slate-950 shadow-sm" : "text-slate-400 hover:bg-white/10 hover:text-white"
                 }`}
@@ -60,7 +60,7 @@ export function DashboardFrame({ current = "projects", project, children }: Dash
             ))}
           </nav>
         </div>
-        {project && <ProjectBar project={project} />}
+        {projectBar}
       </header>
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
         {children}
@@ -69,7 +69,8 @@ export function DashboardFrame({ current = "projects", project, children }: Dash
   );
 }
 
-function ProjectBar({ project }: { project: FrameProject }) {
+/** A ship's breadcrumb and its Library / Viewer / Editor links. `project={{}}` is its loading placeholder. */
+export function ProjectBar({ project }: { project: FrameProject }) {
   const { id } = project;
   return (
     <div className="border-t border-white/[0.06]">

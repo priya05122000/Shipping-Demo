@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ProjectWorkspace } from "../_components/ProjectWorkspace";
 import { ProjectEditor } from "./_components/ProjectEditor";
 
 export const metadata: Metadata = {
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 
 /** The editor for the ship's project folder. Framed by ../layout.tsx. */
 export default function ProjectEditorPage() {
-  return <ProjectEditor />;
+  return (
+    <ProjectWorkspace>
+      <ProjectEditor />
+    </ProjectWorkspace>
+  );
 }

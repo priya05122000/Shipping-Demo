@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ProjectWorkspace } from "../_components/ProjectWorkspace";
 import { ViewerHost } from "./_components/ViewerHost";
 
 export const metadata: Metadata = {
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 
 /** The ship's own viewer project, embedded. Framed by ../layout.tsx. */
 export default function ProjectViewerPage() {
-  return <ViewerHost />;
+  return (
+    <ProjectWorkspace>
+      <ViewerHost />
+    </ProjectWorkspace>
+  );
 }

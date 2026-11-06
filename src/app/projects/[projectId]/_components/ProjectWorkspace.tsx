@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useParams, useSelectedLayoutSegment } from "next/navigation";
-import { createContext, useContext, type ReactNode } from "react";
-import { DashboardFrame, type ProjectPage } from "@/components/layout/DashboardFrame";
+import { createContext, Suspense, useContext, type ReactNode } from "react";
+import { ProjectBar, type ProjectPage } from "@/components/layout/DashboardFrame";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AlertIcon, ArrowLeftIcon, ShipIcon } from "@/components/ui/icons";
@@ -27,61 +27,89 @@ export function useProject(): Project {
 const PAGES: Record<string, ProjectPage> = { viewer: "viewer", editor: "editor" };
 
 /** Placeholder for a ship's page, while the URL is read and while the ship loads. */
-export function PageSkeleton() {
+function PageSkeleton() {
   return <div className="h-[calc(70vh+3.5rem)] min-h-134 animate-pulse rounded-2xl bg-slate-200/60" />;
 }
 
-/**
- * Frame for the pages of the ship in the URL (/projects/[projectId]/…), rendered by their layout. The page is only
- * rendered once the ship is found, and can read it with useProject(). Reads the URL, so it must be inside a Suspense
- * boundary.
- */
-export function ProjectWorkspace({ children }: { children: ReactNode }) {
+/** The ship in the URL (/projects/[projectId]/…), from the ships list, which loads in the browser. */
+function useProjectFromUrl() {
   const { projectId } = useParams<{ projectId: string }>();
+  const { data, error } = useCollection(projectStore);
+  return { projectId, data, error, project: data?.items.find((item) => item.id === projectId) };
+}
+
+/**
+ * The ship's breadcrumb and page links, in the header of its pages' shared layout. Reads the URL, so its loading
+ * placeholder is a Suspense boundary around it (`<ProjectBar project={{}} />`).
+ */
+export function ProjectHeader() {
+  const { projectId, project } = useProjectFromUrl();
   const segment = useSelectedLayoutSegment();
   const current = (segment && PAGES[segment]) || "library";
-  const { data, error } = useCollection(projectStore);
-  const project = data?.items.find((item) => item.id === projectId);
+  return <ProjectBar project={{ id: projectId, name: project?.name, current }} />;
+}
 
+/**
+ * Wraps the content of each of a ship's pages (Library, Viewer, Editor): renders it once the ship in the URL is found,
+ * so it can read the ship with useProject(), and shows loading, error and not-found states until then.
+ *
+ * It's in each page rather than in their shared layout, so the layout always renders its page: Next's
+ * instant-navigation check (Cache Components) can only check pages that are rendered on the server, where the ships
+ * list hasn't loaded yet.
+ */
+export function ProjectWorkspace({ children }: { children: ReactNode }) {
+  // Reading the URL needs a Suspense boundary when prerendered. It's here, inside the page, so it also covers
+  // useSearchParams() in the pages, on page loads and on navigations between a ship's pages.
   return (
-    <DashboardFrame project={{ id: projectId, name: project?.name, current }}>
-      {project ? (
-        // Keyed, so moving to another ship starts its pages afresh (search, open dialogs, viewer).
-        <ProjectContext key={project.id} value={project}>
-          {children}
-        </ProjectContext>
-      ) : !data && error ? (
-        <div className={PANEL}>
-          <EmptyState
-            icon={<AlertIcon className="size-6 text-red-500" />}
-            title="Couldn't load this ship"
-            description={error}
-            action={
-              <Button variant="secondary" onClick={() => void projectStore.reload()}>
-                Try again
-              </Button>
-            }
-          />
-        </div>
-      ) : !data ? (
-        <PageSkeleton />
-      ) : (
-        <div className={PANEL}>
-          <EmptyState
-            icon={<ShipIcon className="size-6" />}
-            title={`${projectId} doesn't exist`}
-            description="It may have been deleted, or the link is wrong."
-            action={
-              <Link
-                href="/"
-                className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-medium text-slate-700 shadow-[0_0_0_1px_rgb(15_23_42/0.06),0_1px_2px_rgb(15_23_42/0.08)] hover:bg-slate-50 hover:text-slate-900"
-              >
-                <ArrowLeftIcon className="size-4" /> All projects
-              </Link>
-            }
-          />
-        </div>
-      )}
-    </DashboardFrame>
+    <Suspense fallback={<PageSkeleton />}>
+      <ProjectGate>{children}</ProjectGate>
+    </Suspense>
+  );
+}
+
+function ProjectGate({ children }: { children: ReactNode }) {
+  const { projectId, data, error, project } = useProjectFromUrl();
+
+  if (project) {
+    return (
+      // Keyed, so moving to another ship starts its pages afresh (search, open dialogs, viewer).
+      <ProjectContext key={project.id} value={project}>
+        {children}
+      </ProjectContext>
+    );
+  }
+  if (!data && error) {
+    return (
+      <div className={PANEL}>
+        <EmptyState
+          icon={<AlertIcon className="size-6 text-red-500" />}
+          title="Couldn't load this ship"
+          description={error}
+          action={
+            <Button variant="secondary" onClick={() => void projectStore.reload()}>
+              Try again
+            </Button>
+          }
+        />
+      </div>
+    );
+  }
+  if (!data) return <PageSkeleton />;
+  return (
+    <div className={PANEL}>
+      <EmptyState
+        icon={<ShipIcon className="size-6" />}
+        title={`${projectId} doesn't exist`}
+        description="It may have been deleted, or the link is wrong."
+        action={
+          <Link
+            href="/"
+            className="inline-flex h-10 items-center gap-2 rounded-xl bg-white px-4 text-sm font-medium text-slate-700 shadow-[0_0_0_1px_rgb(15_23_42/0.06),0_1px_2px_rgb(15_23_42/0.08)] hover:bg-slate-50 hover:text-slate-900"
+          >
+            <ArrowLeftIcon className="size-4" /> All projects
+          </Link>
+        }
+      />
+    </div>
   );
 }
