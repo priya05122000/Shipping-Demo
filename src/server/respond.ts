@@ -1,8 +1,9 @@
-import { isCollectionSlug, type CollectionSlug } from "@/lib/collection-defs";
+import { isProjectCollection, type ProjectCollectionSlug } from "@/lib/collection-defs";
 import { ApiError } from "@/server/storage";
 
-export function parseSlug(value: string): CollectionSlug {
-  if (!isCollectionSlug(value)) throw new ApiError(404, `Unknown collection "${value}".`);
+/** A collection inside a project, e.g. "sections". */
+export function parseProjectCollection(value: string): ProjectCollectionSlug {
+  if (!isProjectCollection(value)) throw new ApiError(404, `Unknown collection "${value}".`);
   return value;
 }
 

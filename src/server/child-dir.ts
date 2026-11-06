@@ -2,8 +2,14 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-/** The child (viewer) app's folder. The editor edits its source, and the Library saves sections and objects into it. */
+/**
+ * The child folder: the ship viewer template, and one standalone viewer project per ship (see child/vite.config.ts).
+ * The editor edits it, and the Library saves ships, sections and objects into it.
+ */
 export const CHILD_DIR = path.join(process.cwd(), "child");
+
+/** The viewer project each new ship's folder is copied from. */
+export const SHIP_TEMPLATE_DIR = path.join(CHILD_DIR, "template");
 
 export function errorCode(error: unknown) {
   return (error as NodeJS.ErrnoException).code;

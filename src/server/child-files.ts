@@ -1,17 +1,24 @@
 import crypto from "node:crypto";
-import type { Dirent } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { CHILD_FILE_MAX_BYTES, isHiddenName, type ChildEntry, type ChildFile } from "@/lib/child-files";
+import {
+  CHILD_FILE_MAX_BYTES,
+  isHiddenName,
+  type ChildEntry,
+  type ChildFile,
+  type ChildScope,
+} from "@/lib/child-files";
+import { COLLECTIONS, projectDir } from "@/lib/collection-defs";
 import { formatBytes } from "@/lib/files";
 import { CHILD_DIR, errorCode, writeAtomic } from "@/server/child-dir";
 import { ApiError } from "@/server/storage";
 
 /**
- * File access for the /editor page, confined to the child app's folder:
+ * File access for the editor pages, confined to the child app's folder:
  *   - paths are checked name by name, so "..", absolute paths and Windows tricks ("name.", "a:stream", "CON")
  *     can't name anything outside ./child
- *   - each path's real location (after symlinks, junctions and short names) must still be inside ./child
+ *   - each path's real location (after symlinks, junctions and short names) must still be inside ./child, and
+ *     inside the editor's scope: the shared files for /editor, or one ship's folder for its Editor page
  *   - node_modules and .git are never listed, read or written
  */
 const NAME_MAX = 255;
@@ -54,14 +61,59 @@ function isInside(root: string, target: string): boolean {
   return rel !== ".." && !rel.startsWith(`..${path.sep}`) && !path.isAbsolute(rel);
 }
 
-/** Turns URL path segments into an absolute path inside ./child, or throws. The path doesn't have to exist yet. */
-async function resolvePath(segments: string[]): Promise<{ target: string; relPath: string }> {
+/** The editor's scope, from `?project=<folder>` on a ship's Editor page. None means /editor (see ChildScope). */
+export function scopeOf(request: Request): ChildScope {
+  return new URL(request.url).searchParams.get("project");
+}
+
+interface Scope {
+  /** The folder the scope's paths are relative to: ./child for the shared files, ./child/ships for a ship. */
+  base: string;
+  /** The folder the scope's files are listed from: ./child, or the ship's project folder. */
+  dir: string;
+  /** `dir` relative to `base`, which every path in the scope starts with: "" or the ship's folder, e.g. "mv-aurora". */
+  prefix: string;
+  /** The real location of ./child. */
+  childReal: string;
+  /** Whether a real location inside ./child is in the scope. */
+  contains: (real: string) => boolean;
+}
+
+async function openScope(scope: ChildScope): Promise<Scope> {
+  const childReal = await fs.realpath(CHILD_DIR).catch((error) => {
+    if (errorCode(error) === "ENOENT") throw new ApiError(404, "The child app folder (./child) wasn't found.");
+    throw error;
+  });
+  if (scope === null) {
+    // Each ship's folder is edited from that ship's Editor page instead.
+    const ships = path.join(childReal, COLLECTIONS.projects.dir);
+    return { base: CHILD_DIR, dir: CHILD_DIR, prefix: "", childReal, contains: (real) => !isInside(ships, real) };
+  }
+  if (!isListed(scope)) throw new ApiError(400, `"${scope}" isn't a valid ship folder name.`);
+  const missing = () => new ApiError(404, `This ship's folder (child/${projectDir(scope)}) wasn't found.`);
+  // A ship's paths start with its folder, e.g. "mv-aurora/src/main.tsx", not "ships/mv-aurora/src/main.tsx".
+  const base = path.join(CHILD_DIR, COLLECTIONS.projects.dir);
+  const dir = path.join(base, scope);
+  const shipReal = await fs.realpath(dir).catch((error) => {
+    if (["ENOENT", "ENOTDIR"].includes(errorCode(error) ?? "")) throw missing();
+    throw error;
+  });
+  if (!isInside(childReal, shipReal) || !(await fs.stat(shipReal)).isDirectory()) throw missing();
+  return { base, dir, prefix: scope, childReal, contains: (real) => isInside(shipReal, real) };
+}
+
+/**
+ * Turns URL path segments (relative to the scope's base) into an absolute path inside ./child and the editor's scope,
+ * or throws. The path doesn't have to exist yet.
+ */
+async function resolvePath(scopeName: ChildScope, segments: string[]): Promise<{ target: string; relPath: string; scope: Scope }> {
   const relPath = segments.join("/");
   if (segments.length === 0) throw new ApiError(400, "A file path is required.");
   if (!segments.every(isValidName)) throw new ApiError(400, `"${relPath}" isn't a valid path in the child app.`);
   if (!segments.every(isListed)) throw notFound(relPath);
 
-  const target = path.join(CHILD_DIR, ...segments);
+  const scope = await openScope(scopeName);
+  const target = path.join(scope.base, ...segments);
   // Check where the deepest existing part of the path really is, so a link inside ./child can't lead out of it.
   let existing = target;
   let real: string | null = null;
@@ -73,10 +125,20 @@ async function resolvePath(segments: string[]): Promise<{ target: string; relPat
       existing = path.dirname(existing);
     }
   }
-  const root = await fs.realpath(CHILD_DIR);
+  const root = scope.childReal;
   const inside = isInside(root, real) && path.relative(root, real).split(path.sep).every((name) => !isHiddenName(name));
   if (!inside) throw notFound(relPath);
-  return { target, relPath };
+  // Where the path really leads: its deepest existing part's real location, then the rest as given. Only compared,
+  // never opened, so the build mustn't trace it (an unknown root would make it bundle the whole project).
+  if (!scope.contains(path.join(/*turbopackIgnore: true*/ real, path.relative(existing, target)))) {
+    throw new ApiError(
+      403,
+      scopeName === null
+        ? `${relPath} is in a ship's folder. Edit it from that ship's Editor page.`
+        : `${relPath} is outside this ship's folder (${scope.prefix}/).`,
+    );
+  }
+  return { target, relPath, scope };
 }
 
 function hashOf(bytes: Buffer): string {
@@ -106,16 +168,13 @@ function decodeText(bytes: Buffer, relPath: string): string {
   throw new ApiError(415, `${relPath} isn't a text file, so it can't be edited here.`);
 }
 
-async function listFolder(dir: string, prefix: string): Promise<ChildEntry[]> {
-  let entries: Dirent[];
-  try {
-    entries = await fs.readdir(dir, { withFileTypes: true });
-  } catch (error) {
-    if (errorCode(error) === "ENOENT" && !prefix) throw new ApiError(404, "The child app folder (./child) wasn't found.");
-    throw error;
-  }
+/** `skip` leaves out entries of this folder (not of its subfolders) by name. */
+async function listFolder(dir: string, prefix: string, skip?: (name: string) => boolean): Promise<ChildEntry[]> {
+  const entries = await fs.readdir(dir, { withFileTypes: true });
   // Symlinks are neither files nor folders here, so they're left out.
-  const visible = entries.filter((entry) => (entry.isFile() || entry.isDirectory()) && isListed(entry.name));
+  const visible = entries.filter(
+    (entry) => (entry.isFile() || entry.isDirectory()) && isListed(entry.name) && !skip?.(entry.name),
+  );
   const nodes = await Promise.all(
     visible.map(async (entry): Promise<ChildEntry | null> => {
       const entryPath = prefix ? `${prefix}/${entry.name}` : entry.name;
@@ -136,12 +195,16 @@ async function listFolder(dir: string, prefix: string): Promise<ChildEntry[]> {
     );
 }
 
-export function listChildFiles(): Promise<ChildEntry[]> {
-  return listFolder(CHILD_DIR, "");
+/** The scope's files as a tree, e.g. "template/src/main.tsx" in the shared files, or "mv-aurora/src/main.tsx" in a ship. */
+export async function listChildFiles(scopeName: ChildScope): Promise<ChildEntry[]> {
+  const scope = await openScope(scopeName);
+  // The shared files leave out the folder of ships, not just its contents.
+  const skip = scopeName === null ? (name: string) => name === COLLECTIONS.projects.dir : undefined;
+  return listFolder(scope.dir, scope.prefix, skip);
 }
 
-export async function readChildFile(segments: string[]): Promise<ChildFile> {
-  const { target, relPath } = await resolvePath(segments);
+export async function readChildFile(scopeName: ChildScope, segments: string[]): Promise<ChildFile> {
+  const { target, relPath } = await resolvePath(scopeName, segments);
   const stat = await fs.stat(target).catch(() => null);
   if (!stat) throw notFound(relPath);
   if (!stat.isFile()) throw new ApiError(400, `${relPath} is a folder.`);
@@ -151,8 +214,8 @@ export async function readChildFile(segments: string[]): Promise<ChildFile> {
 }
 
 /** Saves an existing file. `baseVersion` is the version it was opened at; if the file changed since, it's a 409. */
-export async function saveChildFile(segments: string[], content: unknown, baseVersion: unknown) {
-  const { target, relPath } = await resolvePath(segments);
+export async function saveChildFile(scopeName: ChildScope, segments: string[], content: unknown, baseVersion: unknown) {
+  const { target, relPath } = await resolvePath(scopeName, segments);
   const bytes = encodeText(content, relPath);
   const stat = await fs.stat(target).catch(() => null);
   if (!stat) throw new ApiError(404, `${relPath} no longer exists.`);
@@ -166,8 +229,8 @@ export async function saveChildFile(segments: string[], content: unknown, baseVe
 }
 
 /** Creates a new file, and any folders missing on the way to it. */
-export async function createChildFile(segments: string[], content: unknown): Promise<ChildFile> {
-  const { target, relPath } = await resolvePath(segments);
+export async function createChildFile(scopeName: ChildScope, segments: string[], content: unknown): Promise<ChildFile> {
+  const { target, relPath } = await resolvePath(scopeName, segments);
   const bytes = encodeText(content, relPath);
   try {
     await fs.mkdir(path.dirname(target), { recursive: true });
@@ -186,14 +249,17 @@ export async function createChildFile(segments: string[], content: unknown): Pro
   return { path: relPath, content: bytes.toString("utf8"), version: hashOf(bytes) };
 }
 
-/** Deletes a file, then any folders that left empty (git doesn't keep empty folders either). */
-export async function deleteChildFile(segments: string[]) {
-  const { target, relPath } = await resolvePath(segments);
+/**
+ * Deletes a file, then any folders that left empty (git doesn't keep empty folders either), up to the scope's
+ * folder: a ship's own folder is never removed from its Editor page.
+ */
+export async function deleteChildFile(scopeName: ChildScope, segments: string[]) {
+  const { target, relPath, scope } = await resolvePath(scopeName, segments);
   const stat = await fs.stat(target).catch(() => null);
   if (!stat) throw notFound(relPath);
   if (!stat.isFile()) throw new ApiError(400, `${relPath} is a folder. Only files can be deleted.`);
   await fs.rm(target);
-  for (let dir = path.dirname(target); dir.length > CHILD_DIR.length; dir = path.dirname(dir)) {
+  for (let dir = path.dirname(target); dir.length > scope.dir.length; dir = path.dirname(dir)) {
     try {
       await fs.rmdir(dir);
     } catch {

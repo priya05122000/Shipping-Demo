@@ -133,6 +133,22 @@ export const DocumentIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** A ship (project). */
+export const ShipIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M3 17.5c1.5 1 3 1.5 4.5 1.5s3-.5 4.5-1.5c1.5 1 3 1.5 4.5 1.5s3-.5 4.5-1.5" />
+    <path d="M4.5 15 3 11h18l-1.5 4" />
+    <path d="M6 11V7h12v4M12 3v4" />
+  </Icon>
+);
+
+/** Back to a list, e.g. from a ship to all projects. */
+export const ArrowLeftIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M19 12H5M11 6l-6 6 6 6" />
+  </Icon>
+);
+
 export const FolderIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" />

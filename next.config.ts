@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-/** Vite dev server for the viewer app in ./child (see child/vite.config.ts). */
+/** Vite dev server for the ships' viewers in ./child/ships (see child/vite.config.ts). */
 const CHILD_DEV_URL = process.env.CHILD_DEV_URL ?? "http://localhost:5173";
 
 const nextConfig: NextConfig = {
@@ -17,8 +17,8 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  // The child is served under /child. In production it's static files in public/child (built by
-  // `npm run build -w child`). In development it's proxied to Vite; beforeFiles so a stale build can't shadow it.
+  // Each ship's viewer is served under /child/<ship>/. In production they're static files in public/child (built by
+  // `npm run build -w child`). In development they're proxied to Vite; beforeFiles so a stale build can't shadow them.
   async rewrites() {
     if (process.env.NODE_ENV !== "development") return [];
     return {
@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
     // Vite puts a content hash in every built asset name, so they never change.
     return [
       {
-        source: "/child/assets/:path*",
+        source: "/child/:ship/assets/:path*",
         headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
       },
     ];

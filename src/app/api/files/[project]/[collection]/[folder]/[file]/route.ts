@@ -1,0 +1,25 @@
+import { respond } from "@/server/respond";
+import { readUpload } from "@/server/storage";
+
+type Context = { params: Promise<{ project: string; collection: string; folder: string; file: string }> };
+
+/**
+ * Serve a file from a record's folder, e.g. /api/files/mv-aurora/sections/engine-room/manual-a1c2e3f4.pdf.
+ * Stored names are unique per upload, so responses can be cached forever.
+ */
+export async function GET(_request: Request, { params }: Context) {
+  return respond(async () => {
+    const { project, collection, folder, file } = await params;
+    const { bytes, contentType } = await readUpload(project, collection, folder, file);
+    const headers = new Headers({
+      "Content-Type": contentType,
+      "Cache-Control": "private, max-age=31536000, immutable",
+      "X-Content-Type-Options": "nosniff",
+    });
+    if (contentType === "image/svg+xml") {
+      // Uploaded SVGs could contain scripts; never let them run if the file is opened directly.
+      headers.set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; sandbox");
+    }
+    return new Response(new Uint8Array(bytes), { headers });
+  });
+}

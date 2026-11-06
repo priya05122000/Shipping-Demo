@@ -10,17 +10,17 @@ export interface StoredFile {
   extension: string;
   /** File name on disk, inside the record's folder, e.g. "lineDiagram-9f2c1a7b.png". Unique per upload. */
   storedName: string;
-  /** URL the parent serves the file from, e.g. "/api/files/sections/engine-room/lineDiagram-9f2c1a7b.png" (by folder). */
+  /** URL the parent serves the file from, by folder, e.g. "/api/files/mv-aurora/sections/engine-room/lineDiagram-9f2c1a7b.png". */
   url: string;
   /** ISO timestamp. */
   uploadedAt: string;
 }
 
 export interface BaseRecord {
-  /** Read-only and unique, assigned on create and never reused, e.g. "SEC-001" or "OBJ-001". */
+  /** Read-only, assigned on create and never reused, e.g. "SHP-001", or "SEC-001" (unique within its ship). */
   id: string;
   /**
-   * The record's folder in the child app: a section's is made from its name when it's created (e.g. "engine-room")
+   * The record's folder in the child app: a ship's or section's is made from its name when it's created (e.g. "engine-room")
    * and never changes; an object's is its ID. Derived from where the record is, so it isn't saved in the metadata file.
    */
   folder: string;
@@ -41,17 +41,29 @@ export interface ManualData {
   error?: string;
 }
 
-/** A drawing: at most one line diagram and one manual, plus the shared objects it uses. Saved in child/src/sections/<folder>/. */
+/** A project: one ship, a standalone viewer project holding its own sections and objects. Saved in child/ships/<folder>/ship.json. */
+export interface Project extends BaseRecord {
+  /** Seven digits, e.g. "9074729". */
+  imoNumber?: string;
+  /** E.g. "Bulk carrier". */
+  vesselType?: string;
+  description?: string;
+  /** Counted from the ship's folder each time projects are listed; not saved. */
+  sectionCount: number;
+  objectCount: number;
+}
+
+/** A drawing: at most one line diagram and one manual, plus the ship's objects it uses. Saved in child/ships/<ship>/src/sections/<folder>/. */
 export interface Section extends BaseRecord {
   lineDiagram?: StoredFile;
   manual?: StoredFile;
   /** Set when a manual is uploaded, and cleared when it's removed. */
   manualData?: ManualData;
-  /** IDs of objects, e.g. ["OBJ-001"], in the order they were picked. */
+  /** IDs of the ship's objects, e.g. ["OBJ-001"], in the order they were picked. */
   objectIds: string[];
 }
 
-/** A 3D model with its line diagram, shared by every section. Saved in child/src/shared/objects/<id>/. */
+/** A 3D model with its line diagram, shared by every section of its ship. Saved in child/ships/<ship>/src/objects/<id>/. */
 export interface ObjectRecord extends BaseRecord {
   model: StoredFile;
   lineDiagram: StoredFile;
