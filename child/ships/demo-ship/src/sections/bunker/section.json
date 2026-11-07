@@ -2,18 +2,18 @@
   "id": "SEC-001",
   "name": "Bunker",
   "createdAt": "2026-11-04T08:12:53.827Z",
-  "updatedAt": "2026-11-04T12:37:56.159Z",
+  "updatedAt": "2026-11-07T05:03:26.439Z",
   "objectIds": [],
   "manual": {
-    "name": "Valve_Data (1).pdf",
-    "size": 2367531,
+    "name": "Valve_and_Diesel_Tank_Data.pdf",
+    "size": 1227058,
     "type": "application/pdf",
     "extension": "pdf",
-    "storedName": "manual-591bfca8.pdf",
-    "uploadedAt": "2026-11-04T12:37:56.159Z"
+    "storedName": "manual-5d85e658.pdf",
+    "uploadedAt": "2026-11-07T05:03:26.439Z"
   },
   "manualData": {
-    "components": 39,
-    "extractedAt": "2026-11-04T12:37:55.123Z"
+    "components": 47,
+    "extractedAt": "2026-11-07T05:03:23.229Z"
   }
 }

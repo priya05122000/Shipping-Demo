@@ -4,32 +4,45 @@ import type { SelectedItem } from "@/app/protocol";
 import { findSection, sections } from "@/sections";
 import { ship } from "@/ship";
 import logo from "@/shared/assets/logo.svg";
-import { ItemDetails, SectionNav } from "@/shared/components";
-import type { DiagramItem, Section } from "@/shared/diagram";
+import { GeneratedView, ItemDetails, SectionNav } from "@/shared/components";
+import type { Section } from "@/shared/diagram";
 import { ManualView } from "@/shared/manual";
 import { initialViewerState, viewerReducer, type ViewMode } from "@/shared/operations";
-import { SegmentedControl } from "@/shared/ui";
+import { CubeIcon, DiagramIcon, SegmentedControl } from "@/shared/ui";
 import { View2D } from "@/shared/view2d";
 import { View3D } from "@/shared/view3d";
 
-const VIEW_OPTIONS = [
+const ALL_VIEWS = [
   { value: "2d", label: "2D" },
   { value: "3d", label: "3D" },
+  { value: "drawing", label: "Drawing" },
   { value: "manual", label: "Manual" },
 ] as const satisfies readonly { value: ViewMode; label: string }[];
 
-/** What the section holds, e.g. "Line diagram · Manual · 3 objects". */
+/** The section's views. "Drawing" (the uploaded line diagram) is its own view only when 2D shows generated code instead. */
+function viewOptions(section: Section) {
+  return ALL_VIEWS.filter((option) => option.value !== "drawing" || (section.view2d && section.image));
+}
+
+/** What the section holds, e.g. "Line diagram · Manual · 3 objects · 2D + 3D code v2". */
 function summarize(section: Section): string {
   const count = section.objects.length;
+  const code = [section.view2d && "2D", section.view3d && "3D"].filter(Boolean).join(" + ");
   return [
     section.image ? "Line diagram" : "No line diagram",
     section.manual ? "Manual" : "No manual",
     count === 0 ? "No objects" : `${count} object${count === 1 ? "" : "s"}`,
-  ].join(" · ");
+    code && `${code} code${section.codeVersion ? ` v${section.codeVersion}` : ""}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
-function toSelectedItem(item: DiagramItem | null | undefined, sectionId: string): SelectedItem | null {
-  return item ? { id: item.id, label: item.label, sectionId } : null;
+/** A selection for the parent: a hotspot from diagram.ts, or a tag from the generated views. */
+function toSelectedItem(section: Section, itemId: string | null): SelectedItem | null {
+  if (!itemId) return null;
+  const item = section.diagram?.items.find((i) => i.id === itemId);
+  return { id: itemId, label: item?.label ?? itemId, sectionId: section.id };
 }
 
 export function App() {
@@ -48,8 +61,7 @@ export function App() {
   function selectItem(itemId: string | null) {
     if (!section) return;
     dispatch({ type: "select-item", itemId });
-    const item = section.diagram?.items.find((i) => i.id === itemId);
-    postToParent({ type: "item-selected", item: toSelectedItem(item, section.id) });
+    postToParent({ type: "item-selected", item: toSelectedItem(section, itemId) });
   }
 
   useParentCommands((command) => openSection(command.sectionId));
@@ -60,7 +72,7 @@ export function App() {
       shipId: ship.id,
       sections: sections.map(({ id, title }) => ({ id, title })),
       sectionId: section?.id ?? null,
-      item: section ? toSelectedItem(selectedItem, section.id) : null,
+      item: section ? toSelectedItem(section, state.selectedItemId) : null,
     });
   });
   // `sections` is a new array only when a dev hot update re-runs src/sections, so this normally runs once.
@@ -70,6 +82,12 @@ export function App() {
   useEffect(() => {
     document.title = `${ship.name} · Ship Viewer`;
   }, []);
+
+  const options = section ? viewOptions(section) : ALL_VIEWS;
+  // E.g. "Drawing" stays selected when the next section has no generated code, so it has no Drawing view.
+  const view: ViewMode = options.some((option) => option.value === state.view) ? state.view : "2d";
+  // The uploaded line diagram, with any hotspots from diagram.ts, rather than a generated view.
+  const showsDrawing = view === "drawing" || (view === "2d" && !section?.view2d);
 
   return (
     <div className="flex h-dvh flex-col bg-slate-50 text-slate-900">
@@ -99,24 +117,44 @@ export function App() {
                 </div>
                 <SegmentedControl
                   label="View"
-                  options={VIEW_OPTIONS}
-                  value={state.view}
-                  onChange={(view) => dispatch({ type: "set-view", view })}
+                  options={options}
+                  value={view}
+                  onChange={(next) => dispatch({ type: "set-view", view: next })}
                 />
               </div>
 
               <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
                 <div className="min-h-64 flex-1 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-slate-200">
-                  {state.view === "2d" ? (
-                    <View2D section={section} selectedId={state.selectedItemId} onSelect={selectItem} />
-                  ) : state.view === "3d" ? (
-                    <View3D section={section} />
-                  ) : (
+                  {view === "manual" ? (
                     <ManualView section={section} />
+                  ) : view === "3d" ? (
+                    section.view3d ? (
+                      <GeneratedView
+                        key={`${section.id}:3d`}
+                        view={section.view3d}
+                        label="3D"
+                        icon={<CubeIcon className="size-6" />}
+                        selectedId={state.selectedItemId}
+                        onSelect={selectItem}
+                      />
+                    ) : (
+                      <View3D section={section} />
+                    )
+                  ) : !showsDrawing && section.view2d ? (
+                    <GeneratedView
+                      key={`${section.id}:2d`}
+                      view={section.view2d}
+                      label="2D"
+                      icon={<DiagramIcon className="size-6" />}
+                      selectedId={state.selectedItemId}
+                      onSelect={selectItem}
+                    />
+                  ) : (
+                    <View2D section={section} selectedId={state.selectedItemId} onSelect={selectItem} />
                   )}
                 </div>
                 {/* Details only apply to hotspots, which come from the section's optional diagram.ts. */}
-                {state.view === "2d" && section.image && section.diagram && (
+                {showsDrawing && section.image && section.diagram && (
                   <aside
                     aria-label="Component details"
                     aria-live="polite"

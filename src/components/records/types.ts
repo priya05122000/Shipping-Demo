@@ -83,6 +83,10 @@ export interface ResourceConfig<T extends BaseRecord> {
   deleteWarning: (record: T) => ReactNode;
   /** Extra link in the View modal, e.g. to open a section in the viewer. */
   viewLink?: (record: T) => { href: string; label: string };
+  /** Extra content at the top of the View modal, e.g. a section's generated code. */
+  viewExtras?: (record: T) => ReactNode;
+  /** While this returns true, the list is reloaded every few seconds, e.g. while sections' code is being generated. */
+  refreshWhile?: (records: T[]) => boolean;
 }
 
 export function getFile<T>(record: T, key: FileKey<T>): StoredFile | undefined {

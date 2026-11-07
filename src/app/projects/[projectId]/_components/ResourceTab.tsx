@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { RecordFormModal } from "@/components/records/RecordFormModal";
 import { RecordTable, TableSkeleton } from "@/components/records/RecordTable";
 import type { ResourceConfig } from "@/components/records/types";
@@ -16,6 +16,8 @@ import type { BaseRecord } from "@/types/records";
 import { RecordViewModal } from "./RecordViewModal";
 
 const PAGE_SIZE = 10;
+/** How often the list is reloaded while `config.refreshWhile` says so. */
+const REFRESH_MS = 3000;
 
 type ModalState =
   { type: "add" } | { type: "view" | "edit" | "delete"; id: string } | null;
@@ -33,6 +35,16 @@ export function ResourceTab<T extends BaseRecord>({
   const [deleting, setDeleting] = useState(false);
 
   const items = snapshot?.items;
+
+  // E.g. while sections' code is being generated on the server.
+  const refreshing = Boolean(items && config.refreshWhile?.(items));
+  const { store } = config;
+  useEffect(() => {
+    if (!refreshing) return;
+    const timer = setInterval(() => void store.reload(), REFRESH_MS);
+    return () => clearInterval(timer);
+  }, [refreshing, store]);
+
   // Newest first (items are stored in creation order).
   const filtered = useMemo(() => {
     const list = [...(items ?? [])].reverse();

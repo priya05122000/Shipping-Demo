@@ -1,4 +1,5 @@
-export type ViewMode = "2d" | "3d" | "manual";
+/** "drawing" is the uploaded line diagram itself, offered separately when the 2D view shows generated code instead. */
+export type ViewMode = "2d" | "3d" | "drawing" | "manual";
 
 export interface ViewerState {
   sectionId: string;

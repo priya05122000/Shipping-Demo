@@ -43,7 +43,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -97,7 +97,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -151,7 +151,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -205,7 +205,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -259,7 +259,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -313,7 +313,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -367,7 +367,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -421,7 +421,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -475,7 +475,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -529,7 +529,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -583,7 +583,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -637,7 +637,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -691,7 +691,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -745,7 +745,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -799,7 +799,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -853,7 +853,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -907,7 +907,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -961,7 +961,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1015,7 +1015,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1069,7 +1069,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1123,7 +1123,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1177,7 +1177,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1231,7 +1231,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1285,7 +1285,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1339,7 +1339,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1393,7 +1393,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1447,7 +1447,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1501,7 +1501,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1555,7 +1555,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1609,7 +1609,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1663,7 +1663,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1717,7 +1717,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1771,7 +1771,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1825,7 +1825,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1879,7 +1879,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1933,7 +1933,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -1944,8 +1944,62 @@
     }
   },
   {
-    "id": "FA5 17",
-    "component_name": "FA575 - SELF - CLOSING VALVE",
+    "id": "FA517",
+    "component_name": "FA517 - BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "FA517"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+      "nominal_diameter": 65,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Wafer type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 18,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Wafer, Gearbox Type) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA575_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA575_IN, PIPE_FA575_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA575",
+    "component_name": "FA575- SELF-CLOSING VALVE",
     "component_type": "Valve",
     "identification": {
       "system_name": "Marine Diesel Oil transfer branch (mock assignment; verify service)",
@@ -1987,7 +2041,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -2041,7 +2095,7 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
@@ -2053,12 +2107,120 @@
   },
   {
     "id": "FB111",
-    "component_name": "F A002 - SAFETY / RELIEF VALVE (GLOBE / ANGLE)",
+    "component_name": "FB111 - BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
     "component_type": "Valve",
     "identification": {
       "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
       "location": "Engine Room",
-      "line_number": "F A002"
+      "line_number": "FB111"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (WAFER, GEARBOX TYPE)",
+      "nominal_diameter": 100,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Wafer type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 39,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Wafer, Gearbox Type) for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB111_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts.",
+      "diagnostic_steps": "Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify upstream/downstream pressure using approved instruments.",
+      "immediate_action": "Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB111_IN, PIPE_FB111_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA001",
+    "component_name": "FA001 - SAFETY / RELIEF VALVE (GLOBE / ANGLE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FB105"
+    },
+    "specifications": {
+      "valve_type": "SAFETY / RELIEF VALVE (GLOBE / ANGLE)",
+      "nominal_diameter": 65,
+      "material": "Body: cast steel; spring: alloy steel; trim: stainless steel",
+      "connection_type": "Flanged inlet and discharge",
+      "operation_type": "Spring-loaded automatic",
+      "pressure_rating": 8,
+      "valve_opening": 100,
+      "flow_rate": 15,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Safety / Relief Valve (Globe / Angle) for Diesel Oil (D.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FB105_F001",
+      "failure_condition": "Failure to lift / failure to reseat",
+      "symptoms": "Unwanted discharge, failure to lift at set pressure, failure to reseat, chatter or outlet leakage.",
+      "possible_causes": "Incorrect set pressure, contaminated seat, spring deterioration, blocked discharge path, damaged trim.",
+      "diagnostic_steps": "Treat discharge as a safety event, verify pressure indication and discharge route, compare against certified set-pressure record. Do not adjust in service.",
+      "immediate_action": "Alert responsible engineer immediately, keep clear of discharge, never gag, isolate or adjust except under authorized procedure.",
+      "operational_impact": "Reduced flow, Pressure loss",
+      "verification_steps": "Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after maintenance.",
+      "prevention_measures": "Maintain certification and inspection records, keep discharge path clear, arrange authorized periodic testing.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FB105_IN, PIPE_FB105_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "FA002",
+    "component_name": "FA002 - SAFETY / RELIEF VALVE (GLOBE / ANGLE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Diesel Oil (D.O.) Filling & Transfer System",
+      "location": "Engine Room",
+      "line_number": "FA002"
     },
     "specifications": {
       "valve_type": "SAFETY / RELIEF VALVE (GLOBE / ANGLE)",
@@ -2095,13 +2257,249 @@
       "pressure_inlet": 4.2,
       "pressure_outlet": 4,
       "fault_status": false,
-      "fault_code": "null",
+      "fault_code": null,
       "animation_state": "IDLE",
       "flow_state": false,
       "operating_hours": 0
     },
     "relationships": {
       "connected_pipe_ids": "PIPE_FB104_IN, PIPE_FB104_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "M.D.O S TOR.TK(P)",
+    "component_name": "M.D.O STORAGE TANK (P)",
+    "component_type": "Fuel Storage Tank",
+    "identification": {
+      "system_name": "Diesel Oil (D.O) Storage System",
+      "location": "Port Side",
+      "line_number": "D.O tank connection"
+    },
+    "specifications": {
+      "tank_diameter": "1800 mm",
+      "material": "Marine-grade welded steel",
+      "tank_capacity": "5000 L",
+      "tank_pressure": "0.01 MPa",
+      "flow_rate": "5.0 m3/h Storage and transfer of marine diesel oil to the connected D.O"
+    },
+    "usecase": "system",
+    "troubleshooting": {
+      "fault_code": "MDO_TK_P_F001 Tank not filling, tank overflow, fuel leakage, slow filling,",
+      "failure_condition": "abnormal pressure or vacuum, incorrect level indication No level increase during transfer; high-level alarm; visible fuel",
+      "symptoms": "seepage; unusually long filling time; abnormal pressure indication; mismatch between local and remote level readings Closed or obstructed transfer path; faulty level sensor or alarm; leaking tank boundary or pipe joint; restricted strainer or",
+      "possible_causes": "reduced pump delivery; restricted vent; faulty level gauge or transmitter Confirm valve lineup and transfer source; compare local and",
+      "diagnostic_steps": "remote level readings; inspect tank boundaries and pipe joints; check pump and strainer condition; verify vent and alarm status For suspected overflow or leakage, stop transfer and isolate",
+      "immediate_action": "according to the vessel's approved procedure; notify the responsible engineer and follow spill and fire safety procedures Reduced D.O storage availability, transfer interruption, potential",
+      "operational_impact": "fuel spill, or downstream supply disruption After maintenance, check for leakage, compare level indication",
+      "verification_steps": "with an independent reference, verify alarm operation, and perform a controlled transfer test Inspect tank boundaries, vents, valves, pipe joints, level",
+      "prevention_measures": "instruments and alarms routinely; maintain strainers and equipment according to maker instructions",
+      "related_component_ids": "FB112, FB001"
+    },
+    "simulation": {
+      "current_status": "STOPPED",
+      "current_level": 0,
+      "commanded_status": "STOPPED",
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure": 0,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "D.O tank connection pipes",
+      "related_component_ids": "FB112, FB001"
+    }
+  },
+  {
+    "id": "M.O.D S TOR TK(S)",
+    "component_name": "M.O.D STORAGE TANK (S)",
+    "component_type": "Fuel Storage Tank",
+    "identification": {
+      "system_name": "Diesel Oil (D.O) Storage System",
+      "location": "Starboard Side",
+      "line_number": "D.O tank connection",
+      "locationPortSide": ""
+    },
+    "specifications": {
+      "tank_diameter": "1800 mm",
+      "material": "Marine-grade welded steel",
+      "tank_capacity": "5000 L",
+      "tank_pressure": "0.01 MPa",
+      "flow_rate": "5.0 m3/h Storage and transfer of marine diesel oil to the connected D.O",
+      "tank_diameter1800mm": "",
+      "tank_capacity5000L": ""
+    },
+    "usecase": "system",
+    "troubleshooting": {
+      "fault_code": "MDO_TK_S_F001 Tank not filling, tank overflow, fuel leakage, slow filling,",
+      "failure_condition": "",
+      "symptoms": "",
+      "possible_causes": "",
+      "diagnostic_steps": "",
+      "immediate_action": "procedure; notify the responsible engineer",
+      "operational_impact": "Loss of bulk D.O reserve and interruption to replenishment of the day/service tank After authorized maintenance, check for leakage, compare level indication with an independent",
+      "verification_steps": "reference, verify alarm operation, and perform a controlled transfer test Inspect tank boundaries, vents, valves, pipe joints, level instruments and alarms routinely; maintain",
+      "prevention_measures": "transfer equipment according to maker instructions",
+      "related_component_ids": "FB112, FB001",
+      "fault_codeDO_STOR_P_F001": ""
+    },
+    "simulation": {
+      "current_status": "STOPPED",
+      "current_level": 0,
+      "commanded_status": "STOPPED",
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure": 0,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "D.O transfer piping; exact pipe IDs to be confirmed",
+      "related_component_ids": "FB112, FB001"
+    },
+    "component_typeFuelStorageTank": "",
+    "levelindication": ""
+  },
+  {
+    "id": "D.O S TOR.TK(S)",
+    "component_name": "D.O STORAGE TANK (S)",
+    "component_type": "Fuel Storage Tank",
+    "identification": {
+      "system_name": "Diesel Oil (D.O) Storage and Transfer System",
+      "location": "Starboard Side",
+      "line_number": "D.O transfer line; exact line number to be confirmed from vessel piping diagram"
+    },
+    "specifications": {
+      "tank_diameter": "1800 mm",
+      "material": "Marine-grade welded steel",
+      "tank_capacity": "5000 L",
+      "tank_pressure": "0.01 MPa(g)",
+      "flow_rate": "5.0 m3/h"
+    },
+    "usecase": "Bulk diesel storage and transfer to the D.O service/day tank system.",
+    "troubleshooting": {
+      "fault_code": "DO_STOR_S_F001 Storage tank not filling, overfill, fuel leakage, slow transfer, abnormal pressure or vacuum, or incorrect",
+      "failure_condition": "level indication No level increase during transfer; high/low-level alarm; visible fuel seepage; unusually long filling time;",
+      "symptoms": "abnormal pressure indication; mismatch between local and remote level readings Transfer valve closed or line restricted; transfer pump or strainer issue; level alarm or sensor fault;",
+      "possible_causes": "vent restriction; tank or flange leakage Confirm approved transfer source and valve lineup; check level trend; inspect tank boundary and pipe",
+      "diagnostic_steps": "joints; review pump and strainer; verify vent and alarm status For suspected overfill or leakage, stop transfer and isolate only under the vessel's approved",
+      "immediate_action": "procedure; notify the responsible engineer",
+      "operational_impact": "Loss of bulk D.O reserve and interruption to replenishment of the day/service tank After authorized maintenance, check for leakage, compare level indication with an independent",
+      "verification_steps": "reference, verify alarm operation, and perform a controlled transfer test Inspect tank boundaries, vents, valves, pipe joints, level instruments and alarms routinely; maintain",
+      "prevention_measures": "transfer equipment according to maker instructions",
+      "related_component_ids": "FB111, FB002"
+    },
+    "simulation": {
+      "current_status": "STOPPED",
+      "current_level": 0,
+      "commanded_status": "STOPPED",
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure": 0,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "D.O transfer piping; exact pipe IDs to be confirmed",
+      "related_component_ids": "FB111, FB002"
+    }
+  },
+  {
+    "id": "D.O S DAY.TK(P)",
+    "component_name": "D.O DAY TANK (P)",
+    "component_type": "Fuel Day Tank",
+    "identification": {
+      "system_name": "Diesel Oil (D.O) Storage and Transfer System",
+      "location": "Port Side",
+      "line_number": "D.O transfer line; exact line number to be confirmed from vessel piping diagram"
+    },
+    "specifications": {
+      "tank_diameter": "1000 mm",
+      "material": "Marine-grade welded steel",
+      "tank_capacity": "1000 L",
+      "tank_pressure": "0.01 MPa(g)",
+      "flow_rate": "2.0 m3/h Daily-use diesel buffer tank supplying connected D.O consumers on the Port side, subject to vessel"
+    },
+    "usecase": "arrangement.",
+    "troubleshooting": {
+      "fault_code": "DO_DAY_P_F001",
+      "failure_condition": "Day tank not replenishing, overfill, low-level condition, leakage, unstable level, or supply interruption No level increase during transfer; high/low-level alarm; visible fuel seepage; unusually long filling time;",
+      "symptoms": "abnormal pressure indication; mismatch between local and remote level readings Replenishment valve or pump unavailable; level control malfunction; transfer line restriction; high/low",
+      "possible_causes": "level switch fault; vent restriction; leakage Check day-tank level and alarms; verify approved replenishment sequence and valve lineup; confirm",
+      "diagnostic_steps": "transfer pump availability; inspect line and vent; compare local and remote level indications If low level threatens consumers, notify the responsible engineer and follow the approved",
+      "immediate_action": "replenishment procedure; stop transfer for overfill or leakage",
+      "operational_impact": "Reduced D.O buffer time and possible interruption to connected machinery or consumers After authorized maintenance, check for leakage, compare level indication with an independent",
+      "verification_steps": "reference, verify alarm operation, and perform a controlled transfer test Inspect tank boundaries, vents, valves, pipe joints, level instruments and alarms routinely; maintain",
+      "prevention_measures": "transfer equipment according to maker instructions",
+      "related_component_ids": "Not assigned; confirm from approved piping diagram"
+    },
+    "simulation": {
+      "current_status": "STOPPED",
+      "current_level": 0,
+      "commanded_status": "STOPPED",
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure": 0,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "D.O transfer piping; exact pipe IDs to be confirmed",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "D.O S DAY.TK(S)",
+    "component_name": "D.O DAY TANK (S)",
+    "component_type": "Fuel Day Tank",
+    "identification": {
+      "system_name": "Diesel Oil (D.O) Storage and Transfer System",
+      "location": "Starboard Side",
+      "line_number": "D.O transfer line; exact line number to be confirmed from vessel piping diagram"
+    },
+    "specifications": {
+      "tank_diameter": "1000 mm",
+      "material": "Marine-grade welded steel",
+      "tank_capacity": "1000 L",
+      "tank_pressure": "0.01 MPa(g)",
+      "flow_rate": "2.0 m3/h Daily-use diesel buffer tank supplying connected D.O consumers on the Starboard side, subject to"
+    },
+    "usecase": "vessel arrangement.",
+    "troubleshooting": {
+      "fault_code": "DO_DAY_S_F001",
+      "failure_condition": "Day tank not replenishing, overfill, low-level condition, leakage, unstable level, or supply interruption No level increase during transfer; high/low-level alarm; visible fuel seepage; unusually long filling time;",
+      "symptoms": "abnormal pressure indication; mismatch between local and remote level readings Replenishment valve or pump unavailable; level control malfunction; transfer line restriction; high/low",
+      "possible_causes": "level switch fault; vent restriction; leakage Check day-tank level and alarms; verify approved replenishment sequence and valve lineup; confirm",
+      "diagnostic_steps": "transfer pump availability; inspect line and vent; compare local and remote level indications If low level threatens consumers, notify the responsible engineer and follow the approved",
+      "immediate_action": "replenishment procedure; stop transfer for overfill or leakage",
+      "operational_impact": "Reduced D.O buffer time and possible interruption to connected machinery or consumers After authorized maintenance, check for leakage, compare level indication with an independent",
+      "verification_steps": "reference, verify alarm operation, and perform a controlled transfer test Inspect tank boundaries, vents, valves, pipe joints, level instruments and alarms routinely; maintain",
+      "prevention_measures": "transfer equipment according to maker instructions",
+      "related_component_ids": "Not assigned; confirm from approved piping diagram"
+    },
+    "simulation": {
+      "current_status": "STOPPED",
+      "current_level": 0,
+      "commanded_status": "STOPPED",
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure": 0,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "D.O transfer piping; exact pipe IDs to be confirmed",
       "related_component_ids": ""
     }
   }

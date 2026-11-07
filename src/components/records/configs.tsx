@@ -1,7 +1,9 @@
+import { CodegenCell, CodegenPanel } from "@/components/records/CodegenStatus";
 import { FileNameCell, FileSummaryCell, ThumbnailCell } from "@/components/records/FileCell";
 import type { ResourceConfig } from "@/components/records/types";
 import { CubeIcon, DiagramIcon, ShipIcon } from "@/components/ui/icons";
-import { COLLECTIONS, MANUAL_DATA_FILE } from "@/lib/collection-defs";
+import { isCodegenActive } from "@/lib/codegen";
+import { COLLECTIONS, MANUAL_DATA_FILE, projectDir } from "@/lib/collection-defs";
 import { projectStore, projectStores } from "@/lib/collections";
 import type { ObjectRecord, Project, Section } from "@/types/records";
 
@@ -136,7 +138,13 @@ function makeProjectConfigs(project: Pick<Project, "id" | "folder">): ProjectCon
           </span>
         ),
       },
+      { header: "Code", cell: (r) => <CodegenCell section={r} /> },
     ],
+    viewExtras: (r) => (
+      <CodegenPanel projectId={project.id} section={r} shipDir={projectDir(project.folder)} onChanged={sectionStore.reload} />
+    ),
+    // Shows generation progress, and picks up the result once it's done.
+    refreshWhile: (records) => records.some((r) => isCodegenActive(r.codegen)),
     deleteWarning: (r) => (
       <>
         and its folder <FolderPath dir={sectionStore.dir} folder={r.folder} />, including any files added there in the editor,

@@ -23,7 +23,12 @@ export default defineConfig({
   // As in each ship's own config: 3D models imported as `?url` reach Vite as `?url=` through Next's proxy, a query
   // Vite doesn't recognize, so they need to be known asset types (images and PDFs already are).
   assetsInclude: ["**/*.glb", "**/*.gltf", "**/*.obj", "**/*.fbx", "**/*.stl", "**/*.blend"],
-  optimizeDeps: { entries: ["*/index.html"] },
+  optimizeDeps: {
+    entries: ["*/index.html"],
+    // Sections' generated 3D views (src/sections/*/Diagram3D.tsx) are loaded lazily, and can appear while the server
+    // runs; pre-bundling their libraries up front keeps Vite from reloading the page when the first one is opened.
+    include: ["three", "@react-three/fiber", "@react-three/drei"],
+  },
   server: {
     port: 5173,
     strictPort: true,

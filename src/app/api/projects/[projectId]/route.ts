@@ -1,3 +1,4 @@
+import { stopShipCodegen } from "@/server/codegen/jobs";
 import { assertSameOrigin, respond } from "@/server/respond";
 import { deleteRecord, updateRecord } from "@/server/storage";
 
@@ -12,11 +13,12 @@ export async function PUT(request: Request, { params }: Context) {
   });
 }
 
-/** Delete a project's folder: its sections, objects and all their files. */
+/** Delete a project's folder: its sections, objects and all their files. Its running code generations are stopped first. */
 export async function DELETE(request: Request, { params }: Context) {
   return respond(async () => {
     assertSameOrigin(request);
     const { projectId } = await params;
+    await stopShipCodegen(projectId, "The ship was deleted.");
     return Response.json(await deleteRecord("projects", projectId));
   });
 }

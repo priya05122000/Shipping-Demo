@@ -77,6 +77,7 @@ export function RecordViewModal<T extends BaseRecord>({ config, record, onClose,
       </dl>
 
       <div className="mt-5 space-y-5">
+        {config.viewExtras?.(record)}
         {config.links?.map((field) => (
           <LinkedRecords key={field.key} field={field} ids={getLinks(record, field.key)} />
         ))}

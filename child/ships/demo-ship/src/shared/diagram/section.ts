@@ -1,6 +1,20 @@
+import type { ComponentType } from "react";
 import type { CatalogKind } from "@/shared/catalog";
 import type { SectionData } from "@/shared/data";
 import type { SharedObject } from "@/objects";
+
+/**
+ * Props of a section's generated views: the default exports of Diagram2D.tsx and Diagram3D.tsx in its folder, which
+ * Ship Docs generates from the line diagram with AI. Both views share the selection.
+ */
+export interface SectionViewProps {
+  /** Tag of the selected piece of equipment, e.g. "P-101", or null. */
+  selectedId: string | null;
+  /** Called with an item's tag when it's clicked, or null to clear the selection (e.g. a background click). */
+  onSelect: (id: string | null) => void;
+}
+
+export type SectionView = ComponentType<SectionViewProps>;
 
 /** A clickable piece of equipment on a line diagram. */
 export interface DiagramItem {
@@ -37,6 +51,12 @@ export interface Section {
   data: SectionData;
   /** The ship's objects picked for this section in the Library, in the order they were picked. */
   objects: SharedObject[];
+  /** The generated 2D view (the folder's Diagram2D.tsx), loaded when it's first shown. */
+  view2d?: SectionView;
+  /** The generated 3D view (the folder's Diagram3D.tsx), loaded when it's first shown. */
+  view3d?: SectionView;
+  /** Which version of the generated code the views are (1, 2, 3…), from section.json. */
+  codeVersion?: number;
 }
 
 /** Identity helper so a section's diagram.ts (`export default defineDiagram({...})`) is checked against `Diagram`. */

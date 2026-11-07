@@ -7,8 +7,9 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
-  // PDF.js (which reads uploaded manuals) loads its worker from a file next to itself, so it's run from node_modules unbundled.
-  serverExternalPackages: ["pdfjs-dist"],
+  // PDF.js (which reads uploaded manuals) loads its worker from a file next to itself, and the Claude Agent SDK (which
+  // generates sections' React code) starts the Claude Code binary installed next to itself, so both run unbundled.
+  serverExternalPackages: ["pdfjs-dist", "@anthropic-ai/claude-agent-sdk"],
   turbopack: {
     rules: {
       "*.css": {

@@ -9,14 +9,17 @@ import {
   COLLECTIONS,
   isProjectCollection,
   MANUAL_DATA_FILE,
+  projectDir,
   type CollectionSlug,
   type ProjectCollectionSlug,
 } from "@/lib/collection-defs";
+import { CODEGEN_DIR, readActiveVersion, readCodegen, readCodegenVersions } from "@/lib/codegen";
 import { getExtension, validateFile } from "@/lib/files";
 import { formatId, parseSeq, SLUG_MAX, SLUG_PATTERN, slugify } from "@/lib/ids";
 import { CHILD_DIR, errorCode, SHIP_TEMPLATE_DIR, writeAtomic } from "@/server/child-dir";
+import { presentCodegen, queueRun } from "@/server/codegen/runtime";
 import { buildManualData } from "@/server/manual-data";
-import type { BaseRecord, CollectionSnapshot, StoredFile } from "@/types/records";
+import type { BaseRecord, CodegenVersion, CollectionSnapshot, SectionCodegen, StoredFile } from "@/types/records";
 
 /**
  * Storage for the Library, inside each ship's viewer project so the viewer can use the files:
@@ -26,6 +29,8 @@ import type { BaseRecord, CollectionSnapshot, StoredFile } from "@/types/records
  *   <collection folder>/next-id.json                ID counter, so IDs are never reused (one per ship for sections and objects)
  * Ship and section folders are named from the name and keep the ID ("SHP-001") in their metadata file; an object's folder is its ID.
  * A section's manual is also read into manual-data.json in its folder, each time one is uploaded.
+ * Uploading a section's line diagram queues the generation of its React code (`codegen` in section.json); the API
+ * routes then start it (see src/server/codegen/jobs.ts), and the generated files are written into the folders here.
  * Any other files in a record's folder (e.g. a diagram.ts written in the editor) are left alone, until the record is deleted.
  */
 const NAME_MAX = 100;
@@ -271,8 +276,30 @@ async function withCounts(project: StoredRecord): Promise<StoredRecord> {
   return { ...project, sectionCount, objectCount };
 }
 
+/**
+ * A section with its code generation as the Library shows it: live progress, interrupted runs, and only readable
+ * versions (section.json can be edited by hand). Never saved.
+ */
+function withLiveCodegen(section: StoredRecord): StoredRecord {
+  const { codegen, codegenVersions, codegenVersion, ...rest } = section;
+  const shown = presentCodegen(codegen);
+  const versions = readCodegenVersions(codegenVersions);
+  const active = readActiveVersion(codegenVersion);
+  return {
+    ...rest,
+    ...(shown && { codegen: shown }),
+    ...(versions.length > 0 && { codegenVersions: versions }),
+    ...(active !== undefined && { codegenVersion: active }),
+  };
+}
+
 async function toSnapshot(scope: Scope, data: CollectionData): Promise<CollectionSnapshot<StoredRecord>> {
-  const items = scope.slug === "projects" ? await Promise.all(data.items.map(withCounts)) : data.items;
+  const items =
+    scope.slug === "projects"
+      ? await Promise.all(data.items.map(withCounts))
+      : scope.slug === "sections"
+        ? data.items.map(withLiveCodegen)
+        : data.items;
   const keys = fileFieldsOf(scope.slug).map(([key]) => key);
   const totalBytes = items.reduce(
     (sum, item) => sum + keys.reduce((s, key) => s + ((item[key] as StoredFile | undefined)?.size ?? 0), 0),
@@ -420,6 +447,14 @@ async function saveUploads(scope: Scope, folder: string, files: Map<string, File
 
 /** The section file field whose uploads are read into MANUAL_DATA_FILE. */
 const MANUAL_FIELD = "manual";
+/** The section file field whose uploads start the generation of the section's React code. */
+const LINE_DIAGRAM_FIELD = "lineDiagram";
+
+/** A newly queued code generation, when a save uploads a section's line diagram; undefined otherwise. */
+function codegenFor(slug: CollectionSlug, saved: Record<string, StoredFile>): SectionCodegen | undefined {
+  const lineDiagram = slug === "sections" ? saved[LINE_DIAGRAM_FIELD] : undefined;
+  return lineDiagram ? queueRun(lineDiagram.storedName) : undefined;
+}
 
 /**
  * A save's change to a section's manual data: read from a newly uploaded manual, or null when the manual is removed.
@@ -506,6 +541,7 @@ export async function createRecord(slug: CollectionSlug, form: FormData, project
       const saved = await saveUploads(scope, folder, files);
       if (manualData?.json) await writeManualData(scope, folder, manualData.json);
       const now = new Date().toISOString();
+      const codegen = codegenFor(slug, saved);
       const record: StoredRecord = {
         id,
         folder,
@@ -516,6 +552,7 @@ export async function createRecord(slug: CollectionSlug, form: FormData, project
         ...saved,
         ...(manualData && { manualData: manualData.summary }),
         ...links,
+        ...(codegen && { codegen }),
       };
       await writeRecord(scope, record);
       const nextSeq = data.nextSeq + 1;
@@ -554,6 +591,9 @@ export async function updateRecord(slug: CollectionSlug, id: string, form: FormD
     for (const key of removals) delete record[key];
     if (manualData) record.manualData = manualData.summary;
     else if (manualData === null) delete record.manualData;
+    // A new line diagram replaces any earlier generation; the routes then stop a job still working on the old one.
+    const codegen = codegenFor(slug, saved);
+    if (codegen) record.codegen = codegen;
     let restoreManualData: (() => Promise<void>) | undefined;
     try {
       if (manualData !== undefined) restoreManualData = await writeManualData(scope, folder, manualData?.json ?? null);
@@ -602,8 +642,108 @@ export function deleteRecord(slug: CollectionSlug, id: string, projectId?: strin
     } catch (error) {
       console.warn(`Deleted ${id}, but couldn't remove everything in child/${scope.dir}/${existing.folder}:`, error);
     }
+    // A section's code versions are kept in the ship's codegen folder, by section ID.
+    if (slug === "sections" && scope.projectFolder) {
+      const versions = path.join(CHILD_DIR, ...projectDir(scope.projectFolder).split("/"), CODEGEN_DIR, id);
+      await removeFolder(versions).catch((error) => console.warn(`Deleted ${id}, but couldn't remove its code versions:`, error));
+    }
     const next = { ...data, items: data.items.filter((item) => item.id !== id) };
     return { snapshot: await toSnapshot(scope, next) };
+  });
+}
+
+/** A section's code generation fields in section.json (`codegen`, `codegenVersions`, `codegenVersion`), checked. */
+export interface CodegenState {
+  /** The latest generation. */
+  codegen?: SectionCodegen;
+  /** Oldest first. */
+  versions: CodegenVersion[];
+  /** The version whose files are in the section's folder. */
+  activeVersion?: number;
+}
+
+/** Where CodegenState's fields are kept in section.json. */
+const CODEGEN_FIELDS = { codegen: "codegen", versions: "codegenVersions", activeVersion: "codegenVersion" } as const;
+
+function readCodegenState(record: StoredRecord): CodegenState {
+  return {
+    codegen: readCodegen(record.codegen),
+    versions: readCodegenVersions(record.codegenVersions),
+    activeVersion: readActiveVersion(record.codegenVersion),
+  };
+}
+
+/** A section as code generation needs it (see src/server/codegen/jobs.ts). */
+export interface CodegenSection extends CodegenState {
+  id: string;
+  name: string;
+  folder: string;
+  /** Absolute path of the section's folder. */
+  dir: string;
+  lineDiagram?: StoredFile;
+}
+
+export interface CodegenTarget {
+  shipName: string;
+  /** Absolute path of the ship's project folder, e.g. .../child/ships/mv-aurora. */
+  shipDir: string;
+  section: CodegenSection;
+  /** Every section of the ship, oldest first, including `section`. */
+  sections: CodegenSection[];
+}
+
+/** A section and its ship, read fresh from disk, or null if either is gone. Read-only, so it doesn't take the lock. */
+export async function findCodegenTarget(projectId: string, sectionId: string): Promise<CodegenTarget | null> {
+  const project = (await readData(PROJECTS)).items.find((item) => item.id === projectId);
+  if (!project) return null;
+  const scope = projectScope("sections", project.folder);
+  const sections = (await readData(scope)).items.map(
+    (record): CodegenSection => ({
+      id: record.id,
+      name: record.name,
+      folder: record.folder,
+      dir: recordDir(scope, record.folder),
+      lineDiagram: record[LINE_DIAGRAM_FIELD] as StoredFile | undefined,
+      ...readCodegenState(record),
+    }),
+  );
+  const section = sections.find((item) => item.id === sectionId);
+  if (!section) return null;
+  const shipDir = path.join(CHILD_DIR, ...projectDir(project.folder).split("/"));
+  return { shipName: project.name, shipDir, section, sections };
+}
+
+/**
+ * Changes a section's code generation fields under the write lock, so it can't undo a save made at the same time.
+ * `update` gets their current values and returns the ones to change (a field set to undefined is removed), or
+ * undefined to change nothing. It may throw an ApiError. Returns the save's result, or null if the ship or section is
+ * gone or nothing changed. The section's `updatedAt` is kept: it tells when a person last edited it.
+ */
+export function patchSectionCodegen(
+  projectId: string,
+  sectionId: string,
+  update: (state: CodegenState, section: { lineDiagram?: StoredFile }) => Partial<CodegenState> | undefined,
+) {
+  return withLock(async () => {
+    const project = (await readData(PROJECTS)).items.find((item) => item.id === projectId);
+    if (!project) return null;
+    const scope = projectScope("sections", project.folder);
+    const data = await readData(scope);
+    const existing = data.items.find((item) => item.id === sectionId);
+    if (!existing) return null;
+    const next = update(readCodegenState(existing), {
+      lineDiagram: existing[LINE_DIAGRAM_FIELD] as StoredFile | undefined,
+    });
+    if (!next) return null;
+    const record: StoredRecord = { ...existing };
+    for (const [key, field] of Object.entries(CODEGEN_FIELDS) as [keyof CodegenState, string][]) {
+      if (!(key in next)) continue;
+      const value = next[key];
+      if (value === undefined || (Array.isArray(value) && value.length === 0)) delete record[field];
+      else record[field] = value;
+    }
+    await writeRecord(scope, record);
+    return savedResult(scope, { ...data, items: data.items.map((item) => (item.id === sectionId ? record : item)) }, record);
   });
 }
 

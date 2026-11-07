@@ -20,5 +20,7 @@ export default defineConfig({
   build: {
     // Manuals and 3D models stay files, however small: browsers won't show a data: URL PDF in an iframe.
     assetsInlineLimit: (filePath) => (/\.(pdf|glb|gltf|obj|fbx|stl|blend)$/i.test(filePath) ? false : undefined),
+    // A generated 3D view (src/sections/*/Diagram3D.tsx) is a lazily loaded chunk with three.js, about 1 MB.
+    chunkSizeWarningLimit: 1500,
   },
 });
