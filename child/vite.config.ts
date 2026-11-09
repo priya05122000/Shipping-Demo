@@ -1,18 +1,33 @@
+import path from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+
+const SHIPS_DIR = fileURLToPath(new URL("./ships", import.meta.url));
 
 /**
- * The child is served under /child by the Next.js parent:
- *   dev   Next rewrites /child/* to this dev server (see ../next.config.ts)
- *   build output goes to ../public/child, which Next serves as static files
+ * Development server for every ship at once. Each folder in ./ships is a standalone Vite project (made from
+ * ./template), served here at /child/<ship>/, so a ship added in the Library works without starting anything:
+ *   dev   Next rewrites /child/* to this server (see ../next.config.ts)
+ *   build each ship is built on its own, with its own vite.config.ts (see build-ships.mjs)
  */
 export default defineConfig({
+  root: SHIPS_DIR,
   base: "/child/",
-  plugins: [react(), tailwindcss()],
-  resolve: {
-    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+  // Every ship is its own page; there's no app at the root.
+  appType: "mpa",
+  // No shared public folder: each ship keeps its files in its own src.
+  publicDir: false,
+  plugins: [shipAlias(), react(), tailwindcss()],
+  // As in each ship's own config: 3D models imported as `?url` reach Vite as `?url=` through Next's proxy, a query
+  // Vite doesn't recognize, so they need to be known asset types (images and PDFs already are).
+  assetsInclude: ["**/*.glb", "**/*.gltf", "**/*.obj", "**/*.fbx", "**/*.stl", "**/*.blend"],
+  optimizeDeps: {
+    entries: ["*/index.html"],
+    // Sections' generated 3D views (src/sections/*/Diagram3D.tsx) are loaded lazily, and can appear while the server
+    // runs; pre-bundling their libraries up front keeps Vite from reloading the page when the first one is opened.
+    include: ["three", "@react-three/fiber", "@react-three/drei"],
   },
   server: {
     port: 5173,
@@ -20,10 +35,18 @@ export default defineConfig({
     // Connect HMR straight to Vite: Next redirects the trailing slash in "/child/" and drops redirected websocket upgrades.
     hmr: { clientPort: 5173 },
   },
-  build: {
-    outDir: "../public/child",
-    emptyOutDir: true,
-    // Manuals and 3D models stay files, however small: browsers won't show a data: URL PDF in an iframe.
-    assetsInlineLimit: (filePath) => (/\.(pdf|glb|gltf|obj|fbx|stl|blend)$/i.test(filePath) ? false : undefined),
-  },
 });
+
+/** Resolves "@/…" to the importing ship's own src folder, as each ship's vite.config.ts does when run on its own. */
+function shipAlias(): Plugin {
+  return {
+    name: "ship-alias",
+    enforce: "pre",
+    resolveId(source, importer, options) {
+      if (!source.startsWith("@/") || !importer) return null;
+      const [ship] = path.relative(SHIPS_DIR, importer.replace(/\?.*$/, "")).split(/[\\/]/);
+      if (!ship || ship === ".." || path.isAbsolute(ship)) return null;
+      return this.resolve(path.join(SHIPS_DIR, ship, "src", source.slice(2)), importer, { ...options, skipSelf: true });
+    },
+  };
+}

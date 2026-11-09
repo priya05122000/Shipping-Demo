@@ -15,7 +15,7 @@ export interface CollectionStore<T extends BaseRecord> {
   idPrefix: string;
   /** Each record's folder in the child app (see `dir`) is named from its name when it's created, e.g. "engine-room". */
   folderFromName: boolean;
-  /** Folder in the child app that holds the records' folders, e.g. "src/sections". */
+  /** Folder in the child app that holds the records' folders, e.g. "src/ships/mv-aurora/sections". */
   dir: string;
   subscribe: (onChange: () => void) => () => void;
   getSnapshot: () => CollectionState<T>;
@@ -30,9 +30,18 @@ export interface CollectionStore<T extends BaseRecord> {
 
 const LOADING = { data: null, error: null } as const;
 
+interface StoreLocation {
+  /** The collection's API route, e.g. "/api/projects/SHP-001/sections". */
+  url: string;
+  /** See CollectionStore.dir. */
+  dir: string;
+}
+
 /** Client-side cache of one collection, kept in sync with the child app's folder through the API. */
-export function createCollectionStore<T extends BaseRecord>(slug: CollectionSlug): CollectionStore<T> {
-  const url = `/api/${slug}`;
+export function createCollectionStore<T extends BaseRecord>(
+  slug: CollectionSlug,
+  { url, dir }: StoreLocation,
+): CollectionStore<T> {
   const listeners = new Set<() => void>();
   let state: CollectionState<T> = LOADING;
   let loading: Promise<void> | null = null;
@@ -59,7 +68,7 @@ export function createCollectionStore<T extends BaseRecord>(slug: CollectionSlug
     slug,
     idPrefix: collectionDef(slug).idPrefix,
     folderFromName: Boolean(collectionDef(slug).folderFromName),
-    dir: collectionDef(slug).dir,
+    dir,
     subscribe(onChange) {
       listeners.add(onChange);
       if (listeners.size === 1) {

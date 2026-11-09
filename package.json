@@ -10,17 +10,20 @@
     "dev:parent": "next dev",
     "dev:child": "npm run dev -w child",
     "build": "npm run build -w child && next build",
+    "build:standalone": "npm run build:standalone -w child --",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "node scripts/copy-monaco.mjs"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.3.318",
     "@monaco-editor/loader": "^1.7.0",
     "monaco-editor": "^0.57.0",
     "next": "16.4.3",
     "pdfjs-dist": "^6.5.438",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

@@ -53,16 +53,27 @@ function modelFor(monaco: Monaco, file: ChildFile) {
   return existing;
 }
 
-/** File tree, open-file tabs and a Monaco editor for the child app's source. Only ./child is reachable. */
-export function EditorWorkspace() {
+interface EditorWorkspaceProps {
+  /**
+   * A ship's project folder name, e.g. "mv-aurora": the editor shows and edits only child/ships/mv-aurora, with paths
+   * like "mv-aurora/src/main.tsx". Without it, the editor shows the shared files: everything in ./child but the ships,
+   * with paths like "template/src/main.tsx".
+   */
+  projectFolder?: string;
+}
+
+/** File tree, open-file tabs and a Monaco editor for the child app's source. The server refuses paths outside its scope. */
+export function EditorWorkspace({ projectFolder }: EditorWorkspaceProps) {
   return (
     <ToastProvider>
-      <Workspace />
+      <Workspace projectFolder={projectFolder} />
     </ToastProvider>
   );
 }
 
-function Workspace() {
+function Workspace({ projectFolder }: EditorWorkspaceProps) {
+  const scope = projectFolder ?? null;
+  const api = useMemo(() => childFiles(scope), [scope]);
   const toast = useToast();
   const searchParams = useSearchParams();
   const [entries, setEntries] = useState<ChildEntry[] | null>(null);
@@ -77,6 +88,8 @@ function Workspace() {
   const restoredRef = useRef(false);
 
   const active = files.find((file) => file.path === activePath) ?? null;
+  // A ship's src starts open; in the shared files, the template does.
+  const openByDefault = useMemo(() => (scope === null ? ["template"] : [`${scope}/src`]), [scope]);
   const dirtyPaths = useMemo(() => new Set(files.filter((file) => file.dirty).map((file) => file.path)), [files]);
   const hasUnsaved = dirtyPaths.size > 0;
 
@@ -105,7 +118,7 @@ function Workspace() {
 
   const loadTree = useCallback(async () => {
     try {
-      const list = await childFiles.list();
+      const list = await api.list();
       setEntries(list);
       setTreeError(null);
       return list;
@@ -113,7 +126,7 @@ function Workspace() {
       setTreeError(messageOf(error));
       return null;
     }
-  }, []);
+  }, [api]);
 
   async function openFile(path: string) {
     showFile(path);
@@ -126,7 +139,7 @@ function Workspace() {
     setFiles((current) => (current.some((file) => file.path === path) ? current : [...current, opened]));
     if (opened.status === "error") return;
     try {
-      const [monaco, file] = await Promise.all([loadMonaco(), childFiles.read(path)]);
+      const [monaco, file] = await Promise.all([loadMonaco(), api.read(path)]);
       const model = modelFor(monaco, file);
       const savedAt = model.getAlternativeVersionId();
       updateFile(path, (f) => ({ ...f, status: "ready", model, version: file.version, savedAt, dirty: false }));
@@ -166,7 +179,7 @@ function Workspace() {
     savingRef.current.add(path);
     updateFile(path, (f) => ({ ...f, saving: true }));
     try {
-      const result = await childFiles.save(path, content, version);
+      const result = await api.save(path, content, version);
       // Edits made while the save was in flight stay unsaved.
       updateFile(path, (f) => ({ ...f, version: result.version, savedAt, dirty: isDirty({ ...f, savedAt }), conflict: false }));
     } catch (error) {
@@ -183,7 +196,7 @@ function Workspace() {
     const model = files.find((f) => f.path === path)?.model;
     if (!model) return;
     try {
-      const file = await childFiles.read(path);
+      const file = await api.read(path);
       model.pushStackElement();
       // The model already knows whether the file has a byte-order mark; don't insert it as text.
       model.pushEditOperations([], [{ range: model.getFullModelRange(), text: file.content.replace(/^﻿/, "") }], () => null);
@@ -198,7 +211,7 @@ function Workspace() {
   /** After a conflict: save the editor's text over whatever is on disk now. */
   async function overwrite(path: string) {
     try {
-      const { version } = await childFiles.read(path);
+      const { version } = await api.read(path);
       await save(path, version);
     } catch (error) {
       toast.error(`Couldn't save ${baseName(path)}`, messageOf(error));
@@ -209,7 +222,7 @@ function Workspace() {
     if (deleting) return;
     setDeleting(true);
     try {
-      await childFiles.remove(path);
+      await api.remove(path);
       setDialog(null);
       dropFile(path);
       toast.success("File deleted", path);
@@ -272,8 +285,8 @@ function Workspace() {
       <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:gap-4 sm:px-6">
         <p className="flex min-w-0 flex-1 items-center gap-2 text-sm text-slate-500">
           {active ? (
-            <span className="truncate font-mono" title={`child/${active.path}`}>
-              child/<span className="text-slate-900">{active.path}</span>
+            <span className="truncate font-mono text-slate-900" title={active.path}>
+              {active.path}
             </span>
           ) : (
             "No file open"
@@ -310,7 +323,7 @@ function Workspace() {
 
       <div className="grid h-[70vh] min-h-120 grid-rows-[minmax(0,10rem)_minmax(0,1fr)] sm:grid-cols-[16rem_minmax(0,1fr)] sm:grid-rows-1">
         <nav
-          aria-label="Child app files"
+          aria-label={scope === null ? "Shared files" : "Ship files"}
           className="min-h-0 overflow-auto border-b border-slate-200 bg-slate-50/60 p-2 sm:border-r sm:border-b-0"
         >
           {entries ? (
@@ -319,10 +332,13 @@ function Workspace() {
                 entries={entries}
                 activePath={activePath}
                 dirtyPaths={dirtyPaths}
+                openByDefault={openByDefault}
                 onOpen={(path) => void openFile(path)}
               />
             ) : (
-              <p className="px-2 py-1 text-sm text-slate-500">The child folder is empty.</p>
+              <p className="px-2 py-1 text-sm text-slate-500">
+                {scope === null ? "The child folder has no shared files." : "This ship's folder is empty."}
+              </p>
             )
           ) : treeError ? (
             <div role="alert" className="space-y-3 px-2 py-1 text-sm">
@@ -427,7 +443,8 @@ function Workspace() {
 
       {dialog?.type === "new" && (
         <NewFileModal
-          folder={active ? folderOf(active.path) : "src/"}
+          scope={scope}
+          folder={active ? folderOf(active.path) : scope === null ? "template/src/" : `${scope}/src/`}
           onClose={() => setDialog(null)}
           onCreated={handleCreated}
         />

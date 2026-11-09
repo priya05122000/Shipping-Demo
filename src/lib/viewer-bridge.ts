@@ -1,7 +1,12 @@
 import type { ViewerCommand, ViewerEvent, ViewerSource } from "@child/protocol";
 
-/** The viewer (child app in ./child) is served on this origin: Vite in dev, public/child after a build. */
-export const CHILD_URL = "/child/index.html";
+/**
+ * A ship's viewer: its own project in child/ships/<folder>, served on this origin under /child/<folder>/
+ * (by Vite in dev, from public/child after a build).
+ */
+export function viewerUrl(shipFolder: string): string {
+  return `/child/${encodeURIComponent(shipFolder)}/index.html`;
+}
 
 const SOURCE: ViewerSource = "ship-viewer";
 

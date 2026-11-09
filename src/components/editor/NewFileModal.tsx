@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/Button";
 import { AlertIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
 import { TextInput } from "@/components/ui/TextInput";
-import type { ChildFile } from "@/lib/child-files";
+import type { ChildFile, ChildScope } from "@/lib/child-files";
 import { childFiles } from "@/lib/child-files-api";
+import { COLLECTIONS } from "@/lib/collection-defs";
 
 interface NewFileModalProps {
-  /** Folder the path starts with, e.g. "src/app/". */
+  /** The editor's scope; the server refuses a path outside it. */
+  scope: ChildScope;
+  /** Folder the path starts with, e.g. "template/src/app/". */
   folder: string;
   onClose: () => void;
   onCreated: (file: ChildFile) => void;
@@ -28,7 +31,7 @@ function validatePath(path: string): string | null {
 }
 
 /** New file form. Mount it only while open so its state resets each time. */
-export function NewFileModal({ folder, onClose, onCreated }: NewFileModalProps) {
+export function NewFileModal({ scope, folder, onClose, onCreated }: NewFileModalProps) {
   const [value, setValue] = useState(folder);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -46,7 +49,7 @@ export function NewFileModal({ folder, onClose, onCreated }: NewFileModalProps) 
     savingRef.current = true;
     setSaving(true);
     try {
-      onCreated(await childFiles.create(path));
+      onCreated(await childFiles(scope).create(path));
     } catch (failure) {
       setError(failure instanceof Error ? failure.message : "Something went wrong.");
     } finally {
@@ -89,7 +92,11 @@ export function NewFileModal({ folder, onClose, onCreated }: NewFileModalProps) 
           // Start typing after the pre-filled folder.
           onFocus={(event) => event.currentTarget.setSelectionRange(value.length, value.length)}
           placeholder="src/sections/pump/index.ts"
-          hint="Relative to the child folder."
+          hint={
+            scope === null
+              ? `Relative to the child folder, outside ${COLLECTIONS.projects.dir}/.`
+              : `Inside this ship's folder, starting with ${scope}/.`
+          }
           spellCheck={false}
           autoComplete="off"
           disabled={saving}

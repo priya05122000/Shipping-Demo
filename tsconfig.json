@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@child/protocol": ["./child/src/app/protocol.ts"]
+      "@child/protocol": ["./child/template/src/app/protocol.ts"]
     }
   },
   "include": [

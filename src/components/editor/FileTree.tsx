@@ -9,18 +9,20 @@ interface FileTreeProps {
   activePath: string | null;
   /** Files with unsaved changes. */
   dirtyPaths: ReadonlySet<string>;
+  /** Folders that start open, besides the one holding the active file. */
+  openByDefault: readonly string[];
   onOpen: (path: string) => void;
 }
 
 const ROW =
   "flex w-full items-center gap-1.5 rounded-md py-1 pr-2 text-left text-[13px] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-indigo-600";
 
-/** The child app's files. A folder starts open if it's "src" or holds the active file; clicking it overrides that. */
-export function FileTree({ entries, activePath, dirtyPaths, onOpen }: FileTreeProps) {
+/** The child app's files. A folder starts open if it's in `openByDefault` or holds the active file; clicking it overrides that. */
+export function FileTree({ entries, activePath, dirtyPaths, openByDefault, onOpen }: FileTreeProps) {
   const [toggled, setToggled] = useState<Record<string, boolean>>({});
 
   const isOpen = (folder: string) =>
-    toggled[folder] ?? (folder === "src" || Boolean(activePath?.startsWith(`${folder}/`)));
+    toggled[folder] ?? (openByDefault.includes(folder) || Boolean(activePath?.startsWith(`${folder}/`)));
 
   function renderList(list: ChildEntry[], depth: number) {
     const indent = { paddingLeft: `${depth * 0.75 + 0.5}rem` };

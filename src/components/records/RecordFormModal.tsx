@@ -2,14 +2,16 @@
 
 import { useRef, useState, type FormEvent } from "react";
 import { LinkPicker } from "@/components/records/LinkPicker";
-import { getFile, getLinks, type ResourceConfig } from "@/components/records/types";
+import { getFile, getLinks, getText, type ResourceConfig, type TextKey } from "@/components/records/types";
 import { Button } from "@/components/ui/Button";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { AlertIcon, LockIcon } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/Modal";
+import { TextArea } from "@/components/ui/TextArea";
 import { TextInput } from "@/components/ui/TextInput";
 import { useToast } from "@/components/ui/Toast";
 import { useCollection } from "@/hooks/useCollection";
+import { checkTextField } from "@/lib/collection-defs";
 import { formatId, slugify } from "@/lib/ids";
 import type { BaseRecord, FileKey } from "@/types/records";
 
@@ -23,13 +25,16 @@ interface RecordFormModalProps<T extends BaseRecord> {
   onSaved: (record: T, mode: "add" | "edit") => void;
 }
 
-type Errors<T> = Partial<Record<"name" | FileKey<T>, string>>;
+type Errors<T> = Partial<Record<"name" | FileKey<T> | TextKey<T>, string>>;
 
 /** Add/Edit form. Mount it only while open so its state resets each time. */
 export function RecordFormModal<T extends BaseRecord>({ config, record, onClose, onSaved }: RecordFormModalProps<T>) {
   const toast = useToast();
   const { data } = useCollection(config.store);
   const [name, setName] = useState(record?.name ?? "");
+  const [texts, setTexts] = useState<Record<string, string>>(() =>
+    Object.fromEntries((config.textFields ?? []).map((field) => [field.key, record ? getText(record, field.key) : ""])),
+  );
   const [files, setFiles] = useState<Partial<Record<FileKey<T>, File>>>({});
   // Optional existing files to remove on save.
   const [removed, setRemoved] = useState<Partial<Record<FileKey<T>, boolean>>>({});
@@ -62,6 +67,10 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
     else if (folderFromName && !record && !slugify(trimmed)) {
       result.name = "Use at least one letter or digit (A–Z, 0–9), so the name can become a folder name.";
     }
+    for (const field of config.textFields ?? []) {
+      const { error } = checkTextField(field.def, texts[field.key] ?? "");
+      if (error) result[field.key] = error;
+    }
     for (const field of config.fileFields) {
       if (field.required && !files[field.key] && !record) result[field.key] = `${field.viewLabel} file is required.`;
     }
@@ -82,6 +91,8 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
     try {
       const form = new FormData();
       form.set("name", name.trim());
+      // Text fields are always sent: one left empty is removed.
+      for (const field of config.textFields ?? []) form.set(field.key, (texts[field.key] ?? "").trim());
       // Only new files are sent; on edit the server keeps the existing file for any field left out.
       for (const field of config.fileFields) {
         const picked = files[field.key];
@@ -111,7 +122,9 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
       onClose={onClose}
       busy={saving}
       title={isEdit ? `Edit ${config.label}` : `Add ${config.label}`}
-      description={isEdit ? "Update the name or files. Files you don't change are kept." : undefined}
+      description={
+        isEdit && config.fileFields.length > 0 ? "Update the name or files. Files you don't change are kept." : undefined
+      }
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={saving}>
@@ -158,6 +171,36 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
             data-autofocus
           />
         </div>
+
+        {config.textFields?.map((field) => {
+          const props = {
+            label: field.label,
+            value: texts[field.key] ?? "",
+            onChange: (event: { target: { value: string } }) => {
+              setTexts((current) => ({ ...current, [field.key]: event.target.value }));
+              if (errors[field.key]) setErrors((e) => ({ ...e, [field.key]: undefined }));
+            },
+            placeholder: field.placeholder,
+            maxLength: field.inputMax ?? field.def.max,
+            error: errors[field.key],
+            hint: field.hint,
+            disabled: saving,
+          };
+          if (field.multiline) return <TextArea key={field.key} {...props} />;
+          const listId = field.suggestions && `${formId}-${field.key}-options`;
+          return (
+            <div key={field.key}>
+              <TextInput {...props} list={listId} autoComplete="off" />
+              {listId && (
+                <datalist id={listId}>
+                  {field.suggestions?.map((option) => (
+                    <option key={option} value={option} />
+                  ))}
+                </datalist>
+              )}
+            </div>
+          );
+        })}
 
         {config.fileFields.map((field) => (
           <FileUpload
