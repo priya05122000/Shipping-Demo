@@ -9,8 +9,12 @@ import { getExtension } from "@/lib/files";
 /** Largest file the editor opens or saves. */
 export const CHILD_FILE_MAX_BYTES = 1024 * 1024;
 
-/** Never listed, opened or written: installed packages and git internals. Compared case-insensitively. */
-const HIDDEN_NAMES = new Set(["node_modules", ".git"]);
+/**
+ * Never listed, opened or written: installed packages, git internals, and code generations' working copies (see
+ * src/server/codegen/staging.ts), which the editor mustn't change under a running generation. Compared
+ * case-insensitively.
+ */
+const HIDDEN_NAMES = new Set(["node_modules", ".git", ".codegen-stage"]);
 
 /** Shown in the file tree but not opened as text. The server also refuses any file that isn't UTF-8 text. */
 const BINARY_EXTENSIONS = new Set([

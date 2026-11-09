@@ -7,7 +7,15 @@ import { useToast } from "@/components/ui/Toast";
 import { isCodegenActive } from "@/lib/codegen";
 import { generateCode, restoreCodeVersion, stopCodeGeneration } from "@/lib/codegen-api";
 import { formatDateTime } from "@/lib/format";
-import type { CodegenStatus, CodegenVersion, Section, SectionCodegen } from "@/types/records";
+import type {
+  CodegenLimit,
+  CodegenObjects,
+  CodegenStatus,
+  CodegenVersion,
+  Section,
+  SectionCodegen,
+  SharedChange,
+} from "@/types/records";
 
 /**
  * A section's AI-generated 2D and 3D React code (see src/server/codegen/): its status and version in the Sections
@@ -26,6 +34,12 @@ const MODE_LABEL = {
   first: "First prompt: created the ship's shared components",
   second: "Second prompt: reused the ship's shared components",
 } as const;
+
+const LIMIT_LABEL: Record<CodegenLimit, string> = {
+  budget: "budget, CODEGEN_MAX_BUDGET_USD",
+  turns: "turns, CODEGEN_MAX_TURNS",
+  fixRounds: "rounds of fixes, CODEGEN_FIX_ROUNDS",
+};
 
 /** E.g. "v2 in use · 3 versions". */
 function versionSummary(section: Section): string | undefined {
@@ -117,10 +131,17 @@ export function CodegenPanel({ projectId, section, shipDir, onChanged }: Codegen
     }
   }
 
+  const usage = codegen?.usage;
+  const tokens = (count: number) => count.toLocaleString("en-US");
   const times = codegen && [
     codegen.startedAt && { label: "Started", value: formatDateTime(codegen.startedAt) },
     codegen.finishedAt && { label: "Finished", value: formatDateTime(codegen.finishedAt) },
-    typeof codegen.costUsd === "number" && { label: "Estimated cost", value: `$${codegen.costUsd.toFixed(2)}` },
+    typeof codegen.costUsd === "number"
+      ? { label: "Estimated cost", value: `$${codegen.costUsd.toFixed(2)}` }
+      : usage && { label: "Estimated cost", value: "Not reported (stopped early)" },
+    usage && { label: "Input tokens", value: tokens(usage.inputTokens + usage.cacheCreationInputTokens + usage.cacheReadInputTokens) },
+    usage && { label: "Output tokens", value: tokens(usage.outputTokens) },
+    typeof usage?.turns === "number" && { label: "Turns", value: String(usage.turns) },
   ];
 
   return (
@@ -139,10 +160,16 @@ export function CodegenPanel({ projectId, section, shipDir, onChanged }: Codegen
         ) : (
           <>
             {codegen.mode && <p className="text-slate-700">{MODE_LABEL[codegen.mode]}.</p>}
+            {codegen.objects && <ObjectsNote objects={codegen.objects} />}
             {codegen.status === "queued" && (
-              <p className="text-slate-500">Waiting for the ship&apos;s other generations to finish.</p>
+              <p className="text-slate-500">Waiting for other generations to finish: they run one at a time, across ships.</p>
             )}
             {codegen.status === "running" && codegen.progress && <p className="text-indigo-700">{codegen.progress}…</p>}
+            {codegen.limit && (
+              <p className="text-red-700">
+                Stopped by its limit ({LIMIT_LABEL[codegen.limit]}); nothing it wrote was kept.
+              </p>
+            )}
             {codegen.error && (
               <p className="rounded-lg bg-red-50 px-3 py-2 whitespace-pre-wrap text-red-700 ring-1 ring-red-100">{codegen.error}</p>
             )}
@@ -151,6 +178,7 @@ export function CodegenPanel({ projectId, section, shipDir, onChanged }: Codegen
                 {codegen.summary}
               </p>
             )}
+            {codegen.sharedChange && <SharedChangeNote change={codegen.sharedChange} />}
             {times?.some(Boolean) && (
               <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
                 {times.map(
@@ -212,6 +240,55 @@ export function CodegenPanel({ projectId, section, shipDir, onChanged }: Codegen
         )}
       </div>
     </section>
+  );
+}
+
+/**
+ * How a generation used the section's objects: whose images it looked at (and wrote cards for), and which it placed
+ * from their cards without their images. section.json can be edited by hand, so the lists are checked.
+ */
+function ObjectsNote({ objects }: { objects: CodegenObjects }) {
+  const ids = (value: unknown) => (Array.isArray(value) ? value.filter((id): id is string => typeof id === "string") : []);
+  const [learned, reused, skipped] = [ids(objects.learned), ids(objects.reused), ids(objects.skipped)];
+  const parts = [
+    learned.length > 0 && `looked at the images of ${learned.join(", ")} and saved their cards`,
+    reused.length > 0 && `placed ${reused.join(", ")} from their cards, without sending their images`,
+    skipped.length > 0 && `didn't look at ${skipped.join(", ")} yet`,
+  ].filter(Boolean);
+  if (parts.length === 0) return null;
+  return <p className="text-slate-700">Objects: {parts.join("; ")}.</p>;
+}
+
+/** What happened to a generation's change to the template (child/template/), which new ships are copied from. */
+function SharedChangeNote({ change }: { change: SharedChange }) {
+  const files = (
+    <ul className="mt-1 space-y-0.5 font-mono text-xs break-all">
+      {change.files.map((file) => (
+        <li key={file}>{file}</li>
+      ))}
+    </ul>
+  );
+  const checked = change.checkedShips.length
+    ? `Checked against ${change.checkedShips.join(", ")}.`
+    : "No other ship has these files, so none had to be checked.";
+  if (change.status === "kept") {
+    return (
+      <div className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-800 ring-1 ring-emerald-100">
+        <p>
+          Template updated for new ships. {checked}
+        </p>
+        {files}
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-lg bg-amber-50 px-3 py-2 text-amber-900 ring-1 ring-amber-200">
+      <p>
+        The change to the template was rejected and undone; it stays in this ship only. {checked}
+      </p>
+      {files}
+      {change.reason && <p className="mt-2 max-h-48 overflow-y-auto text-xs whitespace-pre-wrap">{change.reason}</p>}
+    </div>
   );
 }
 

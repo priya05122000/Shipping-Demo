@@ -87,8 +87,61 @@ export interface SectionCodegen {
   costUsd?: number;
   /** The version the generation created. Set when it's done. */
   version?: number;
+  /** What happened to the generation's change to the template, if it made one. Set when it's done. */
+  sharedChange?: SharedChange;
+  /** Tokens and cost, as the Claude Agent SDK reported them. Set when the generation ends, however it ends. */
+  usage?: CodegenUsage;
+  /** The configured limit that stopped it, if one did (it's then failed, and nothing it wrote was kept). */
+  limit?: CodegenLimit;
+  /** How the section's objects were used. Set when it's done. */
+  objects?: CodegenObjects;
   /** What the agent is doing right now, while running. Never saved: added when sections are listed. */
   progress?: string;
+}
+
+/**
+ * How a generation used the section's objects (IDs, e.g. "OBJ-001"). The agent looks at an object's image only the
+ * first time a generation uses it, and writes the object's card; later generations get the card as text instead (see
+ * src/server/codegen/objects.ts).
+ */
+export interface CodegenObjects {
+  /** New to the ship's code: their images were sent, and their cards written. */
+  learned: string[];
+  /** Placed from their cards, without their images. */
+  reused: string[];
+  /** Not looked at in this generation (too many new ones, too big, or no usable card): placed from their names. */
+  skipped: string[];
+}
+
+/** The limits on a generation (see src/server/codegen/agent.ts): CODEGEN_MAX_TURNS, CODEGEN_MAX_BUDGET_USD, CODEGEN_FIX_ROUNDS. */
+export type CodegenLimit = "turns" | "budget" | "fixRounds";
+
+/** A generation's use of the Claude API, as the Claude Agent SDK reported it: an estimate, not a bill. */
+export interface CodegenUsage {
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  cacheCreationInputTokens: number;
+  cacheReadInputTokens: number;
+  /** Estimated cost in US dollars; unset when the generation was stopped before the SDK reported one. */
+  costUsd?: number;
+  /** Turns the agent took; unset as for costUsd. */
+  turns?: number;
+}
+
+/**
+ * A generation's change to the template (child/template/), the shared code new ships are copied from. It's kept only
+ * if the template still type-checks with it and it wouldn't break any existing ship that has the changed files (see
+ * src/server/codegen/shared-check.ts); otherwise it's rejected: rolled back, while the section's own code is kept.
+ */
+export interface SharedChange {
+  status: "kept" | "rejected";
+  /** The template's files it changed, relative to the template's folder, e.g. "src/shared/ui/Badge.tsx". */
+  files: string[];
+  /** The names of the existing ships it was checked against: those that have the changed files. */
+  checkedShips: string[];
+  /** Why it was rejected. */
+  reason?: string;
 }
 
 /**

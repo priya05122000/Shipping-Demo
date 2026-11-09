@@ -15,6 +15,15 @@ export const CODEGEN_SHARED_DIR = "src/shared/schematic";
  */
 export const CODEGEN_DIR = "codegen";
 export const CODEGEN_STATE_FILE = `${CODEGEN_DIR}/generations.json`;
+/** One JSON line per generation, however it ended: its status, tokens and cost (see src/server/codegen/jobs.ts). */
+export const CODEGEN_USAGE_FILE = `${CODEGEN_DIR}/usage.jsonl`;
+
+/**
+ * In an object's folder (child/ships/<ship>/src/objects/<ID>/): what code generation learned from the object's line
+ * diagram image the first time a section used it, so later generations don't look at the image again (see
+ * src/server/codegen/objects.ts, and the viewer's src/objects/card.ts).
+ */
+export const OBJECT_CARD_FILE = "card.json";
 
 /** Where a version's files are kept, relative to the ship's folder, e.g. "codegen/SEC-001/v3". */
 export function codegenVersionDir(sectionId: string, version: number): string {

@@ -43,6 +43,8 @@ next-env.d.ts
 # child (viewer) app: dependencies and build output served by Next
 /child/node_modules
 /public/child
+# code generations' working copies (src/server/codegen/staging.ts)
+/child/.codegen-stage
 
 # Monaco editor files, copied from node_modules on install (scripts/copy-monaco.mjs)
 /public/monaco

@@ -97,6 +97,9 @@ export const COLLECTIONS = {
 /** Written in a section's folder whenever its manual is uploaded: the component tables read from it (see src/server/manual-data.ts). */
 export const MANUAL_DATA_FILE = "manual-data.json";
 
+/** In each folder of record folders: its ID counter, so IDs are never reused (see src/server/storage.ts). */
+export const COUNTER_FILE = "next-id.json";
+
 export function isProjectCollection(value: string): value is ProjectCollectionSlug {
   return value !== "projects" && Object.hasOwn(COLLECTIONS, value);
 }

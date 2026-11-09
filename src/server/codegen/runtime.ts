@@ -15,6 +15,11 @@ export interface Job {
   controller: AbortController;
   /** Why it was cancelled, saved as the section's codegen error. */
   cancelReason?: string;
+  /**
+   * Set when it was stopped because something went wrong rather than on request (e.g. a path changed under a tool
+   * call): it's then saved as failed, with this as the error.
+   */
+  failure?: string;
   /** Settles once the job has finished, including rolling back and saving its final status. */
   done: Promise<void>;
   /** Settles once the jobs this one replaced (for the same section) have finished rolling back. */
@@ -31,6 +36,11 @@ interface Runtime {
    * restore of a section's version takes the ship's turn too.
    */
   queues: Map<string, Promise<void>>;
+  /**
+   * Settles once every job started so far, of any ship, has finished: jobs run one at a time across ships too, since
+   * any of them may change the template. Never rejects.
+   */
+  jobChain: Promise<void>;
   /** Restores of a section's version in progress, by Job.key; each settles when it has finished or rolled back. */
   restores: Map<string, Promise<void>>;
 }
@@ -41,6 +51,7 @@ shared.runs ??= new Map();
 shared.jobs ??= new Map();
 shared.queues ??= new Map();
 shared.restores ??= new Map();
+shared.jobChain ??= Promise.resolve();
 export const runtime = shared as Runtime;
 
 /** A new queued generation for a section whose line diagram was just saved, known to this process from now on. */
