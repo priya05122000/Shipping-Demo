@@ -237,6 +237,16 @@ export function RecordFormModal<T extends BaseRecord>({ config, record, onClose,
           />
         ))}
       </form>
+
+      {record && config.editExtras && (
+        <div className="mt-5">
+          {config.editExtras(record, {
+            saving,
+            picked: config.fileFields.filter((field) => files[field.key]).map((field) => field.key),
+            removed: config.fileFields.filter((field) => removed[field.key] && !files[field.key]).map((field) => field.key),
+          })}
+        </div>
+      )}
     </Modal>
   );
 }

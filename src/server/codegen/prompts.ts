@@ -7,16 +7,14 @@ import path from "node:path";
  *   rules.md    appended to Claude Code's system prompt, for every generation
  *   first.md    the task for a ship's first generation
  *   second.md   the task for every later generation of the ship
- *   cli-2d.md   the CLI's second prompt, to refine the generated 2D view
- *   cli-3d.md   the CLI's third prompt, to refine and integrate both views
- * These are the only instructions the agent gets (besides Claude Code's own system prompt): only these names
+ * These are the only instructions the agent gets (besides Claude Code's own system prompt): only these three names
  * can be read, and each must be a regular file in ./prompts, not a link. A leading <!-- comment --> is left out, and
  * {{name}} placeholders are filled in (see PromptValues), each value at most once, so a value can't bring in another.
  */
 const PROMPTS_DIR = path.join(process.cwd(), "src", "server", "codegen", "prompts");
 
-export type PromptName = "rules" | "first" | "second" | "cli-2d" | "cli-3d";
-const PROMPT_NAMES: readonly PromptName[] = ["rules", "first", "second", "cli-2d", "cli-3d"];
+export type PromptName = "rules" | "first" | "second";
+const PROMPT_NAMES: readonly PromptName[] = ["rules", "first", "second"];
 
 /**
  * The values filled in. Text that came from people (names typed in the Library, file names) arrives already quoted or

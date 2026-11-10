@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { useToast } from "@/components/ui/Toast";
 import { isCodegenActive } from "@/lib/codegen";
 import { generateCode, restoreCodeVersion, stopCodeGeneration } from "@/lib/codegen-api";
 import { formatDateTime } from "@/lib/format";
+import { PlanUsagePanel } from "@/components/records/PlanUsagePanel";
 import type {
   CodegenLimit,
   CodegenObjects,
@@ -19,7 +20,8 @@ import type {
 
 /**
  * A section's AI-generated 2D and 3D React code (see src/server/codegen/): its status and version in the Sections
- * table, and in the View modal the details, "Generate again", "Stop", and its versions, each of which can be restored.
+ * table, its details and versions in the View modal (read-only), and in the Edit form "Generate again", "Stop", and
+ * its versions, each of which can be restored.
  */
 
 const STATUS: Record<CodegenStatus, { label: string; className: string }> = {
@@ -36,10 +38,19 @@ const MODE_LABEL = {
 } as const;
 
 const LIMIT_LABEL: Record<CodegenLimit, string> = {
-  budget: "budget, CODEGEN_MAX_BUDGET_USD",
   turns: "turns, CODEGEN_MAX_TURNS",
   fixRounds: "rounds of fixes, CODEGEN_FIX_ROUNDS",
 };
+
+/** Older records can name a limit that no longer exists (the API budget). */
+function limitLabel(limit: CodegenLimit): string {
+  return LIMIT_LABEL[limit] ?? "a limit that no longer applies";
+}
+
+/** Said while a generation waits for the Claude plan's usage limit to reset (src/server/codegen/plan.ts). */
+function waitingNote(waitingUntil: string) {
+  return `The Claude plan's usage limit is reached: this generation waits until ${formatDateTime(waitingUntil)}, then starts again on its own.`;
+}
 
 /** E.g. "v2 in use · 3 versions". */
 function versionSummary(section: Section): string | undefined {
@@ -49,7 +60,10 @@ function versionSummary(section: Section): string | undefined {
 }
 
 function StatusPill({ codegen }: { codegen: SectionCodegen }) {
-  const { label, className } = STATUS[codegen.status];
+  const { label, className } =
+    codegen.status === "queued" && codegen.waitingUntil
+      ? { label: "Waiting for plan limit", className: "bg-amber-50 text-amber-700 ring-amber-200" }
+      : STATUS[codegen.status];
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ring-inset ${className}`}
@@ -72,7 +86,14 @@ export function CodegenCell({ section }: { section: Section }) {
       <span className="text-sm text-slate-400">Needs a line diagram</span>
     );
   }
-  const detail = codegen.status === "running" ? codegen.progress : codegen.status === "failed" ? codegen.error : undefined;
+  const detail =
+    codegen.status === "running"
+      ? codegen.progress
+      : codegen.status === "failed"
+        ? codegen.error
+        : codegen.status === "queued" && codegen.waitingUntil
+          ? `Starts again after ${formatDateTime(codegen.waitingUntil)}`
+          : undefined;
   const version = versionSummary(section);
   return (
     <div className="min-w-0">
@@ -87,22 +108,82 @@ export function CodegenCell({ section }: { section: Section }) {
   );
 }
 
-interface CodegenPanelProps {
-  projectId: string;
-  section: Section;
-  /** The ship's folder, relative to child/, e.g. "ships/mv-aurora", which the generated files' paths start from. */
-  shipDir: string;
-  /** Reloads the sections, after a generation is started or stopped. */
-  onChanged: () => Promise<void>;
+/** The Generated code box, with the generation's status in its header. */
+function CodegenFrame({ codegen, children }: { codegen?: SectionCodegen; children: ReactNode }) {
+  return (
+    <section className="overflow-hidden rounded-xl ring-1 ring-slate-200">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-2.5">
+        <h3 className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Generated code</h3>
+        {codegen && <StatusPill codegen={codegen} />}
+      </div>
+      <div className="space-y-3 p-4 text-sm">
+        {children}
+        <PlanUsagePanel />
+      </div>
+    </section>
+  );
 }
 
-/** The View modal's Generated code section. */
-export function CodegenPanel({ projectId, section, shipDir, onChanged }: CodegenPanelProps) {
+interface VersionListProps {
+  section: Section;
+  /** The ship's folder, relative to child/, e.g. "ships/mv-aurora". */
+  shipDir?: string;
+  /** Restores a version; without it the list is read-only. Rejects when it couldn't (a toast has said why). */
+  onRestore?: (version: number) => Promise<void>;
+  /** Restoring isn't possible right now (the section's code is being generated). */
+  blocked?: boolean;
+}
+
+/** The section's code versions, newest first. */
+function VersionList({ section, shipDir, onRestore, blocked = false }: VersionListProps) {
+  const versions = [...(section.codegenVersions ?? [])].reverse();
+  if (versions.length === 0) return null;
+  return (
+    <div>
+      <p className="text-xs text-slate-500">
+        {shipDir ? (
+          <>
+            Versions, kept in <span className="font-mono">child/{shipDir}/codegen/{section.id}/</span>
+          </>
+        ) : (
+          "Versions"
+        )}
+      </p>
+      <ul className="mt-1 divide-y divide-slate-100 rounded-lg ring-1 ring-slate-200">
+        {versions.map((version) => (
+          <VersionRow
+            key={version.version}
+            version={version}
+            inUse={version.version === section.codegenVersion}
+            blocked={blocked}
+            onRestore={onRestore && (() => onRestore(version.version))}
+          />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+interface CodegenControlsProps {
+  projectId: string;
+  section: Section;
+  /** Reloads the sections, after a generation is started or stopped, or a version restored. */
+  onChanged: () => Promise<void>;
+  /**
+   * Why "Generate again" can't be used right now, e.g. the form has a new line diagram that isn't saved yet (a
+   * generation always uses the saved one).
+   */
+  pending?: string;
+  /** The form is being saved. */
+  disabled?: boolean;
+}
+
+/** The Edit form's Generated code section: "Generate again" (or "Stop"), and the versions, each of which can be restored. */
+export function CodegenControls({ projectId, section, onChanged, pending, disabled = false }: CodegenControlsProps) {
   const toast = useToast();
   const [busy, setBusy] = useState(false);
   const { codegen } = section;
   const active = isCodegenActive(codegen);
-  const versions = [...(section.codegenVersions ?? [])].reverse();
 
   async function restore(version: number) {
     try {
@@ -115,16 +196,15 @@ export function CodegenPanel({ projectId, section, shipDir, onChanged }: Codegen
     }
   }
 
-  async function run(action: "generate" | "retry-cli" | "stop") {
+  async function run(action: "generate" | "stop") {
     setBusy(true);
     try {
       if (action === "generate") await generateCode(projectId, section.id);
-      else if (action === "retry-cli") await generateCode(projectId, section.id, "cli");
       else await stopCodeGeneration(projectId, section.id);
       await onChanged();
     } catch (error) {
       toast.error(
-        action === "stop" ? "Couldn't stop generating code" : "Couldn't start generating code",
+        action === "generate" ? "Couldn't start generating code" : "Couldn't stop generating code",
         error instanceof Error ? error.message : undefined,
       );
     } finally {
@@ -132,137 +212,135 @@ export function CodegenPanel({ projectId, section, shipDir, onChanged }: Codegen
     }
   }
 
+  return (
+    <CodegenFrame codegen={codegen}>
+      {!codegen ? (
+        <p className="text-slate-500">
+          {section.lineDiagram
+            ? "No code has been generated from this line diagram yet."
+            : "Upload a line diagram above, and 2D and 3D React code will be generated from it when you save."}
+        </p>
+      ) : (
+        <>
+          {codegen.status === "queued" &&
+            (codegen.waitingUntil ? (
+              <p className="text-amber-800">{waitingNote(codegen.waitingUntil)}</p>
+            ) : (
+              <p className="text-slate-500">Waiting for other generations to finish: they run one at a time, across ships.</p>
+            ))}
+          {codegen.status === "running" && codegen.progress && <p className="text-indigo-700">{codegen.progress}…</p>}
+          {codegen.error && (
+            <p className="max-h-32 overflow-y-auto rounded-lg bg-red-50 px-3 py-2 whitespace-pre-wrap text-red-700 ring-1 ring-red-100">
+              {codegen.error}
+            </p>
+          )}
+        </>
+      )}
+      {/* Switching while code is being generated would mix the two. */}
+      <VersionList section={section} onRestore={restore} blocked={active || disabled} />
+      {(active || section.lineDiagram) && (
+        <div className="flex items-center justify-end gap-3">
+          {pending && !active && <p className="mr-auto text-xs text-slate-500">{pending}</p>}
+          {active ? (
+            <Button variant="secondary" size="sm" loading={busy} disabled={disabled} onClick={() => void run("stop")}>
+              Stop
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={busy}
+              disabled={disabled || Boolean(pending)}
+              onClick={() => void run("generate")}
+            >
+              {codegen ? "Generate again" : "Generate code"}
+            </Button>
+          )}
+        </div>
+      )}
+    </CodegenFrame>
+  );
+}
+
+interface CodegenPanelProps {
+  section: Section;
+  /** The ship's folder, relative to child/, e.g. "ships/mv-aurora", which the generated files' paths start from. */
+  shipDir: string;
+}
+
+/** The View modal's Generated code section: read-only; generating and restoring are done in the Edit form. */
+export function CodegenPanel({ section, shipDir }: CodegenPanelProps) {
+  const { codegen } = section;
   const usage = codegen?.usage;
   const tokens = (count: number) => count.toLocaleString("en-US");
   const times = codegen && [
     codegen.startedAt && { label: "Started", value: formatDateTime(codegen.startedAt) },
     codegen.finishedAt && { label: "Finished", value: formatDateTime(codegen.finishedAt) },
-    typeof codegen.costUsd === "number"
-      ? { label: "Estimated cost", value: `$${codegen.costUsd.toFixed(2)}` }
-      : usage && { label: "Estimated cost", value: "Not reported (stopped early)" },
     usage && { label: "Input tokens", value: tokens(usage.inputTokens + usage.cacheCreationInputTokens + usage.cacheReadInputTokens) },
     usage && { label: "Output tokens", value: tokens(usage.outputTokens) },
     typeof usage?.turns === "number" && { label: "Turns", value: String(usage.turns) },
   ];
 
   return (
-    <section className="overflow-hidden rounded-xl ring-1 ring-slate-200">
-      <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-2.5">
-        <h3 className="text-xs font-semibold tracking-wide text-slate-500 uppercase">Generated code</h3>
-        {codegen && <StatusPill codegen={codegen} />}
-      </div>
-      <div className="space-y-3 p-4 text-sm">
-        {!codegen ? (
-          <p className="text-slate-500">
-            {section.lineDiagram
-              ? "No code has been generated from this line diagram yet."
-              : "Upload a line diagram with Edit, and 2D and 3D React code will be generated from it."}
-          </p>
-        ) : (
-          <>
-            {codegen.mode && <p className="text-slate-700">{MODE_LABEL[codegen.mode]}.</p>}
-            {codegen.engine === "cli" && (
-              <p className="text-slate-600">Automatic Claude Code CLI run after a changed drawing was saved.</p>
-            )}
-            {codegen.objects && <ObjectsNote objects={codegen.objects} />}
-            {codegen.status === "queued" && (
-              <p className="text-slate-500">Waiting for other generations to finish: they run one at a time, across ships.</p>
-            )}
-            {codegen.status === "running" && codegen.progress && <p className="text-indigo-700">{codegen.progress}…</p>}
-            {codegen.latestEvent && codegen.latestEvent !== codegen.progress && (
-              <p className="text-slate-500">Latest CLI event: {codegen.latestEvent}</p>
-            )}
-            {codegen.cliSessionId && (
-              <p className="text-xs text-slate-500">
-                Claude Code CLI session: <span className="font-mono">{codegen.cliSessionId}</span>
-              </p>
-            )}
-            {typeof codegen.exitCode === "number" && (
-              <p className="text-xs text-slate-500">Claude Code CLI exit code: {codegen.exitCode}</p>
-            )}
-            {codegen.validation === "passed" && <p className="text-emerald-700">Type check and viewer build passed.</p>}
-            {codegen.limit && (
-              <p className="text-red-700">
-                Stopped by its limit ({LIMIT_LABEL[codegen.limit]}); nothing it wrote was kept.
-              </p>
-            )}
-            {codegen.error && (
-              <p className="rounded-lg bg-red-50 px-3 py-2 whitespace-pre-wrap text-red-700 ring-1 ring-red-100">{codegen.error}</p>
-            )}
-            {codegen.summary && (
-              <p className="max-h-48 overflow-y-auto rounded-lg bg-slate-50 px-3 py-2 whitespace-pre-wrap text-slate-700 ring-1 ring-slate-200">
-                {codegen.summary}
-              </p>
-            )}
-            {codegen.sharedChange && <SharedChangeNote change={codegen.sharedChange} />}
-            {times?.some(Boolean) && (
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
-                {times.map(
-                  (item) =>
-                    item && (
-                      <div key={item.label}>
-                        <dt className="text-xs text-slate-500">{item.label}</dt>
-                        <dd className="mt-0.5 text-slate-900">{item.value}</dd>
-                      </div>
-                    ),
-                )}
-              </dl>
-            )}
-            {codegen.files && codegen.files.length > 0 && (
-              <div>
-                <p className="text-xs text-slate-500">
-                  Files written, in <span className="font-mono">child/{shipDir}/</span>
-                </p>
-                <ul className="mt-1 space-y-0.5 font-mono text-xs break-all text-slate-700">
-                  {codegen.files.map((file) => (
-                    <li key={file}>{file}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </>
-        )}
-        {versions.length > 0 && (
-          <div>
-            <p className="text-xs text-slate-500">
-              Versions, kept in <span className="font-mono">child/{shipDir}/codegen/{section.id}/</span>
-            </p>
-            <ul className="mt-1 divide-y divide-slate-100 rounded-lg ring-1 ring-slate-200">
-              {versions.map((version) => (
-                <VersionRow
-                  key={version.version}
-                  version={version}
-                  inUse={version.version === section.codegenVersion}
-                  // Switching while code is being generated would mix the two.
-                  blocked={active}
-                  onRestore={() => restore(version.version)}
-                />
-              ))}
-            </ul>
-          </div>
-        )}
-        {(active || section.lineDiagram) && (
-          <div className="flex justify-end">
-            {active ? (
-              <Button variant="secondary" size="sm" loading={busy} onClick={() => void run("stop")}>
-                Stop
-              </Button>
+    <CodegenFrame codegen={codegen}>
+      {!codegen ? (
+        <p className="text-slate-500">
+          {section.lineDiagram
+            ? "No code has been generated from this line diagram yet. Use Edit to generate it."
+            : "Upload a line diagram with Edit, and 2D and 3D React code will be generated from it."}
+        </p>
+      ) : (
+        <>
+          {codegen.mode && <p className="text-slate-700">{MODE_LABEL[codegen.mode]}.</p>}
+          {codegen.objects && <ObjectsNote objects={codegen.objects} />}
+          {codegen.status === "queued" &&
+            (codegen.waitingUntil ? (
+              <p className="text-amber-800">{waitingNote(codegen.waitingUntil)}</p>
             ) : (
-              <div className="flex gap-2">
-                {codegen?.engine === "cli" && (codegen.status === "failed" || codegen.status === "cancelled") && (
-                  <Button variant="secondary" size="sm" loading={busy} onClick={() => void run("retry-cli")}>
-                    Retry CLI
-                  </Button>
-                )}
-                <Button variant="secondary" size="sm" loading={busy} onClick={() => void run("generate")}>
-                  {codegen ? "Generate again (SDK)" : "Generate code (SDK)"}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </section>
+              <p className="text-slate-500">Waiting for other generations to finish: they run one at a time, across ships.</p>
+            ))}
+          {codegen.status === "running" && codegen.progress && <p className="text-indigo-700">{codegen.progress}…</p>}
+          {codegen.limit && (
+            <p className="text-red-700">Stopped by its limit ({limitLabel(codegen.limit)}); nothing it wrote was kept.</p>
+          )}
+          {codegen.error && (
+            <p className="rounded-lg bg-red-50 px-3 py-2 whitespace-pre-wrap text-red-700 ring-1 ring-red-100">{codegen.error}</p>
+          )}
+          {codegen.summary && (
+            <p className="max-h-48 overflow-y-auto rounded-lg bg-slate-50 px-3 py-2 whitespace-pre-wrap text-slate-700 ring-1 ring-slate-200">
+              {codegen.summary}
+            </p>
+          )}
+          {codegen.sharedChange && <SharedChangeNote change={codegen.sharedChange} />}
+          {times?.some(Boolean) && (
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
+              {times.map(
+                (item) =>
+                  item && (
+                    <div key={item.label}>
+                      <dt className="text-xs text-slate-500">{item.label}</dt>
+                      <dd className="mt-0.5 text-slate-900">{item.value}</dd>
+                    </div>
+                  ),
+              )}
+            </dl>
+          )}
+          {codegen.files && codegen.files.length > 0 && (
+            <div>
+              <p className="text-xs text-slate-500">
+                Files written, in <span className="font-mono">child/{shipDir}/</span>
+              </p>
+              <ul className="mt-1 space-y-0.5 font-mono text-xs break-all text-slate-700">
+                {codegen.files.map((file) => (
+                  <li key={file}>{file}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
+      )}
+      <VersionList section={section} shipDir={shipDir} />
+    </CodegenFrame>
   );
 }
 
@@ -324,16 +402,17 @@ interface VersionRowProps {
   inUse: boolean;
   /** Restoring isn't possible right now (the section's code is being generated). */
   blocked: boolean;
-  /** Rejects when the version couldn't be restored (the panel has said why). */
-  onRestore: () => Promise<void>;
+  /** Without it there's no Restore button (the View modal). Rejects when it couldn't restore (a toast has said why). */
+  onRestore?: () => Promise<void>;
 }
 
-/** One of a section's code versions. Restoring it asks first, in place (the View modal is already a dialog). */
+/** One of a section's code versions. Restoring it asks first, in place (the Edit form is already a dialog). */
 function VersionRow({ version, inUse, blocked, onRestore }: VersionRowProps) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
 
   async function restore() {
+    if (!onRestore) return;
     setBusy(true);
     try {
       await onRestore();
@@ -349,7 +428,6 @@ function VersionRow({ version, inUse, blocked, onRestore }: VersionRowProps) {
     formatDateTime(version.finishedAt),
     version.mode === "first" ? "First prompt" : "Second prompt",
     version.lineDiagramName,
-    typeof version.costUsd === "number" ? `$${version.costUsd.toFixed(2)}` : null,
   ].filter(Boolean);
 
   return (
@@ -364,6 +442,7 @@ function VersionRow({ version, inUse, blocked, onRestore }: VersionRowProps) {
             In use
           </span>
         ) : (
+          onRestore &&
           !confirming && (
             <Button
               variant="ghost"

@@ -15,10 +15,7 @@ export async function POST(request: Request, { params }: Context) {
     assertSameOrigin(request);
     const { projectId, collection, id } = await params;
     parseSections(collection);
-    const body = request.headers.get("content-type")?.split(";")[0].trim() === "application/json" ? await readJson(request) : {};
-    const engine = body.engine ?? "sdk";
-    if (engine !== "sdk" && engine !== "cli") throw new ApiError(400, "`engine` must be `sdk` or `cli`.");
-    await requestCodegen(projectId, id, engine);
+    await requestCodegen(projectId, id);
     return Response.json({ ok: true }, { status: 202 });
   });
 }

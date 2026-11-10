@@ -21,8 +21,8 @@ export async function POST(request: Request, { params }: Context) {
     assertSameOrigin(request);
     const { projectId, collection } = await params;
     const slug = parseProjectCollection(collection);
-    const result = await createRecord(slug, await request.formData(), projectId, { codegenEngine: "cli" });
-    if (slug === "sections") await reconcileCodegen(projectId, result.record);
+    const result = await createRecord(slug, await request.formData(), projectId);
+    if (slug === "sections") reconcileCodegen(projectId, result.record);
     return Response.json(result, { status: 201 });
   });
 }

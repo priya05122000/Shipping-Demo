@@ -1,4 +1,4 @@
-import { CodegenCell, CodegenPanel } from "@/components/records/CodegenStatus";
+import { CodegenCell, CodegenControls, CodegenPanel } from "@/components/records/CodegenStatus";
 import { FileNameCell, FileSummaryCell, ThumbnailCell } from "@/components/records/FileCell";
 import type { ResourceConfig } from "@/components/records/types";
 import { CubeIcon, DiagramIcon, ShipIcon } from "@/components/ui/icons";
@@ -140,8 +140,22 @@ function makeProjectConfigs(project: Pick<Project, "id" | "folder">): ProjectCon
       },
       { header: "Code", cell: (r) => <CodegenCell section={r} /> },
     ],
-    viewExtras: (r) => (
-      <CodegenPanel projectId={project.id} section={r} shipDir={projectDir(project.folder)} onChanged={sectionStore.reload} />
+    viewExtras: (r) => <CodegenPanel section={r} shipDir={projectDir(project.folder)} />,
+    editExtras: (r, form) => (
+      <CodegenControls
+        projectId={project.id}
+        section={r}
+        onChanged={sectionStore.reload}
+        disabled={form.saving}
+        // A generation always uses the saved line diagram, so one changed in the form has to be saved first.
+        pending={
+          form.picked.includes("lineDiagram")
+            ? "Saving generates the code from the new line diagram."
+            : form.removed.includes("lineDiagram")
+              ? "The line diagram will be removed when you save."
+              : undefined
+        }
+      />
     ),
     // Shows generation progress, and picks up the result once it's done.
     refreshWhile: (records) => records.some((r) => isCodegenActive(r.codegen)),

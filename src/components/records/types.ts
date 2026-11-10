@@ -64,6 +64,16 @@ export interface ColumnDef<T> {
   className?: string;
 }
 
+/** The Edit form's unsaved changes, for `ResourceConfig.editExtras`. */
+export interface EditFormState<T> {
+  /** The form is being saved. */
+  saving: boolean;
+  /** File fields with a new file picked, not saved yet. */
+  picked: FileKey<T>[];
+  /** File fields whose file will be removed on save. */
+  removed: FileKey<T>[];
+}
+
 export interface ResourceConfig<T extends BaseRecord> {
   id: CollectionSlug;
   /** Tab / heading label, e.g. "Section". */
@@ -83,8 +93,10 @@ export interface ResourceConfig<T extends BaseRecord> {
   deleteWarning: (record: T) => ReactNode;
   /** Extra link in the View modal, e.g. to open a section in the viewer. */
   viewLink?: (record: T) => { href: string; label: string };
-  /** Extra content at the top of the View modal, e.g. a section's generated code. */
+  /** Extra read-only content at the top of the View modal, e.g. a section's generated code. */
   viewExtras?: (record: T) => ReactNode;
+  /** Extra content at the end of the Edit form, e.g. "Generate again" for a section's code. */
+  editExtras?: (record: T, form: EditFormState<T>) => ReactNode;
   /** While this returns true, the list is reloaded every few seconds, e.g. while sections' code is being generated. */
   refreshWhile?: (records: T[]) => boolean;
 }

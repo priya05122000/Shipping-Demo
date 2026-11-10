@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { IdBadge } from "@/components/records/RecordTable";
 import type { LinkFieldConfig } from "@/components/records/types";
+import { ChevronDownIcon } from "@/components/ui/icons";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { useCollection } from "@/hooks/useCollection";
 
@@ -17,10 +18,17 @@ interface LinkPickerProps<T> {
   disabled?: boolean;
 }
 
-/** Checkbox list for picking records from another collection, e.g. the objects a section uses. */
+/**
+ * Checkbox list for picking records from another collection, e.g. the objects a section uses. Its heading row (label,
+ * count and arrow) is one button that shows and hides the list.
+ */
 export function LinkPicker<T>({ field, value, onChange, disabled }: LinkPickerProps<T>) {
   const { data, error } = useCollection(field.store);
   const [query, setQuery] = useState("");
+  // Closed at first, so a long list doesn't push the rest of the form down.
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const labelId = useId();
   const noun = field.label.toLowerCase();
 
   const items = data?.items ?? [];
@@ -44,35 +52,49 @@ export function LinkPicker<T>({ field, value, onChange, disabled }: LinkPickerPr
         : null;
 
   return (
-    <fieldset disabled={disabled}>
-      <legend className="mb-1.5 block text-sm font-medium text-slate-700">
-        {field.label}
-        <span className="ml-2 text-xs font-normal text-slate-500">{value.length} selected</span>
-      </legend>
-      <p className="mb-2 text-xs text-slate-500">{field.hint}</p>
-      <div className="overflow-hidden rounded-xl border border-slate-200">
-        {items.length > SEARCH_FROM && (
-          <div className="border-b border-slate-200 bg-slate-50 p-2 sm:[&>div]:w-full">
-            <SearchInput value={query} onChange={setQuery} label={`Search ${noun}`} placeholder="Search by name or ID…" />
-          </div>
-        )}
-        <ul className="max-h-56 divide-y divide-slate-100 overflow-y-auto">
-          {missing.map((id) => (
-            <PickerRow key={id} id={id} name="No longer exists" checked onToggle={() => toggle(id)} muted />
-          ))}
-          {filtered.map((item) => (
-            <PickerRow
-              key={item.id}
-              id={item.id}
-              name={item.name}
-              checked={value.includes(item.id)}
-              onToggle={() => toggle(item.id)}
-            />
-          ))}
-        </ul>
-        {status && <p className="px-3 py-4 text-center text-sm text-slate-500">{status}</p>}
-      </div>
-    </fieldset>
+    <div>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={panelId}
+        title={open ? `Hide ${noun}` : `Show ${noun}`}
+        onClick={() => setOpen((current) => !current)}
+        className="group mb-1.5 flex w-full items-center justify-between gap-3 rounded-lg py-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+      >
+        <span id={labelId} className="text-sm font-medium text-slate-700">
+          {field.label}
+          <span className="ml-2 text-xs font-normal text-slate-500">{value.length} selected</span>
+        </span>
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-lg text-slate-500 transition-colors group-hover:bg-slate-100 group-hover:text-slate-900">
+          <ChevronDownIcon className={`size-5 transition-transform ${open ? "rotate-180" : ""}`} />
+        </span>
+      </button>
+      <fieldset id={panelId} hidden={!open} disabled={disabled} aria-labelledby={labelId}>
+        <p className="mb-2 text-xs text-slate-500">{field.hint}</p>
+        <div className="overflow-hidden rounded-xl border border-slate-200">
+          {items.length > SEARCH_FROM && (
+            <div className="border-b border-slate-200 bg-slate-50 p-2 sm:[&>div]:w-full">
+              <SearchInput value={query} onChange={setQuery} label={`Search ${noun}`} placeholder="Search by name or ID…" />
+            </div>
+          )}
+          <ul className="max-h-56 divide-y divide-slate-100 overflow-y-auto">
+            {missing.map((id) => (
+              <PickerRow key={id} id={id} name="No longer exists" checked onToggle={() => toggle(id)} muted />
+            ))}
+            {filtered.map((item) => (
+              <PickerRow
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                checked={value.includes(item.id)}
+                onToggle={() => toggle(item.id)}
+              />
+            ))}
+          </ul>
+          {status && <p className="px-3 py-4 text-center text-sm text-slate-500">{status}</p>}
+        </div>
+      </fieldset>
+    </div>
   );
 }
 

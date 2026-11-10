@@ -8,6 +8,8 @@ import type {
   SDKUserMessage,
 } from "@anthropic-ai/claude-agent-sdk";
 import type { CodegenLimit, CodegenUsage } from "@/types/records";
+import { claudeCodeEnv, ISOLATED } from "./claude-code";
+import { PlanLimitError, resetTime } from "./plan";
 import { checkPattern, scanForLinks, toLabel, type CodegenPolicy, type FileJournal } from "./policy";
 import { diagnosticsBlock, type Diagnostic } from "./typecheck";
 
@@ -32,24 +34,23 @@ import { diagnosticsBlock, type Diagnostic } from "./typecheck";
  * Instructions come only from Claude Code's system prompt with rules.md appended, and the task (first.md or
  * second.md): settings, CLAUDE.md files, skills and plugins on this machine aren't loaded, and the session isn't saved.
  *
+ * It runs on the Claude plan Claude Code is signed in with on this machine (claude-code.ts), never on an API key.
+ * When the plan's usage limit is reached, it stops with a PlanLimitError, and the job waits for the limit to reset
+ * and starts again (plan.ts).
+ *
  * Limits (environment variables, e.g. in .env.local). Reaching one stops the generation, and the job discards
  * everything it wrote:
- *   CODEGEN_MAX_BUDGET_USD   default 5 ("none" for no limit): the SDK's estimate of the cost
  *   CODEGEN_MAX_TURNS        default 120
  *   CODEGEN_FIX_ROUNDS       default 3: how often the agent is sent back to fix its code; still wrong after that is a stop
  * And:
- *   ANTHROPIC_API_KEY        required, unless Claude Code is signed in on this machine
  *   CODEGEN_MODEL            default claude-opus-5-5
  *   CODEGEN_EFFORT           low | medium | high | xhigh | max, default high
  */
 export const MODEL = process.env.CODEGEN_MODEL || "claude-opus-5-5";
 const EFFORTS: readonly EffortLevel[] = ["low", "medium", "high", "xhigh", "max"];
-export const EFFORT: EffortLevel = EFFORTS.find((level) => level === process.env.CODEGEN_EFFORT) ?? "high";
-export const MAX_TURNS = positiveNumber(process.env.CODEGEN_MAX_TURNS) ?? 120;
-export const MAX_BUDGET_USD = /^(none|off)$/i.test(process.env.CODEGEN_MAX_BUDGET_USD ?? "")
-  ? undefined
-  : (positiveNumber(process.env.CODEGEN_MAX_BUDGET_USD) ?? 5);
-export const MAX_FIX_ROUNDS = wholeNumber(process.env.CODEGEN_FIX_ROUNDS) ?? 3;
+const EFFORT: EffortLevel = EFFORTS.find((level) => level === process.env.CODEGEN_EFFORT) ?? "high";
+const MAX_TURNS = positiveNumber(process.env.CODEGEN_MAX_TURNS) ?? 120;
+const MAX_FIX_ROUNDS = wholeNumber(process.env.CODEGEN_FIX_ROUNDS) ?? 3;
 
 const SERVER_NAME = "ship";
 const TYPECHECK_TOOL = `mcp__${SERVER_NAME}__typecheck`;
@@ -125,31 +126,19 @@ export interface AgentRequest {
   onProgress: (step: string) => void;
   /** Called with the usage so far, as it grows and at the end (however the generation ends). */
   onUsage: (usage: CodegenUsage) => void;
-  /** The interactive Claude Code CLI session ID, when supplied by its init event. */
-  onCliSession?: (sessionId: string) => void;
-  /** The CLI process exit code. */
-  onCliExit?: (exitCode: number | null) => void;
-  /** Per-invocation limits; used to account for CLI repair sessions. */
-  maxTurns?: number;
-  maxBudgetUsd?: number;
 }
 
 export interface AgentOutcome {
   /** The agent's closing summary. */
   summary: string;
-  costUsd?: number;
   /** How often the agent was sent back to fix its code when it wanted to finish. */
   fixRounds: number;
-  sessionId?: string;
-  exitCode?: number;
-  turns?: number;
 }
 
-/** The agent didn't finish its task. */
+/** The agent didn't finish its task. (Reaching the Claude plan's usage limit is a PlanLimitError instead.) */
 export class AgentError extends Error {
   constructor(
     message: string,
-    public costUsd?: number,
     /** The configured limit it reached, if that's why. */
     public limit?: CodegenLimit,
   ) {
@@ -245,8 +234,6 @@ function failureOf(result: SDKResultMessage): { message: string; limit?: Codegen
       return { message: result.result || "The agent ended with an error." };
     case "error_max_turns":
       return { message: `The agent used all of its ${MAX_TURNS} turns (CODEGEN_MAX_TURNS), so it was stopped.`, limit: "turns" };
-    case "error_max_budget_usd":
-      return { message: `The agent reached its budget of $${MAX_BUDGET_USD} (CODEGEN_MAX_BUDGET_USD), so it was stopped.`, limit: "budget" };
     default:
       return { message: result.errors.join(" ") || "The agent stopped because of an error." };
   }
@@ -304,10 +291,10 @@ class UsageMeter {
     return { model: this.model, ...totals };
   }
 
-  /** As the SDK reported it at the end: every model call, with its cost estimate. */
+  /** As the SDK reported it at the end: every model call. */
   final(result: SDKResultMessage): CodegenUsage {
     const models = Object.entries(result.modelUsage);
-    if (models.length === 0) return { ...this.current(), costUsd: result.total_cost_usd, turns: result.num_turns };
+    if (models.length === 0) return { ...this.current(), turns: result.num_turns };
     const sum = (pick: (usage: (typeof models)[number][1]) => number) => models.reduce((total, [, usage]) => total + pick(usage), 0);
     return {
       model: models.map(([model]) => model).join(", "),
@@ -315,7 +302,6 @@ class UsageMeter {
       outputTokens: sum((usage) => usage.outputTokens),
       cacheCreationInputTokens: sum((usage) => usage.cacheCreationInputTokens),
       cacheReadInputTokens: sum((usage) => usage.cacheReadInputTokens),
-      costUsd: result.total_cost_usd,
       turns: result.num_turns,
     };
   }
@@ -400,8 +386,10 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
   let fixRounds = 0;
   let lastCards: string | null = null;
   let fixLimit: string | null = null;
+  // Set when the Claude plan's usage limit is reached: the agent can't go on, so it isn't sent back to fix anything.
+  let planLimit: { resetsAt?: Date } | undefined;
   const checkFinish: HookCallback = async (input) => {
-    if (input.hook_event_name !== "Stop") return {};
+    if (input.hook_event_name !== "Stop" || planLimit) return {};
     request.onProgress("Checking the generated code");
     const { own, cards } = await request.verify();
     if (!own && !cards) return {};
@@ -476,30 +464,35 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
       },
       permissionMode: "default",
       canUseTool: async (toolName) => ({ behavior: "deny", message: `${toolName} isn't available here.` }),
-      // Only the system prompt and the task are instructions: nothing from this machine's Claude Code setup (no
-      // settings or CLAUDE.md files, no other MCP servers, and, when it's signed in with a Claude account, none of that
-      // account's connectors, skills or plugins). Besides giving the agent tools it mustn't have, a signed-in account's
-      // connectors add their tool definitions to every request, which made a short run cost dozens of times more.
-      settingSources: [],
-      strictMcpConfig: true,
-      settings: { disableClaudeAiConnectors: true, syncClaudeAiSkills: false, syncClaudeAiPlugins: false },
-      skills: [],
-      persistSession: false,
+      // Only the system prompt and the task are instructions: nothing from this machine's Claude Code setup, and none
+      // of the signed-in account's connectors, skills or plugins (claude-code.ts).
+      ...ISOLATED,
       maxTurns: MAX_TURNS,
-      maxBudgetUsd: MAX_BUDGET_USD,
       abortController: request.controller,
-      env: { ...process.env, CLAUDE_AGENT_SDK_CLIENT_APP: "ship-docs-codegen/0.1.0" },
+      // On the signed-in Claude plan, never an API key.
+      env: claudeCodeEnv(),
       stderr: (data) => {
         stderr.push(...data.split(/\r?\n/).filter(Boolean));
         stderr.splice(0, Math.max(0, stderr.length - STDERR_LINES));
       },
     },
   });
+
   const meter = new UsageMeter();
   let result: SDKResultMessage | undefined;
+  // The latest rejection Claude Code reported for the plan's usage limit (not while extra usage covers it).
+  let rejected: { resetsAt?: Date } | undefined;
   try {
     for await (const message of session) {
-      if (message.type === "assistant") {
+      if (message.type === "rate_limit_event") {
+        const info = message.rate_limit_info;
+        if (info.status === "rejected" && !info.isUsingOverage) rejected = { resetsAt: resetTime(info.resetsAt) };
+      } else if (message.type === "assistant") {
+        // A request refused because the plan's usage limit is reached: nothing more can be done until it resets.
+        if (message.error === "rate_limit") {
+          planLimit = { resetsAt: rejected?.resetsAt };
+          break;
+        }
         meter.add(message);
         request.onUsage(meter.current());
         const step = message.parent_tool_use_id ? undefined : describe(request, message);
@@ -511,6 +504,7 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
     }
   } catch (error) {
     if (request.controller.signal.aborted) throw error;
+    if (rejected) throw new PlanLimitError(rejected.resetsAt);
     const detail = stderr.length ? ` ${stderr.slice(-3).join(" ")}` : "";
     throw new AgentError(`The agent couldn't run: ${error instanceof Error ? error.message : String(error)}.${detail}`);
   } finally {
@@ -518,29 +512,33 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
     session.close();
   }
 
+  if (planLimit) {
+    request.onUsage(meter.current());
+    throw new PlanLimitError(planLimit.resetsAt);
+  }
   if (!result) throw new AgentError("The agent stopped without finishing.");
   request.onUsage(meter.final(result));
   logUsage(result);
   if (result.subtype !== "success" || result.is_error) {
+    if (rejected) throw new PlanLimitError(rejected.resetsAt);
     const { message, limit } = failureOf(result);
-    throw new AgentError(message, result.total_cost_usd, limit);
+    throw new AgentError(message, limit);
   }
   if (fixLimit) {
     throw new AgentError(
       `The code still had problems after ${MAX_FIX_ROUNDS} round(s) of fixes (CODEGEN_FIX_ROUNDS), so it was discarded:\n\n${fixLimit}`,
-      result.total_cost_usd,
       "fixRounds",
     );
   }
-  return { summary: result.result, costUsd: result.total_cost_usd, fixRounds, turns: result.num_turns };
+  return { summary: result.result, fixRounds };
 }
 
-/** One line per model in the server log, so the cost of a generation can be traced. */
+/** One line per model in the server log, so a generation's use of the plan can be traced. */
 function logUsage(result: SDKResultMessage) {
   const models = Object.entries(result.modelUsage).map(
     ([model, usage]) =>
       `${model}: ${usage.inputTokens} input, ${usage.cacheCreationInputTokens} cache write, ${usage.cacheReadInputTokens} cache read, ` +
-      `${usage.outputTokens} output tokens, $${usage.costUSD.toFixed(3)}`,
+      `${usage.outputTokens} output tokens`,
   );
-  console.info(`Code generation: ${result.num_turns} turns, $${result.total_cost_usd.toFixed(3)}. ${models.join("; ")}`);
+  console.info(`Code generation: ${result.num_turns} turns. ${models.join("; ")}`);
 }

@@ -14,18 +14,19 @@ import { getExtension } from "@/lib/files";
 import { CHILD_DIR, errorCode, writeAtomic } from "@/server/child-dir";
 import { ApiError, findCodegenTarget, patchSectionCodegen, type CodegenState, type CodegenTarget } from "@/server/storage";
 import type { CodegenLimit, CodegenMode, CodegenObjects, CodegenUsage, CodegenVersion, SectionCodegen } from "@/types/records";
-import { AgentError, IMAGE_MEDIA_TYPES, runAgent, type AgentImage } from "./agent";
+import { AgentError, IMAGE_MEDIA_TYPES, MODEL, runAgent, type AgentImage } from "./agent";
 import { checkCards, objectAccess, objectImages, objectReads, objectsPrompt, planObjects, settleCards, type ObjectPlan } from "./objects";
+import { PlanLimitError, planLimitUntil, setPlanWait, sleepUntil, UNKNOWN_RESET_WAIT_MS } from "./plan";
 import { assertPlainPath, CodegenPolicy, FileJournal, listGeneratedFiles, pathProblem, toLabel } from "./policy";
 import { renderPrompt, type PromptValues } from "./prompts";
 import { queueRun, runtime, type Job } from "./runtime";
 import { applyStage, createStage, discardStage, discardStaleStages, removeTree, type AppliedStage, type Stage } from "./staging";
 import { projectTree, requiredReads } from "./structure";
-import { buildViewer, diagnosticsBlock, formatDiagnostics, newDiagnostics, typecheck, TypeChecker, type Diagnostic } from "./typecheck";
+import { diagnosticsBlock, formatDiagnostics, newDiagnostics, typecheck, TypeChecker, type Diagnostic } from "./typecheck";
 import { dataBlock, quoteText } from "./untrusted";
 
 /**
- * Generates a section's 2D and 3D React code from its line diagram, with the SDK or Claude Code CLI:
+ * Generates a section's 2D and 3D React code from its line diagram, with the Claude Agent SDK (see agent.ts):
  *   1. Uploading a line diagram queues a generation in section.json (storage.ts); the API route then calls
  *      reconcileCodegen, which starts a job for it, and stops a job still working on an older one.
  *   2. Jobs run one at a time, across ships, so generations don't compete for the machine (each type-checks a whole
@@ -47,8 +48,12 @@ import { dataBlock, quoteText } from "./untrusted";
  *      passed: the stage's changes are then applied (each path checked again; nothing at all if a real file changed
  *      meanwhile), and the section's generated files become its next version (v1, v2…): copied to
  *      codegen/<section ID>/v<N>/ and listed in section.json, so restoreCodegenVersion can switch back to it. If it
- *      fails, is stopped, or reaches a limit (budget, turns, fix rounds), the stage is discarded and nothing changes.
- *   5. However it ends, its status, tokens and cost are saved in section.json (`usage`) and added to the ship's
+ *      fails, is stopped, or reaches a limit (turns, fix rounds), the stage is discarded and nothing changes.
+ *   4b. It runs on the Claude plan Claude Code is signed in with (plan.ts). While the plan's usage limit is reached,
+ *      the generation waits for it to reset (status "queued", with `waitingUntil`), then starts: checked before it
+ *      starts, and when the agent reaches the limit while working, its stage is discarded and it starts again, on a
+ *      fresh copy, once the limit has reset. Generations after it wait too, since they run one at a time.
+ *   5. However it ends, its status, tokens and turns are saved in section.json (`usage`) and added to the ship's
  *      codegen/usage.jsonl, one line per generation.
  * Jobs live in this server process: one that's queued or running when the server stops shows as interrupted, and its
  * stage is removed by the next generation.
@@ -57,6 +62,10 @@ import { dataBlock, quoteText } from "./untrusted";
 const SUMMARY_MAX = 4000;
 const STATE_MAX = 100;
 const ROLLBACK_DELAY_MS = 1000;
+/** How often a generation waits for the plan's usage limit and starts again, at most; reaching it again fails it. */
+const MAX_PLAN_WAITS = 6;
+/** A generation starts again this long after the limit's reset, so the plan's usage has turned over. */
+const RESET_MARGIN_MS = 60_000;
 
 function jobKey(projectId: string, sectionId: string) {
   return `${projectId}/${sectionId}`;
@@ -91,15 +100,10 @@ export function reconcileCodegen(projectId: string, record: { id: string } & Rec
 }
 
 /** "Generate again": queues a new generation from the section's current line diagram, and starts it. */
-export async function requestCodegen(projectId: string, sectionId: string, engine: CodegenEngine = "sdk") {
-  const result = await patchSectionCodegen(projectId, sectionId, (state, section) => {
+export async function requestCodegen(projectId: string, sectionId: string) {
+  const result = await patchSectionCodegen(projectId, sectionId, (_state, section) => {
     if (!section.lineDiagram) throw new ApiError(400, "Upload a line diagram first: the code is generated from it.");
-    return {
-      codegen: queueRun(section.lineDiagram.storedName, {
-        engine,
-        ...(engine === "cli" && state.codegen?.drawingHash && { drawingHash: state.codegen.drawingHash }),
-      }),
-    };
+    return { codegen: queueRun(section.lineDiagram.storedName) };
   });
   if (!result) throw new ApiError(404, `${sectionId} no longer exists.`);
   reconcileCodegen(projectId, result.record);
@@ -186,158 +190,6 @@ function setProgress(job: Job, step: string) {
   if (run) run.progress = step;
 }
 
-interface CliPromptStage {
-  label: string;
-  prompt: string;
-}
-
-async function runCliWithFixes(request: AgentRequest, stages: readonly CliPromptStage[], onEvent: (event: string) => void) {
-  let fixRounds = 0;
-  let turns = 0;
-  let totalCost = 0;
-  let hasCost = false;
-  let lastOutcome: AgentOutcome | undefined;
-  const summaries: string[] = [];
-  const usage = {
-    model: MODEL,
-    inputTokens: 0,
-    outputTokens: 0,
-    cacheCreationInputTokens: 0,
-    cacheReadInputTokens: 0,
-  };
-  const publishUsage = () =>
-    request.onUsage({
-      ...usage,
-      ...(hasCost && { costUsd: totalCost }),
-      turns,
-    });
-
-  for (const [stageIndex, stage] of stages.entries()) {
-    let prompt = stage.prompt;
-    let lastShared: string | null = null;
-    let lastCards: string | null = null;
-    for (;;) {
-      request.onProgress(`Claude Code CLI prompt ${stageIndex + 1} of ${stages.length}: ${stage.label}`);
-      let invocationUsage: CodegenUsage | undefined;
-      let outcome: AgentOutcome;
-      try {
-        outcome = await runClaudeCli({
-          ...request,
-          prompt,
-          maxTurns: MAX_TURNS - turns,
-          maxBudgetUsd: MAX_BUDGET_USD === undefined ? undefined : MAX_BUDGET_USD - totalCost,
-          onProgress: (event) => {
-            request.onProgress(event);
-            onEvent(event);
-          },
-          onUsage: (latest) => {
-            invocationUsage = latest;
-          },
-        });
-      } catch (error) {
-        if (invocationUsage) {
-          usage.inputTokens += invocationUsage.inputTokens;
-          usage.outputTokens += invocationUsage.outputTokens;
-          usage.cacheCreationInputTokens += invocationUsage.cacheCreationInputTokens;
-          usage.cacheReadInputTokens += invocationUsage.cacheReadInputTokens;
-          turns += invocationUsage.turns ?? 0;
-          if (typeof invocationUsage.costUsd === "number") {
-            totalCost += invocationUsage.costUsd;
-            hasCost = true;
-          }
-        } else if (error instanceof AgentError && typeof error.costUsd === "number") {
-          totalCost += error.costUsd;
-          hasCost = true;
-        }
-        if (error instanceof AgentError && error.limit === "turns") turns = MAX_TURNS;
-        publishUsage();
-        if (error instanceof AgentError) throw new AgentError(error.message, hasCost ? totalCost : undefined, error.limit);
-        throw error;
-      }
-
-      if (invocationUsage) {
-        usage.inputTokens += invocationUsage.inputTokens;
-        usage.outputTokens += invocationUsage.outputTokens;
-        usage.cacheCreationInputTokens += invocationUsage.cacheCreationInputTokens;
-        usage.cacheReadInputTokens += invocationUsage.cacheReadInputTokens;
-        if (typeof invocationUsage.costUsd === "number") {
-          totalCost += invocationUsage.costUsd;
-          hasCost = true;
-        }
-      } else if (typeof outcome.costUsd === "number") {
-        totalCost += outcome.costUsd;
-        hasCost = true;
-      }
-      turns += outcome.turns ?? 0;
-      publishUsage();
-      lastOutcome = outcome;
-      summaries.push(outcome.summary.trim());
-
-      const { own, shared, cards } = await request.verify();
-      if (!own && !shared && !cards) break;
-      if (!own && shared === lastShared && cards === lastCards) break;
-      if (fixRounds >= MAX_FIX_ROUNDS) {
-        if (own || shared !== lastShared) {
-          throw new AgentError(
-            `The code still had problems after ${MAX_FIX_ROUNDS} round(s) of fixes (CODEGEN_FIX_ROUNDS), so it was discarded:\n\n${[own, shared].filter(Boolean).join("\n\n")}`,
-            hasCost ? totalCost : undefined,
-            "fixRounds",
-          );
-        }
-        break;
-      }
-      if (turns >= MAX_TURNS) {
-        throw new AgentError(`The agent used all of its ${MAX_TURNS} turns (CODEGEN_MAX_TURNS), so it was stopped.`, hasCost ? totalCost : undefined, "turns");
-      }
-      if (MAX_BUDGET_USD !== undefined && totalCost >= MAX_BUDGET_USD) {
-        throw new AgentError(
-          `The agent reached its budget of $${MAX_BUDGET_USD} (CODEGEN_MAX_BUDGET_USD), so it was stopped.`,
-          hasCost ? totalCost : undefined,
-          "budget",
-        );
-      }
-
-      lastShared = shared;
-      lastCards = cards;
-      fixRounds += 1;
-      request.onProgress(`Fixing errors in the generated code (round ${fixRounds} of ${MAX_FIX_ROUNDS})`);
-      const parts: string[] = [];
-      if (own) {
-        parts.push(
-          `The code isn't finished yet:\n\n${own}\n\nRead the files involved and fix these diagnostics. The server will rerun the actual type check after this repair.`,
-        );
-      }
-      if (shared) {
-        parts.push(
-          `Your change to the template can't be kept as it is:\n\n${shared}\n\nMake it work for the template and for those ships, ` +
-            "for example with a new optional prop rather than a changed one. Other ships aren't accessible in this CLI run, " +
-            "so use the compatibility diagnostics above rather than trying to read their files. If it can't be, leave it as it is: " +
-            "the change to the template is then rejected (undone), and the change stays in this ship only.",
-        );
-      }
-      if (cards) {
-        parts.push(
-          `Some object cards are missing or wrong:\n\n${cards}\n\nWrite each one as the task describes, from the object's image. ` +
-            "A card that's still missing or wrong is left out, and that object's image is sent again next time.",
-        );
-      }
-      if (fixRounds === MAX_FIX_ROUNDS) {
-        parts.push("This is the last round: if these problems are still there when you finish, the generation fails and everything you wrote is discarded.");
-      }
-      prompt = `${stage.prompt}\n\n${parts.join("\n\n")}\n\nThen reply with your summary again.`;
-    }
-  }
-
-  if (!lastOutcome) throw new Error("Claude Code CLI had no prompts to run.");
-  return {
-    ...lastOutcome,
-    summary: summaries.filter(Boolean).join("\n\n"),
-    costUsd: hasCost ? totalCost : undefined,
-    turns,
-    fixRounds,
-  };
-}
-
 /**
  * Saves the job's status in section.json, unless the section has moved on to another generation (or is gone).
  * `update` gets the section's current generation and fields, and returns the new generation, plus any other fields.
@@ -359,6 +211,47 @@ async function save(
   }
 }
 
+/** The section's generation target, if it's still this job's: not gone, nor replaced by a newer generation. */
+async function currentTarget(job: Job): Promise<CodegenTarget | null> {
+  const target = await findCodegenTarget(job.projectId, job.sectionId);
+  const section = target?.section;
+  if (!target || !section || section.codegen?.runId !== job.runId || section.lineDiagram?.storedName !== section.codegen.lineDiagram) {
+    return null;
+  }
+  return target;
+}
+
+/**
+ * While the Claude plan's usage limit is reached, the generation waits for it to reset (status "queued", with
+ * `waitingUntil`), checking the plan again after each reset; then it returns whether it waited. Stopping the
+ * generation ends the wait (it throws). With `hit`, the agent has just reached the limit: it waits for the reset
+ * Claude Code gave, or what the plan's usage says, or a few minutes.
+ */
+async function waitForPlan(job: Job, hit?: PlanLimitError): Promise<boolean> {
+  const { signal } = job.controller;
+  let waited = false;
+  let until = hit
+    ? (hit.resetsAt ?? (await planLimitUntil(MODEL, { fresh: true })) ?? new Date(Date.now() + UNKNOWN_RESET_WAIT_MS))
+    : await planLimitUntil(MODEL);
+  // Just reached, so not "already reset", whatever the clocks say.
+  if (hit && until) until = new Date(Math.max(until.getTime(), Date.now() + RESET_MARGIN_MS));
+  try {
+    while (until && until.getTime() > Date.now()) {
+      const waitingUntil = until.toISOString();
+      console.info(`Code generation for ${job.key}: the Claude plan's usage limit is reached; waiting until ${waitingUntil}.`);
+      setPlanWait(waitingUntil);
+      setProgress(job, "Waiting for the Claude plan's usage limit to reset");
+      await save(job, (current) => ({ ...current, status: "queued", waitingUntil }));
+      await sleepUntil(new Date(until.getTime() + RESET_MARGIN_MS), signal);
+      waited = true;
+      until = await planLimitUntil(MODEL, { fresh: true });
+    }
+  } finally {
+    setPlanWait(undefined);
+  }
+  return waited;
+}
+
 async function runJob(job: Job, previous: Promise<void>) {
   const { signal } = job.controller;
   await Promise.race([previous, whenAborted(signal)]);
@@ -368,24 +261,70 @@ async function runJob(job: Job, previous: Promise<void>) {
     return;
   }
 
-  const target = await findCodegenTarget(job.projectId, job.sectionId);
-  const section = target?.section;
   // Gone, or replaced while it waited (the replacement has its own job).
-  if (!target || !section || section.codegen?.runId !== job.runId || section.lineDiagram?.storedName !== section.codegen.lineDiagram) {
-    return;
+  let target = await currentTarget(job);
+  if (!target) return;
+
+  const attempt: Attempt = {};
+  let mode: CodegenMode | undefined;
+  try {
+    mode = await nextMode(target.shipDir);
+    // The plan's limit is checked before the agent starts, and again whenever the agent reaches it. After a wait, the
+    // section is read again (it may have changed meanwhile, or been replaced).
+    let waited = await waitForPlan(job);
+    for (let waits = 0; ; waits += 1) {
+      if (waited) {
+        target = await currentTarget(job);
+        if (!target) return;
+      }
+      try {
+        await generate(job, target, mode, attempt);
+        return;
+      } catch (error) {
+        if (!(error instanceof PlanLimitError) || signal.aborted) throw error;
+        if (waits >= MAX_PLAN_WAITS) {
+          throw new Error(`The Claude plan's usage limit was reached ${waits + 1} times during this generation, so it was stopped. Use Generate again to retry.`);
+        }
+        console.info(`Code generation for ${job.key}: the agent reached the Claude plan's usage limit; it starts again after the reset.`);
+        await waitForPlan(job, error);
+        waited = true;
+      }
+    }
+  } catch (error) {
+    const limit = error instanceof AgentError ? error.limit : undefined;
+    // Stopped by a check (a path changed under a tool call) is a failure; stopped on request is "cancelled".
+    const failure = job.failure;
+    const cancelled = signal.aborted && !failure;
+    let message = failure ?? (cancelled ? (job.cancelReason ?? "Stopped.") : error instanceof Error ? error.message : String(error));
+    if (!cancelled) console.warn(`Code generation for ${job.key} failed:`, error);
+    if (attempt.undoFailed) message += " Some of the files it had applied couldn't be put back; the server log lists them.";
+    await end(job, target, { status: cancelled ? "cancelled" : "failed", error: message, usage: attempt.usage, limit, mode });
   }
+}
+
+/** What the latest attempt at a generation did, for when the generation ends. */
+interface Attempt {
+  usage?: CodegenUsage;
+  /** It failed after applying changes to the real ship, and some of them couldn't be undone. */
+  undoFailed?: boolean;
+}
+
+/**
+ * One attempt at a generation, on a fresh copy of the ship (its stage): the agent writes the code, which is checked,
+ * applied to the real ship, and kept as the section's next version. If anything fails, what it applied is undone and
+ * it throws; a PlanLimitError when the agent reached the Claude plan's usage limit.
+ */
+async function generate(job: Job, target: CodegenTarget, runMode: CodegenMode, attempt: Attempt) {
+  const { signal } = job.controller;
+  const { section } = target;
+  const lineDiagram = section.lineDiagram;
+  if (!lineDiagram) throw new Error("The section no longer has a line diagram.");
 
   let stage: Stage | undefined;
   let applied: AppliedStage | undefined;
-  let usage: CodegenUsage | undefined;
-  let costUsd: number | undefined;
-  let mode: CodegenMode | undefined;
-  let cliSessionId: string | undefined;
-  let cliExitCode: number | undefined;
+  attempt.usage = undefined;
   try {
-    mode = await nextMode(target.shipDir);
-    const runMode = mode;
-    await save(job, (current) => ({ ...current, status: "running", mode: runMode, startedAt: now() }));
+    await save(job, (current) => ({ ...current, status: "running", mode: runMode, startedAt: now(), waitingUntil: undefined }));
 
     // The agent works on a copy (staging.ts), so nothing real changes until its code has passed every check.
     setProgress(job, "Copying the ship to work on");
@@ -409,15 +348,9 @@ async function runJob(job: Job, previous: Promise<void>) {
     const ownProblems = () => findProblems(workStage.section, () => shipChecker.fresh());
 
     const values = await promptValues(target, workStage, policy, objectPlan);
-    const isCli = section.codegen?.engine === "cli";
-    const [system, prompt, cli2d, cli3d] = await Promise.all([
-      renderPrompt("rules", values),
-      renderPrompt(runMode, values),
-      isCli ? renderPrompt("cli-2d", values) : Promise.resolve(""),
-      isCli ? renderPrompt("cli-3d", values) : Promise.resolve(""),
-    ]);
-    const drawing = await readImage(section.dir, section.lineDiagram.storedName);
-    const request: AgentRequest = {
+    const [system, prompt] = await Promise.all([renderPrompt("rules", values), renderPrompt(runMode, values)]);
+    const drawing = await readImage(section.dir, lineDiagram.storedName);
+    const outcome = await runAgent({
       system,
       prompt,
       images: [...(drawing ? [drawing] : []), ...objectImages(objectPlan)],
@@ -436,35 +369,8 @@ async function runJob(job: Job, previous: Promise<void>) {
         job.controller.abort();
       },
       onProgress: (step) => setProgress(job, step),
-      onUsage: (latest) => (usage = latest),
-      onCliSession: (sessionId) => {
-        cliSessionId = sessionId;
-      },
-      onCliExit: (exitCode) => {
-        cliExitCode = exitCode ?? undefined;
-      },
-    };
-    const outcome =
-      isCli
-        ? await runCliWithFixes(
-            request,
-            [
-              { label: "generate both views from the line drawing", prompt },
-              { label: "review and refine the 2D view", prompt: cli2d },
-              { label: "refine the 3D view and integrate both views", prompt: cli3d },
-            ],
-            (event) => {
-            if (
-              event === "Claude Code CLI is running" ||
-              event === "Claude Code CLI session started" ||
-              /^(Reading|Writing|Editing|Inspecting)( |$)/.test(event)
-            ) {
-              setRunEvent(job.runId, event);
-            }
-            },
-          )
-        : await runAgent(request);
-    costUsd = outcome.costUsd;
+      onUsage: (latest) => (attempt.usage = latest),
+    });
     signal.throwIfAborted();
 
     setProgress(job, "Checking the generated code");
@@ -473,11 +379,6 @@ async function runJob(job: Job, previous: Promise<void>) {
     if (missing.length) throw new Error(`The agent didn't create ${missing.join(" or ")}${afterFixes}.`);
     if (fresh.length) {
       throw new Error(`The generated code still has type errors${afterFixes}, so it was discarded:\n${formatDiagnostics(fresh.slice(0, 5))}`);
-    }
-    if (section.codegen?.engine === "cli") {
-      setProgress(job, "Building the generated viewer");
-      await buildViewer(workStage.ship, signal);
-      if (changedTemplate()) await buildViewer(workStage.template, signal);
     }
 
     // The new objects' cards are kept if they're right (so later generations don't need the images), else left out.
@@ -504,42 +405,26 @@ async function runJob(job: Job, previous: Promise<void>) {
       version,
       finishedAt,
       mode: runMode,
-      lineDiagramName: section.lineDiagram.name,
+      lineDiagramName: lineDiagram.name,
       files: await keepVersion(target.shipDir, section.id, section.dir, version),
-      costUsd,
     };
     await recordGeneration(target.shipDir, { sectionId: section.id, section: section.name, version, mode: runMode, finishedAt, files });
     const summary = outcome.summary.trim().slice(0, SUMMARY_MAX);
+    const { usage } = attempt;
     await save(job, (current, state) => ({
-      codegen: { ...current, status: "done", finishedAt, files, summary, costUsd, version, usage, objects, error: undefined },
+      codegen: { ...current, status: "done", finishedAt, files, summary, version, usage, objects, error: undefined, waitingUntil: undefined },
       versions: [...state.versions.filter((other) => other.version !== version), entry],
       activeVersion: version,
     }));
-    await logUsage(target, job, { status: "done", mode: runMode, finishedAt, usage, costUsd, objects });
+    await logUsage(target, job, { status: "done", mode: runMode, finishedAt, usage, objects });
   } catch (error) {
-    const limit = error instanceof AgentError ? error.limit : undefined;
-    if (error instanceof AgentError) costUsd = error.costUsd ?? costUsd;
-    // Stopped by a check (a path changed under a tool call) is a failure; stopped on request is "cancelled".
-    const failure = job.failure;
-    const cancelled = signal.aborted && !failure;
-    let message = failure ?? (cancelled ? (job.cancelReason ?? "Stopped.") : error instanceof Error ? error.message : String(error));
-    if (!cancelled) console.warn(`Code generation for ${job.key} failed:`, error);
     try {
       await applied?.undo();
     } catch (undoError) {
       console.error(`Couldn't undo all the changes the code generation for ${job.key} had applied:`, undoError);
-      message += " Some of the files it had applied couldn't be put back; the server log lists them.";
+      attempt.undoFailed = true;
     }
-    await end(job, target, {
-      status: cancelled ? "cancelled" : "failed",
-      error: message,
-      costUsd,
-      usage,
-      limit,
-      mode,
-      cliSessionId,
-      cliExitCode,
-    });
+    throw error;
   } finally {
     if (stage) {
       // The SDK reports a stop as soon as it's asked to, so let a write the agent had already started land first.
@@ -553,30 +438,11 @@ async function runJob(job: Job, previous: Promise<void>) {
 async function end(
   job: Job,
   target: CodegenTarget | null,
-  ending: {
-    status: "failed" | "cancelled";
-    error?: string;
-    costUsd?: number;
-    usage?: CodegenUsage;
-    limit?: CodegenLimit;
-    mode?: CodegenMode;
-    cliSessionId?: string;
-    cliExitCode?: number;
-  },
+  ending: { status: "failed" | "cancelled"; error?: string; usage?: CodegenUsage; limit?: CodegenLimit; mode?: CodegenMode },
 ) {
   const finishedAt = now();
-  const { status, error, costUsd, usage, limit, cliSessionId, cliExitCode } = ending;
-  await save(job, (current) => ({
-    ...current,
-    status,
-    finishedAt,
-    error,
-    costUsd,
-    usage,
-    limit,
-    ...(cliSessionId && { cliSessionId }),
-    ...(cliExitCode !== undefined && { exitCode: cliExitCode }),
-  }));
+  const { status, error, usage, limit } = ending;
+  await save(job, (current) => ({ ...current, status, finishedAt, error, usage, limit, waitingUntil: undefined }));
   if (target) await logUsage(target, job, { ...ending, finishedAt });
 }
 
@@ -595,8 +461,7 @@ interface UsageEntry {
   outputTokens: number;
   cacheCreationInputTokens: number;
   cacheReadInputTokens: number;
-  /** Unset when the generation was stopped before the SDK reported a cost. */
-  costUsd?: number;
+  /** Unset when the generation was stopped before the SDK reported them. */
   turns?: number;
   /** How the section's objects were used: which images were sent, and which came from cards. Set when it's done. */
   objects?: CodegenObjects;
@@ -604,7 +469,7 @@ interface UsageEntry {
 }
 
 /**
- * Adds a finished generation (done, failed or stopped) to the ship's usage log, so every generation's tokens and cost
+ * Adds a finished generation (done, failed or stopped) to the ship's usage log, so every generation's tokens and turns
  * are kept, not just the latest one's in section.json. Only one job runs at a time, so appends don't interleave.
  */
 async function logUsage(
@@ -614,7 +479,6 @@ async function logUsage(
     status: UsageEntry["status"];
     finishedAt: string;
     error?: string;
-    costUsd?: number;
     usage?: CodegenUsage;
     limit?: CodegenLimit;
     mode?: CodegenMode;
@@ -636,7 +500,6 @@ async function logUsage(
     outputTokens: usage?.outputTokens ?? 0,
     cacheCreationInputTokens: usage?.cacheCreationInputTokens ?? 0,
     cacheReadInputTokens: usage?.cacheReadInputTokens ?? 0,
-    costUsd: ending.costUsd ?? usage?.costUsd,
     turns: usage?.turns,
     objects: ending.objects,
     error: ending.error?.slice(0, 500),
@@ -683,7 +546,7 @@ function describeProblems({ missing, fresh }: Problems, sectionDir: string): str
 
 /**
  * The drawing as an image for the prompt, or undefined for an SVG, which the agent reads as text instead. Its path is
- * checked first: it's sent to the Claude API, so it mustn't be a link to some other file.
+ * checked first: it's sent to Claude, so it mustn't be a link to some other file.
  */
 async function readImage(sectionDir: string, storedName: string): Promise<AgentImage | undefined> {
   const mediaType = IMAGE_MEDIA_TYPES[getExtension(storedName)];

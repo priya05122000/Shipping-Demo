@@ -8,7 +8,7 @@ An admin UI for **Ships**, each with its own **Sections** and **Objects**:
 
 Built with Next.js (App Router), TypeScript and Tailwind CSS. Each ship's sections and objects are saved as **folders inside the ship's own project** (`child/ships/<ship>/`) on the machine running the app, so its viewer can show them. There's no database and no cloud.
 
-Uploading a section's line diagram also **generates React code** for it with AI: an interactive 2D view and a 3D view, written into the ship's project (see [Generated 2D and 3D code](#generated-2d-and-3d-code)). Set `ANTHROPIC_API_KEY` in `.env.local` for that.
+Uploading a section's line diagram also **generates React code** for it with AI: an interactive 2D view and a 3D view, written into the ship's project (see [Generated 2D and 3D code](#generated-2d-and-3d-code)). It runs on this machine's Claude Code login (a Claude Pro or Max plan): sign in once with `claude`, then `/login`.
 
 ```bash
 npm install             # the parent (Next) only, and copies Monaco to public/monaco
@@ -76,19 +76,18 @@ The viewer shows a section's line diagram (**2D**), its objects (**3D**; the gen
 
 ## Generated 2D and 3D code
 
-When a section is created with a line diagram or an administrator saves a changed drawing while editing it, the parent automatically runs Claude Code CLI in three prompts. **Generate again (SDK)** in the section's View modal remains available for an explicit Claude Agent SDK run.
+When a section's line diagram is uploaded (with a new section, or replacing one), the parent turns it into React code with the [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview): Claude looks at the drawing and writes the code into the ship's project, where the ship's viewer shows it.
 
 - **What's written:** the section's `Diagram2D.tsx` (SVG) and `Diagram3D.tsx` ([react-three-fiber](https://r3f.docs.pmnd.rs/)) in its folder, plus the ship's **shared schematic components** in `src/shared/schematic/` (one 2D and one 3D component per kind of equipment, pipes, and the types that describe a drawing), which every section's code uses. It builds on the shared viewer (`@shipdocs/viewer-core`: `SectionViewProps`, `ObjectSymbol2D`, `ObjectModel3D`, `objectPort`…), which it reads but **never changes**: the viewer is every ship's, so a generation for one ship can't change another. Something the shared viewer lacks is written in the ship, and suggested in the agent's summary for people to add to `child/core` (see **Only the ship** below). It's ordinary code: change it in the editor like any other file.
 - **Two prompts**, in `src/server/codegen/prompts/` (Markdown, read again for each generation, so edits apply straight away):
   - `first.md` for a ship's **first** generation: creates the shared components, simply.
   - `second.md` for **every later** generation of the ship: reuses the shared components, adding to them only in ways that keep the other sections working.
-  - A Claude Code CLI run executes three prompts against the same staged project: the selected `first.md` or `second.md` builds both views, `cli-2d.md` reviews/refines the 2D view, and `cli-3d.md` refines the 3D view and checks their integration. Each prompt runs as its own CLI invocation; the total turn, cost and repair limits are shared across the three.
-  - `rules.md` goes with the generation prompt and both CLI review prompts: where code goes and what the viewer expects (file names, `SectionViewProps`), reading before writing, and fixing errors. Change it together with the viewer.
+  - `rules.md` goes with both: where code goes and what the viewer expects (file names, `SectionViewProps`), reading before writing, and fixing errors. Change it together with the viewer.
 
   Both prompts include the **file trees** of the ship's project and of the shared viewer (`{{projectTree}}` and `{{coreTree}}`, without `node_modules`, `dist` and `codegen/`), so the agent starts from the projects' real structure.
 
   The ship's `codegen/generations.json` lists its finished generations, and decides the prompt: none yet means `first.md`. Delete it to start over with `first.md`.
-- **Versions:** each finished generation becomes the section's next version: v1, v2, v3… Its generated files (every `.ts`/`.tsx` in the section's folder except `diagram.ts`) are kept in `codegen/<section ID>/v<N>/`, outside `src/`, so old versions are never built. A section's View modal lists its versions, with the drawing each came from and its cost, and **Restore** switches the section back to one:
+- **Versions:** each finished generation becomes the section's next version: v1, v2, v3… Its generated files (every `.ts`/`.tsx` in the section's folder except `diagram.ts`) are kept in `codegen/<section ID>/v<N>/`, outside `src/`, so old versions are never built. A section's View modal lists its versions, with the drawing each came from, and **Restore** switches the section back to one:
   - its generated files are replaced by that version's, so changes made to them since are lost (they're still in their own version, unless made by hand);
   - the shared components, and any other files outside the section's folder, stay as they are, since the ship's other sections use them, so the version is only restored if the ship still type-checks with it; otherwise nothing changes and the errors are shown;
   - it isn't possible while the ship's code is being generated. The next generation still gets the next number.
@@ -116,18 +115,19 @@ When a section is created with a line diagram or an administrator saves a change
 - **Shared UI is changed by people:** a change every ship needs (a fix to the viewer, a new shared component) is made in `child/core`, in the editor's shared files or an IDE, and reaches every ship when it's rebuilt. A generation only reports such a need, in its summary. (Generations made before this could change the template; their records still show whether that change was kept, as `sharedChange` in `section.json`.)
 - **Checked, or discarded:** when the agent is done, the section's own code is checked: both entry files must exist and the ship must have no new type errors, so its build keeps working. Otherwise, or when it's stopped, its stage is discarded.
 - **Untrusted content:** only Claude Code's system prompt with `rules.md` appended, and the task (`first.md` or `second.md`), are instructions. They're read only from those three regular files, and nothing from this machine's Claude Code setup is loaded. Everything else is data, and `rules.md` says so: the drawing (image or SVG), names, descriptions, tags and labels, `manual-data.json`, source code and its comments, documentation, and tool results. Text that came from people goes into the prompts quoted (names) or fenced as `data` (file trees, type checker messages, which quote the code), with control and direction-override characters removed, so it can't pass for the prompt (`src/server/codegen/untrusted.ts`).
-- **Limits:** a generation stops as soon as it reaches its budget (`CODEGEN_MAX_BUDGET_USD`, the SDK's cost estimate), its turns (`CODEGEN_MAX_TURNS`), or still has problems after its rounds of fixes (`CODEGEN_FIX_ROUNDS`). It then fails, its stage is discarded, and the View modal says which limit stopped it.
-- **Usage:** every generation, however it ends (done, failed, stopped, or stopped before it started), records its input and output tokens (with cache reads and writes), turns, estimated cost and status: the latest in `section.json` (`codegen.usage`, shown in the View modal), and all of them in the ship's `codegen/usage.jsonl`, one JSON line each. A generation stopped before the SDK reported a cost has its tokens so far, and no cost.
-- A generation takes a few minutes and runs in the Next server process: one that's running when the server stops shows as interrupted (use **Generate again**), and its stage is removed when the next generation starts. Each one costs money on the Anthropic account; the cost is shown when it's done.
+- **Limits:** a generation stops as soon as it reaches its turns (`CODEGEN_MAX_TURNS`), or still has problems after its rounds of fixes (`CODEGEN_FIX_ROUNDS`). It then fails, its stage is discarded, and the View modal says which limit stopped it.
+- **Usage:** every generation, however it ends (done, failed, stopped, or stopped before it started), records its input and output tokens (with cache reads and writes), turns and status: the latest in `section.json` (`codegen.usage`, shown in the View modal), and all of them in the ship's `codegen/usage.jsonl`, one JSON line each.
+- A generation takes a few minutes and runs in the Next server process: one that's running when the server stops shows as interrupted (use **Generate again**), and its stage is removed when the next generation starts.
+- **Claude Code, on your Claude plan:** the agent runs on the Claude account Claude Code is signed in with on this machine (`claude`, then `/login`; `/status` shows which), never on an API key: `ANTHROPIC_API_KEY` is ignored even when it's set (`src/server/codegen/claude-code.ts`). Generations count toward that plan's usage limits, shared with claude.ai. A subscription is for your own use: an instance that other people use needs its own arrangement with Anthropic.
+- **Plan usage:** the Generated code box (in a section's View modal and Edit form) shows the plan's usage, as Claude Code's `/usage` does: the current 5-hour session and the week (and any per-model week), each with how much is used and when it resets. It's read every minute while shown, or with **Refresh** (`GET /api/claude/usage`). Reading it sends no prompt, so it uses none of the plan. It relies on a call the Agent SDK marks experimental; if that stops working, the box says so, and generations still wait as below when the agent reaches a limit.
+- **When the limit is reached, generations wait, then start again on their own:** before a generation starts, the plan's usage is checked; if a limit that applies to `CODEGEN_MODEL` is used up, the generation waits (shown as **Waiting for plan limit**, with the time) until a minute after it resets. If the agent reaches the limit while working, its stage is discarded and the generation starts again, on a fresh copy of the ship, once the limit has reset (6 times at most). Generations after it wait too, since they run one at a time. **Stop** ends a wait; a wait in progress when the server stops shows as interrupted, like a running generation (`src/server/codegen/plan.ts`).
 
 Configure it in `.env.local` (Next loads it; it's git-ignored):
 
 | Variable | Default | |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | | Required for CLI runs; SDK runs may use signed-in Claude Code authentication |
 | `CODEGEN_MODEL` | `claude-opus-5-5` | The Claude model |
 | `CODEGEN_EFFORT` | `high` | `low`, `medium`, `high`, `xhigh` or `max` |
-| `CODEGEN_MAX_BUDGET_USD` | `5` | Stops a generation when its estimated cost reaches this, and discards it. `none` for no limit |
 | `CODEGEN_MAX_TURNS` | `120` | Stops a generation that takes more turns, and discards it |
 | `CODEGEN_FIX_ROUNDS` | `3` | How often the agent is sent back to fix errors when it wants to finish; still wrong after that stops it and discards it. `0`: no rounds |
 
@@ -156,7 +156,7 @@ child/ships/
     ship.json                          its ID (SHP-001), name, dates, and imoNumber / vesselType / description if set
     codegen/                           its generated code's history, outside src/ so the viewer never builds it
       generations.json                 finished code generations (they decide between the first and second prompt)
-      usage.jsonl                      every code generation's status, tokens and cost, one JSON line each
+      usage.jsonl                      every code generation's status, tokens and turns, one JSON line each
       SEC-001/v1/, v2/, …              each version of a section's generated files, by section ID
     package.json, vite.config.ts,      the project's files, made from child/template when the ship was created: they
       index.html, tsconfig*.json,        start the shared viewer (child/core) with this ship's data
@@ -228,9 +228,10 @@ The limits are `MAX_FILE_SIZE` and `MAX_PDF_SIZE` in `src/lib/files.ts`.
 | `POST /api/projects/:id/:collection` | Create a record (multipart: `name`, file fields, and for sections one `objectIds` value per object) |
 | `PUT /api/projects/:id/:collection/:recordId` (e.g. `/api/projects/SHP-001/sections/SEC-001`) | Update the name and/or replace files; omitted files are kept, `remove=<field>` clears an optional one. `objectIds` replaces the section's list (send none to clear it) |
 | `DELETE /api/projects/:id/:collection/:recordId` | Delete a record's folder; 409 for an object a section still uses |
-| `POST /api/projects/:id/sections/:recordId/codegen` | Generate a section's code again from its line diagram (202; optional JSON `{ "engine": "cli" }` to retry with CLI); 400 without a line diagram |
+| `POST /api/projects/:id/sections/:recordId/codegen` | Generate a section's code again from its line diagram (202); 400 without a line diagram |
 | `PUT /api/projects/:id/sections/:recordId/codegen` | Switch a section's code to one of its versions, from JSON `{ "version": 2 }`; 409 if it doesn't type-check with the ship's current shared components (nothing changes), or while the ship's code is being generated |
 | `DELETE /api/projects/:id/sections/:recordId/codegen` | Stop a section's code generation; responds once its files are rolled back |
+| `GET /api/claude/usage` | The usage of the Claude plan Claude Code is signed in with: each limit's percentage used and reset time, and `waitingUntil` while generations wait for one. A read from the last minute is reused; `?fresh=1` reads it again |
 | `GET /api/files/:ship/:collection/:folder/:file` | Serve a file from a record's folder, by folder names (e.g. `/api/files/mv-aurora/sections/engine-room/manual-a1c2e3f4.pdf`) |
 | `GET /api/child-files` | The child app's shared files (everything but `ships/`), as a tree (editor). With `?project=<folder>` (e.g. `?project=mv-aurora`), only that ship's folder |
 | `GET /api/child-files/:path*` | Open a file: `{ path, content, version }` |
@@ -250,13 +251,13 @@ Code used by only one page lives next to that page in a `_components/` folder (f
 | `src/lib/collection-defs.ts`, `src/lib/imo.ts` | Per-collection folder, IDs, file, text and link fields, shared by the UI and the server; IMO number checks |
 | `src/server/storage.ts` | Reads and writes ship, section and object folders in the child app |
 | `src/server/manual-data.ts` | Reads a section manual's component tables (with PDF.js) for `manual-data.json` |
-| `src/server/codegen/` | Generates sections' React code: `jobs.ts` (queue per ship, first or second prompt, checks, rollback, versions and restoring them), `agent.ts` (the Claude Agent SDK run, and its hooks: the file rules before each tool call, the type check after each write, the fix rounds before it finishes), `policy.ts` (what the agent may read and write, and the rollback journal), `structure.ts` (the project's file tree for the prompt, and the files to read before writing), `typecheck.ts` (tsc from the child's install, and the run's `TypeChecker`), `staging.ts` (the generation's working copy, and applying it), `untrusted.ts` (quoting and fencing text that came from people), `prompts.ts` and `prompts/*.md`, `runtime.ts` (this process's jobs). `src/lib/codegen.ts` holds what the Library shares with it |
+| `src/server/codegen/` | Generates sections' React code: `jobs.ts` (queue per ship, first or second prompt, checks, rollback, versions and restoring them), `agent.ts` (the Claude Agent SDK run, and its hooks: the file rules before each tool call, the type check after each write, the fix rounds before it finishes), `claude-code.ts` (runs Claude Code on the signed-in Claude plan, isolated from this machine's setup), `plan.ts` (the plan's usage, and waiting while its limit is reached), `policy.ts` (what the agent may read and write, and the rollback journal), `structure.ts` (the project's file tree for the prompt, and the files to read before writing), `typecheck.ts` (tsc from the child's install, and the run's `TypeChecker`), `staging.ts` (the generation's working copy, and applying it), `untrusted.ts` (quoting and fencing text that came from people), `prompts.ts` and `prompts/*.md`, `runtime.ts` (this process's jobs). `src/lib/codegen.ts` holds what the Library shares with it |
 | `src/app/api/` | Route handlers for the API above |
 | `src/lib/storage.ts`, `src/lib/collections.ts` | Client-side stores that call the API and cache results: the ships, and each ship's sections and objects |
 | `src/app/(dashboard)/` | Top-level pages, grouped without adding to the URL: the projects page `/` (ship cards) and `/editor` for the shared files |
 | `src/app/projects/[projectId]/` | A ship's Library, Viewer and Editor pages. `layout.tsx` gives them one frame (header, breadcrumb, page links) that stays mounted between them, and always renders the page, as Next's instant-navigation check needs. Each page wraps its content in `_components/ProjectWorkspace`, which finds the ship (loading, error and not-found states) and provides it through `useProject()`; `_components/` also holds the Library's tabs and view modal; `viewer/_components/` holds the iframe host that shows the ship's viewer and drives it; `editor/_components/` scopes the editor to the ship |
 | `src/components/layout/` | `DashboardFrame`: the header, main nav, and a ship's breadcrumb and page links |
-| `src/components/records/` | Shared CRUD UI: collection configs, table, add/edit form (with the object picker and text fields), and sections' code generation status (`CodegenStatus.tsx`) |
+| `src/components/records/` | Shared CRUD UI: collection configs, table, add/edit form (with the object picker and text fields), and sections' code generation status (`CodegenStatus.tsx`, with the Claude plan's usage in `PlanUsagePanel.tsx`) |
 | `src/components/ui/`, `src/components/files/` | Reusable modal, confirm dialog, tabs, inputs, file upload, toasts, pagination; file thumbnails and details |
 | `src/components/editor/` | The editor behind `/editor` and each ship's Editor page: file tree, open-file tabs, Monaco |
 | `src/lib/viewer-protocol.ts`, `src/lib/viewer-bridge.ts`, `src/hooks/useViewerEvents.ts` | Parent side of the message bridge: its copy of the contract (checking every message), the viewer's URL, and sending and receiving |

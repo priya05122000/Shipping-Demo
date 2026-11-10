@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { isCodegenActive, readCodegen } from "@/lib/codegen";
-import type { CodegenEngine, SectionCodegen } from "@/types/records";
+import type { PlanUsage, SectionCodegen } from "@/types/records";
 
 /**
  * State of this server process's code generations, kept on globalThis so every route bundle shares it (like the
@@ -28,7 +28,7 @@ export interface Job {
 
 interface Runtime {
   /** Generations this process knows about (queued or running), by run ID, with what each is doing right now. */
-  runs: Map<string, { progress?: string; latestEvent?: string }>;
+  runs: Map<string, { progress?: string }>;
   /** Jobs by Job.key. */
   jobs: Map<string, Job>;
   /**
@@ -43,6 +43,10 @@ interface Runtime {
   jobChain: Promise<void>;
   /** Restores of a section's version in progress, by Job.key; each settles when it has finished or rolled back. */
   restores: Map<string, Promise<void>>;
+  /** The Claude plan's usage, as last read (plan.ts), and when that read started. */
+  planUsage?: { read: Promise<PlanUsage>; at: number };
+  /** ISO time generations wait until, while the Claude plan's usage limit is reached (plan.ts). */
+  planWait?: string;
 }
 
 const shared = ((globalThis as { __shipCodegen?: Partial<Runtime> }).__shipCodegen ??= {});
@@ -55,29 +59,10 @@ shared.jobChain ??= Promise.resolve();
 export const runtime = shared as Runtime;
 
 /** A new queued generation for a section whose line diagram was just saved, known to this process from now on. */
-export function queueRun(
-  lineDiagram: string,
-  options: { engine?: CodegenEngine; drawingHash?: string } = {},
-): SectionCodegen {
+export function queueRun(lineDiagram: string): SectionCodegen {
   const runId = crypto.randomBytes(6).toString("hex");
   runtime.runs.set(runId, {});
-  return {
-    runId,
-    status: "queued",
-    lineDiagram,
-    requestedAt: new Date().toISOString(),
-    engine: options.engine ?? "sdk",
-    ...(options.drawingHash && { drawingHash: options.drawingHash }),
-  };
-}
-
-/** Publishes a parsed agent event to section listings while the job is active. */
-export function setRunEvent(runId: string, event: string) {
-  const run = runtime.runs.get(runId);
-  if (run) {
-    run.progress = event;
-    run.latestEvent = event;
-  }
+  return { runId, status: "queued", lineDiagram, requestedAt: new Date().toISOString() };
 }
 
 /**
@@ -92,10 +77,9 @@ export function presentCodegen(value: unknown): SectionCodegen | undefined {
     return {
       ...codegen,
       status: "failed",
+      waitingUntil: undefined,
       error: "Interrupted: the server stopped before the code was finished. Use Generate again to retry.",
     };
   }
-  return run.progress || run.latestEvent
-    ? { ...codegen, ...(run.progress && { progress: run.progress }), ...(run.latestEvent && { latestEvent: run.latestEvent }) }
-    : codegen;
+  return run.progress ? { ...codegen, progress: run.progress } : codegen;
 }

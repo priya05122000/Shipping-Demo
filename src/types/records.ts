@@ -62,7 +62,6 @@ export interface Project extends BaseRecord {
 }
 
 export type CodegenStatus = "queued" | "running" | "done" | "failed" | "cancelled";
-export type CodegenEngine = "sdk" | "cli";
 
 /**
  * Which prompt a generation used: "first" for the ship's first generation (it creates the ship's shared schematic
@@ -78,18 +77,6 @@ export interface SectionCodegen {
   /** Identifies one generation. A new upload or "Generate again" starts a new one. */
   runId: string;
   status: CodegenStatus;
-  /** Which Claude integration ran this generation. Older records default to the Agent SDK. */
-  engine?: CodegenEngine;
-  /** SHA-256 of the uploaded drawing; used to avoid repeat runs for unchanged content. */
-  drawingHash?: string;
-  /** Claude Code CLI's session ID, when the CLI was used. */
-  cliSessionId?: string;
-  /** Latest parsed execution event, never raw terminal output. */
-  latestEvent?: string;
-  /** CLI process exit code. */
-  exitCode?: number;
-  /** Set only after the generated entry points pass type-checking and the viewer build. */
-  validation?: "passed";
   /** Stored name of the line diagram the code is made from, e.g. "lineDiagram-9f2c1a7b.png". */
   lineDiagram: string;
   /** Set when the generation starts. */
@@ -104,8 +91,11 @@ export interface SectionCodegen {
   summary?: string;
   /** Why it failed or was stopped. */
   error?: string;
-  /** Estimated API cost in US dollars. */
-  costUsd?: number;
+  /**
+   * ISO time the Claude plan's usage limit resets, while the generation waits for it (status "queued"): it then
+   * starts again on its own. See src/server/codegen/plan.ts.
+   */
+  waitingUntil?: string;
   /** The version the generation created. Set when it's done. */
   version?: number;
   /**
@@ -113,7 +103,7 @@ export interface SectionCodegen {
    * they can't: ships share child/core, which only people change). Kept so those records still show it.
    */
   sharedChange?: SharedChange;
-  /** Tokens and cost, as the Claude Agent SDK reported them. Set when the generation ends, however it ends. */
+  /** Tokens and turns, as the Claude Agent SDK reported them. Set when the generation ends, however it ends. */
   usage?: CodegenUsage;
   /** The configured limit that stopped it, if one did (it's then failed, and nothing it wrote was kept). */
   limit?: CodegenLimit;
@@ -137,20 +127,44 @@ export interface CodegenObjects {
   skipped: string[];
 }
 
-/** The limits on a generation (see src/server/codegen/agent.ts): CODEGEN_MAX_TURNS, CODEGEN_MAX_BUDGET_USD, CODEGEN_FIX_ROUNDS. */
-export type CodegenLimit = "turns" | "budget" | "fixRounds";
+/** The limits on a generation (see src/server/codegen/agent.ts): CODEGEN_MAX_TURNS, CODEGEN_FIX_ROUNDS. */
+export type CodegenLimit = "turns" | "fixRounds";
 
-/** A generation's use of the Claude API, as the Claude Agent SDK reported it: an estimate, not a bill. */
+/** A generation's use of Claude (through Claude Code, on its signed-in plan), as the Claude Agent SDK reported it. */
 export interface CodegenUsage {
   model: string;
   inputTokens: number;
   outputTokens: number;
   cacheCreationInputTokens: number;
   cacheReadInputTokens: number;
-  /** Estimated cost in US dollars; unset when the generation was stopped before the SDK reported one. */
-  costUsd?: number;
-  /** Turns the agent took; unset as for costUsd. */
+  /** Turns the agent took; unset when the generation was stopped before the SDK reported them. */
   turns?: number;
+}
+
+/** One of the Claude plan's usage limits, e.g. the 5-hour session or the week. */
+export interface PlanUsageWindow {
+  /** E.g. "Current session (5 hours)". */
+  label: string;
+  /** Percentage used, 0-100, or null when Claude Code didn't say. */
+  utilization: number | null;
+  /** ISO time it resets. */
+  resetsAt: string | null;
+  /** Set for a limit that only counts one model's use, e.g. "Opus": it only holds back generations with that model. */
+  model?: string;
+}
+
+/** The usage of the Claude plan Claude Code is signed in with on this machine (GET /api/claude/usage). */
+export interface PlanUsage {
+  /** False when the plan's limits couldn't be read (not signed in, or Claude Code didn't report them); see `error`. */
+  available: boolean;
+  /** E.g. "pro", "max". */
+  subscription: string | null;
+  windows: PlanUsageWindow[];
+  /** ISO time generations are waiting until, while a limit is reached. */
+  waitingUntil?: string;
+  /** ISO time it was read. */
+  checkedAt: string;
+  error?: string;
 }
 
 /**
@@ -181,8 +195,6 @@ export interface CodegenVersion {
   lineDiagramName: string;
   /** The section's generated files at that version, relative to the section's folder, e.g. "Diagram2D.tsx". */
   files: string[];
-  /** Estimated API cost in US dollars. */
-  costUsd?: number;
 }
 
 /** A drawing: at most one line diagram and one manual, plus the ship's objects it uses. Saved in child/ships/<ship>/src/sections/<folder>/. */
