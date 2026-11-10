@@ -1,0 +1,18 @@
+{
+  "image": "stainless-steel-safety-relief-valve-2d-048a287a.png",
+  "kind": "safety relief valve (spring loaded, in-line)",
+  "description": "Framed panel, symbol on the left: a horizontal bowtie valve (two triangles meeting at their tips) with a zigzag spring rising from the centre; a blue inlet arrow and a short flange bar on the left, a straight outlet line on the right. A rendered photo of the valve fills the right half of the image.",
+  "aspect": 3,
+  "ports": [
+    {
+      "id": "in",
+      "x": 0.1,
+      "y": 0.567
+    },
+    {
+      "id": "out",
+      "x": 0.379,
+      "y": 0.567
+    }
+  ]
+}

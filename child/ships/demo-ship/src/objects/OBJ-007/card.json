@@ -1,0 +1,18 @@
+{
+  "image": "angled-butterfly-valve-2d-426df46b.png",
+  "kind": "butterfly valve (angled disc, handwheel)",
+  "description": "Framed panel, symbol on the left: a horizontal bowtie valve whose two triangles are joined by a diagonal band (the disc), with a stem up to a T bar, and a rectangle (flange) at each end. Pipes join at the outer edges of the end rectangles. A rendered photo of the valve fills the right half of the image.",
+  "aspect": 3,
+  "ports": [
+    {
+      "id": "in",
+      "x": 0.14,
+      "y": 0.55
+    },
+    {
+      "id": "out",
+      "x": 0.35,
+      "y": 0.55
+    }
+  ]
+}

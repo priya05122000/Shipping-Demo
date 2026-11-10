@@ -1,0 +1,18 @@
+{
+  "image": "p-id-valve-2d-1bf0383e.png",
+  "kind": "globe / stop valve (handwheel)",
+  "description": "Framed panel, symbol on the left: a horizontal bowtie valve (two triangles meeting at their tips) with a circle around the centre, and a stem rising from the centre that turns right into a horizontal flag. Pipes join at the outer edges of the triangles. A rendered photo of the valve fills the right half of the image.",
+  "aspect": 3,
+  "ports": [
+    {
+      "id": "in",
+      "x": 0.181,
+      "y": 0.555
+    },
+    {
+      "id": "out",
+      "x": 0.322,
+      "y": 0.555
+    }
+  ]
+}

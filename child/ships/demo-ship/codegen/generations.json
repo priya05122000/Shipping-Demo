@@ -1,0 +1,29 @@
+{
+  "generations": [
+    {
+      "sectionId": "SEC-001",
+      "section": "Bunker",
+      "version": 1,
+      "mode": "first",
+      "finishedAt": "2026-11-10T11:30:49.672Z",
+      "files": [
+        "src/objects/OBJ-003/card.json",
+        "src/objects/OBJ-004/card.json",
+        "src/objects/OBJ-005/card.json",
+        "src/objects/OBJ-006/card.json",
+        "src/objects/OBJ-007/card.json",
+        "src/objects/OBJ-008/card.json",
+        "src/objects/OBJ-009/card.json",
+        "src/sections/bunker/Diagram2D.tsx",
+        "src/sections/bunker/Diagram3D.tsx",
+        "src/sections/bunker/schematic.ts",
+        "src/shared/schematic/2d.tsx",
+        "src/shared/schematic/3d.tsx",
+        "src/shared/schematic/geometry.ts",
+        "src/shared/schematic/panel.tsx",
+        "src/shared/schematic/selection.ts",
+        "src/shared/schematic/types.ts"
+      ]
+    }
+  ]
+}

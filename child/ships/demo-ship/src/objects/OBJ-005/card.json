@@ -1,0 +1,18 @@
+{
+  "image": "stainless-steel-ball-valve-2d-6a672867.png",
+  "kind": "ball valve (manual, lever)",
+  "description": "Framed panel, symbol on the left: a horizontal bowtie valve (two triangles meeting at their tips) with a vertical stem from the centre up to a long horizontal T bar. No pipe stubs; pipes join at the outer edges of the triangles. A rendered photo of the valve fills the right half of the image.",
+  "aspect": 2.993,
+  "ports": [
+    {
+      "id": "in",
+      "x": 0.18,
+      "y": 0.614
+    },
+    {
+      "id": "out",
+      "x": 0.319,
+      "y": 0.614
+    }
+  ]
+}

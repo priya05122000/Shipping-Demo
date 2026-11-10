@@ -2,7 +2,7 @@
   "id": "SEC-001",
   "name": "Bunker",
   "createdAt": "2026-11-04T08:12:53.827Z",
-  "updatedAt": "2026-11-10T10:28:57.314Z",
+  "updatedAt": "2026-11-10T11:13:34.471Z",
   "objectIds": [
     "OBJ-003",
     "OBJ-004",
@@ -25,23 +25,56 @@
     "extractedAt": "2026-11-07T05:03:23.229Z"
   },
   "codegen": {
-    "runId": "4f11c2a8a6c5",
-    "status": "failed",
+    "runId": "1de0351bfbfd",
+    "status": "done",
     "lineDiagram": "lineDiagram-a413b9fc.png",
-    "requestedAt": "2026-11-10T09:34:42.643Z",
-    "engine": "cli",
-    "drawingHash": "4533f00b98b0a7732e4db437219ac5f427040f9169e30f855eafbbbfd801be5c",
+    "requestedAt": "2026-11-10T11:14:52.071Z",
+    "engine": "sdk",
     "mode": "first",
-    "startedAt": "2026-11-10T09:34:42.689Z",
-    "finishedAt": "2026-11-10T09:34:48.606Z",
-    "error": "Claude Code CLI requires ANTHROPIC_API_KEY; this isolated CLI run does not use OAuth or keychain credentials.",
+    "startedAt": "2026-11-10T11:14:52.245Z",
+    "finishedAt": "2026-11-10T11:30:49.672Z",
+    "files": [
+      "src/objects/OBJ-003/card.json",
+      "src/objects/OBJ-004/card.json",
+      "src/objects/OBJ-005/card.json",
+      "src/objects/OBJ-006/card.json",
+      "src/objects/OBJ-007/card.json",
+      "src/objects/OBJ-008/card.json",
+      "src/objects/OBJ-009/card.json",
+      "src/sections/bunker/Diagram2D.tsx",
+      "src/sections/bunker/Diagram3D.tsx",
+      "src/sections/bunker/schematic.ts",
+      "src/shared/schematic/2d.tsx",
+      "src/shared/schematic/3d.tsx",
+      "src/shared/schematic/geometry.ts",
+      "src/shared/schematic/panel.tsx",
+      "src/shared/schematic/selection.ts",
+      "src/shared/schematic/types.ts"
+    ],
+    "summary": "I've added the Bunker section (SEC-001) with working 2D and 3D views, but you need to confirm several component mappings before they can be treated as verified. The project type-checks with no errors. I haven't run it in a browser, so rendering, clicking, selection sync, pan/zoom and orbit are all untested.\n\nTwo things limit what the views can show:\n- **There is no `data.json` for this section.** The rules don't allow me to create one, so no specifications, operating states, alarms or flow animation appear. Every item's data record is `null`, and the overview says so.\n- **I only used `manual-data.json` to cross-check tags.** Its entry IDs are stored for reference; the code never loads the file.\n\n## What was built\n\n**Library object cards** (`src/objects/OBJ-003` to `OBJ-009/card.json`): kind, description, aspect and in/out ports, measured from each 2D image. Each card's `image` field matches the stored 2D file name; the viewer ignores a card without it.\n\n**Shared code in `src/shared/schematic/`** (new; there was nothing to reuse):\n- `types.ts` and `geometry.ts`: plain data types, port positions, pipe routes and \"what is connected to this\" (pipes are followed through joints, never through crossings).\n- `2d.tsx`: SVG symbols and pipes, with pan, zoom, click/keyboard selection and highlighting of connected pipes and equipment. It doesn't load three.js.\n- `3d.tsx`: React Three Fiber scene with orbit controls, built from the same geometry. Pipe thickness follows the 65A/100A/150A labels but is visual only.\n- `panel.tsx` and `selection.ts`: one overview panel and one selection callout, used by both views so they match.\n\n**Section files in `src/sections/bunker/`**:\n- `schematic.ts`: the only geometry source, traced in the drawing's pixel coordinates. It has 75 components, 118 pipe runs and the drawing's text labels.\n- `Diagram2D.tsx` and `Diagram3D.tsx`: thin wrappers using the viewer's `SectionViewProps`. Items are selected by drawing tag, or by instance ID when untagged.\n\nNo existing files were modified.\n\nEach Library 2D image is a framed panel with a photo beside the symbol, so the 2D view clips each image to its symbol area. The image keeps its aspect ratio. The 3D view shows each object's 3D image through `ObjectModel3D`.\n\n## Component mapping (75 components, 43 tagged)\n\nI only placed a Library object where the evidence agreed. That means the manual entry's type names exactly one object, or the drawn symbol rules out the alternatives.\n\n| Tags | Type | Library object | Status |\n|---|---|---|---|\n| FB001, FB002 | Relief valve (spring) | OBJ-004 | Partially verified: the manual entries are tagged **FA001/FA002** |\n| FB582/572/571/581, FA584/574/573/583, FA582/572/571/581 (12) | Ball valve | OBJ-005 | Partially verified |\n| 7 untagged flanged spools | Spool | OBJ-009 | Partially verified (symbol only) |\n| FB541/542, FA543/544, FA541/542 (6) | Gate valve with blind flange | none in the Library | Partially verified, shared symbol |\n| FB112, FB111, FA515–FA521, FB511/512, FA511–514 (15) | Butterfly valve | **OBJ-006 or OBJ-007?** | Ambiguous, shared symbol |\n| FB543/544, FA545–548 (6) | Stop (globe) valve | **OBJ-008?** | Ambiguous, shared symbol |\n| FA575 | Angle valve with spring | **OBJ-003?** The manual calls it \"self-closing\" | Ambiguous |\n| Upper-left D.O. tank | Tank | — | Ambiguous: two manual tank entries claim it |\n| Lower-left D.O. tank | Tank | — | Partially verified (D.O S TOR.TK(S), via related valves only) |\n| FB513, 4 F.O. tanks, 6 PI gauges, 6 end flanges, 6 vents, 1 circled pipe end | various | — | Missing data |\n\nTotals: 0 verified, 28 partially verified, 23 ambiguous, 24 missing data.\n\n## Pipes\n\n- **Joined:** 116 of the 118 runs are traced end to end, including the junction dots at the three manifolds.\n- **Not joined:** I treated these as crossings:\n  - FB105 and FB104 hop over the FB100 line.\n  - FB100 is broken where it meets FA101.\n  - FA101 crosses the D.O. manifold.\n- **Unresolved:** the outlets of FB001 and FB0",
+    "costUsd": 3.5354256,
+    "version": 1,
     "usage": {
-      "model": "claude-opus-5-5",
-      "inputTokens": 0,
-      "outputTokens": 0,
-      "cacheCreationInputTokens": 0,
-      "cacheReadInputTokens": 0,
-      "turns": 0
+      "model": "claude-haiku-5-5, claude-opus-5-5",
+      "inputTokens": 12741,
+      "outputTokens": 93233,
+      "cacheCreationInputTokens": 207070,
+      "cacheReadInputTokens": 3171858,
+      "costUsd": 3.5354256,
+      "turns": 60
+    },
+    "objects": {
+      "learned": [
+        "OBJ-003",
+        "OBJ-004",
+        "OBJ-005",
+        "OBJ-006",
+        "OBJ-007",
+        "OBJ-008",
+        "OBJ-009"
+      ],
+      "reused": [],
+      "skipped": []
     }
   },
   "lineDiagram": {
@@ -51,5 +84,20 @@
     "extension": "png",
     "storedName": "lineDiagram-a413b9fc.png",
     "uploadedAt": "2026-11-10T09:34:42.643Z"
-  }
+  },
+  "codegenVersions": [
+    {
+      "version": 1,
+      "finishedAt": "2026-11-10T11:30:49.672Z",
+      "mode": "first",
+      "lineDiagramName": "Copy of page_48 (1).pdf_20261110_143045_0000.png",
+      "files": [
+        "Diagram2D.tsx",
+        "Diagram3D.tsx",
+        "schematic.ts"
+      ],
+      "costUsd": 3.5354256
+    }
+  ],
+  "codegenVersion": 1
 }

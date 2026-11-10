@@ -1,0 +1,18 @@
+{
+  "image": "stainless-steel-safety-valve-2d-dc43a0a5.png",
+  "kind": "angle safety relief valve (spring loaded)",
+  "description": "Framed panel, symbol on the left: a right-pointing triangle (inlet, red arrow from the left) meets a downward-pointing triangle (outlet, red tick on top) at a common apex, forming an angle valve; a stem drops from the apex to a zigzag spring and a cross. A rendered photo of the valve fills the right half of the image.",
+  "aspect": 3,
+  "ports": [
+    {
+      "id": "in",
+      "x": 0.142,
+      "y": 0.514
+    },
+    {
+      "id": "out",
+      "x": 0.265,
+      "y": 0.237
+    }
+  ]
+}

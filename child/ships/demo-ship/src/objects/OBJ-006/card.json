@@ -1,0 +1,18 @@
+{
+  "image": "stainless-steel-butterfly-valve-2d-1634fa97.png",
+  "kind": "butterfly valve (gearbox operated)",
+  "description": "Framed panel, symbol on the left: a horizontal bowtie valve (two triangles meeting at their tips) with a stem up to a short T bar, and a small upright rectangle just right of the right triangle. Inlet at the left triangle's edge, outlet at the rectangle's right edge. A rendered photo of the valve fills the right half of the image.",
+  "aspect": 3,
+  "ports": [
+    {
+      "id": "in",
+      "x": 0.159,
+      "y": 0.552
+    },
+    {
+      "id": "out",
+      "x": 0.349,
+      "y": 0.546
+    }
+  ]
+}
