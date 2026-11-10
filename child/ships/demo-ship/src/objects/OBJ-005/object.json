@@ -1,0 +1,24 @@
+{
+  "id": "OBJ-005",
+  "name": "Stainless Steel Ball Valve",
+  "createdAt": "2026-11-10T06:15:42.179Z",
+  "updatedAt": "2026-11-10T06:15:42.179Z",
+  "model": {
+    "name": "Angled Stainless Steel Ball Valve.png",
+    "size": 906821,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "stainless-steel-ball-valve-3d-a661c321.png",
+    "uploadedAt": "2026-11-10T06:15:42.172Z",
+    "view": "3d"
+  },
+  "lineDiagram": {
+    "name": "Valve Symbol and Industrial Ball Valve.png",
+    "size": 1111847,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "stainless-steel-ball-valve-2d-6a672867.png",
+    "uploadedAt": "2026-11-10T06:15:42.178Z",
+    "view": "2d"
+  }
+}

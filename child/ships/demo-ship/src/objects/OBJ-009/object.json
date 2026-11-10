@@ -1,0 +1,24 @@
+{
+  "id": "OBJ-009",
+  "name": "Flanged Steel Pipe",
+  "createdAt": "2026-11-10T06:21:17.186Z",
+  "updatedAt": "2026-11-10T06:21:17.186Z",
+  "model": {
+    "name": "Flanged Steel Pipe Spool.png",
+    "size": 1489699,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "flanged-steel-pipe-3d-8eb4af2b.png",
+    "uploadedAt": "2026-11-10T06:21:17.181Z",
+    "view": "3d"
+  },
+  "lineDiagram": {
+    "name": "Technical Schematic and Flanged Pipe Comparison.png",
+    "size": 1054169,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "flanged-steel-pipe-2d-233c209d.png",
+    "uploadedAt": "2026-11-10T06:21:17.186Z",
+    "view": "2d"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "id": "OBJ-007",
+  "name": "Angled Butterfly Valve",
+  "createdAt": "2026-11-10T06:18:18.321Z",
+  "updatedAt": "2026-11-10T06:18:18.321Z",
+  "model": {
+    "name": "Angled Butterfly Valve.png",
+    "size": 1228264,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "angled-butterfly-valve-3d-f0b6eeba.png",
+    "uploadedAt": "2026-11-10T06:18:18.317Z",
+    "view": "3d"
+  },
+  "lineDiagram": {
+    "name": "Schematic and 3D Industrial Valves.png",
+    "size": 1009421,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "angled-butterfly-valve-2d-426df46b.png",
+    "uploadedAt": "2026-11-10T06:18:18.321Z",
+    "view": "2d"
+  }
+}

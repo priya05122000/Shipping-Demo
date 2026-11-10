@@ -1,0 +1,24 @@
+{
+  "id": "OBJ-008",
+  "name": "P&ID Valve",
+  "createdAt": "2026-11-10T06:20:27.970Z",
+  "updatedAt": "2026-11-10T06:20:27.970Z",
+  "model": {
+    "name": "Silver Stainless Valve with Blue Handwheel.png",
+    "size": 1399268,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "p-id-valve-3d-212713e6.png",
+    "uploadedAt": "2026-11-10T06:20:27.964Z",
+    "view": "3d"
+  },
+  "lineDiagram": {
+    "name": "P&ID Valve Symbol and Industrial Assembly.png",
+    "size": 1040167,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "p-id-valve-2d-1bf0383e.png",
+    "uploadedAt": "2026-11-10T06:20:27.969Z",
+    "view": "2d"
+  }
+}

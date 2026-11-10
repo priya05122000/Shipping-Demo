@@ -1,0 +1,24 @@
+{
+  "id": "OBJ-003",
+  "name": "Stainless Steel Safety Relief Valve",
+  "createdAt": "2026-11-10T06:12:59.223Z",
+  "updatedAt": "2026-11-10T06:25:25.692Z",
+  "model": {
+    "name": "Industrial Stainless Steel Safety Valve.png",
+    "size": 1821717,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "stainless-steel-safety-valve-3d-81bd5a5e.png",
+    "uploadedAt": "2026-11-10T06:12:59.217Z",
+    "view": "3d"
+  },
+  "lineDiagram": {
+    "name": "Valve Schematic and Industrial Relief Valve.png",
+    "size": 1176697,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "stainless-steel-safety-valve-2d-dc43a0a5.png",
+    "uploadedAt": "2026-11-10T06:12:59.223Z",
+    "view": "2d"
+  }
+}

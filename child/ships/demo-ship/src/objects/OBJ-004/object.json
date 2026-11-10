@@ -1,0 +1,24 @@
+{
+  "id": "OBJ-004",
+  "name": "Stainless Steel Safety Relief Valve",
+  "createdAt": "2026-11-10T06:14:49.627Z",
+  "updatedAt": "2026-11-10T06:14:49.627Z",
+  "model": {
+    "name": "Stainless Steel Safety Relief Valve.png",
+    "size": 1443189,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "stainless-steel-safety-relief-valve-3d-18ac0e5b.png",
+    "uploadedAt": "2026-11-10T06:14:49.621Z",
+    "view": "3d"
+  },
+  "lineDiagram": {
+    "name": "P&ID Valve and Relief Valve Comparison.png",
+    "size": 1075077,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "stainless-steel-safety-relief-valve-2d-048a287a.png",
+    "uploadedAt": "2026-11-10T06:14:49.627Z",
+    "view": "2d"
+  }
+}
