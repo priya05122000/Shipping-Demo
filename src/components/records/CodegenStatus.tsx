@@ -42,7 +42,7 @@ const LIMIT_LABEL: Record<CodegenLimit, string> = {
   fixRounds: "rounds of fixes, CODEGEN_FIX_ROUNDS",
 };
 
-/** Older records can name a limit that no longer exists (the API budget). */
+/** section.json can be edited by hand, or come from an earlier version, so a limit it names may no longer exist. */
 function limitLabel(limit: CodegenLimit): string {
   return LIMIT_LABEL[limit] ?? "a limit that no longer applies";
 }

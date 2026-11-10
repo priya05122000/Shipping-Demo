@@ -15,7 +15,7 @@ export const CODEGEN_SHARED_DIR = "src/shared/schematic";
  */
 export const CODEGEN_DIR = "codegen";
 export const CODEGEN_STATE_FILE = `${CODEGEN_DIR}/generations.json`;
-/** One JSON line per generation, however it ended: its status, tokens and cost (see src/server/codegen/jobs.ts). */
+/** One JSON line per generation, however it ended: its status, tokens and turns (see src/server/codegen/jobs.ts). */
 export const CODEGEN_USAGE_FILE = `${CODEGEN_DIR}/usage.jsonl`;
 
 /**

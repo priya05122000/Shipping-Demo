@@ -8,7 +8,7 @@ import type {
   SDKUserMessage,
 } from "@anthropic-ai/claude-agent-sdk";
 import type { CodegenLimit, CodegenUsage } from "@/types/records";
-import { claudeCodeEnv, ISOLATED } from "./claude-code";
+import { apiKeyProblem, claudeCodeEnv, ISOLATED, planLoginProblem } from "./claude-code";
 import { PlanLimitError, resetTime } from "./plan";
 import { checkPattern, scanForLinks, toLabel, type CodegenPolicy, type FileJournal } from "./policy";
 import { diagnosticsBlock, type Diagnostic } from "./typecheck";
@@ -34,9 +34,10 @@ import { diagnosticsBlock, type Diagnostic } from "./typecheck";
  * Instructions come only from Claude Code's system prompt with rules.md appended, and the task (first.md or
  * second.md): settings, CLAUDE.md files, skills and plugins on this machine aren't loaded, and the session isn't saved.
  *
- * It runs on the Claude plan Claude Code is signed in with on this machine (claude-code.ts), never on an API key.
- * When the plan's usage limit is reached, it stops with a PlanLimitError, and the job waits for the limit to reset
- * and starts again (plan.ts).
+ * It runs on the Claude plan Claude Code is signed in with on this machine (claude-code.ts), never on the Claude API:
+ * the task is only sent once Claude Code has said it's signed in with a plan, and a turn that starts on an API key
+ * anyway is stopped at once. When the plan's usage limit is reached, it stops with a PlanLimitError, and the job
+ * waits for the limit to reset and starts again (plan.ts).
  *
  * Limits (environment variables, e.g. in .env.local). Reaching one stops the generation, and the job discards
  * everything it wrote:
@@ -61,6 +62,8 @@ const WRITE_TOOLS = new Set(["Write", "Edit"]);
 const STDERR_LINES = 20;
 /** The PostToolUse and Stop hooks type-check the project, which can wait for a check already running (3 min each at most). */
 const CHECK_HOOK_TIMEOUT_S = 400;
+/** How long Claude Code may take to start and say which account it's signed in with. */
+const ACCOUNT_TIMEOUT_MS = 60_000;
 
 function positiveNumber(value: string | undefined): number | undefined {
   const number = Number(value);
@@ -279,7 +282,7 @@ class UsageMeter {
     });
   }
 
-  /** So far: no cost or turns until the SDK reports them. */
+  /** So far: no turns until the SDK reports them. */
   current(): CodegenUsage {
     const totals = { inputTokens: 0, outputTokens: 0, cacheCreationInputTokens: 0, cacheReadInputTokens: 0 };
     for (const usage of this.byMessage.values()) {
@@ -419,11 +422,15 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
     return { decision: "block", reason: parts.join("\n\n") };
   };
 
-  // The prompt is streamed so the drawing and the new objects' images can go with it, each after its caption. The
+  // The prompt is streamed so the drawing and the new objects' images can go with it, each after its caption. It's
+  // held back until Claude Code's login is checked (sendTask(true)): nothing is sent unless it's a Claude plan. The
   // stream stays open until the result arrives, since closing it ends the session.
+  let sendTask: (send: boolean) => void = () => {};
+  const taskCleared = new Promise<boolean>((resolve) => (sendTask = resolve));
   let endInput = () => {};
   const inputEnded = new Promise<void>((resolve) => (endInput = resolve));
   async function* input(): AsyncGenerator<SDKUserMessage> {
+    if (!(await taskCleared)) return;
     yield {
       type: "user",
       parent_tool_use_id: null,
@@ -483,8 +490,22 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
   // The latest rejection Claude Code reported for the plan's usage limit (not while extra usage covers it).
   let rejected: { resetsAt?: Date } | undefined;
   try {
+    const account = await within(
+      session.accountInfo(),
+      ACCOUNT_TIMEOUT_MS,
+      request.controller.signal,
+      `Claude Code didn't say which account it's signed in with within ${ACCOUNT_TIMEOUT_MS / 1000} s, so nothing was generated.`,
+    );
+    const loginProblem = planLoginProblem(account);
+    if (loginProblem) throw new AgentError(loginProblem);
+    sendTask(true);
+
     for await (const message of session) {
-      if (message.type === "rate_limit_event") {
+      if (message.type === "system" && message.subtype === "init") {
+        // The login was checked above; should this turn still run on an API key, it's stopped right away.
+        const problem = apiKeyProblem(message.apiKeySource);
+        if (problem) throw new AgentError(problem);
+      } else if (message.type === "rate_limit_event") {
         const info = message.rate_limit_info;
         if (info.status === "rejected" && !info.isUsingOverage) rejected = { resetsAt: resetTime(info.resetsAt) };
       } else if (message.type === "assistant") {
@@ -503,11 +524,12 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
       }
     }
   } catch (error) {
-    if (request.controller.signal.aborted) throw error;
+    if (request.controller.signal.aborted || error instanceof AgentError) throw error;
     if (rejected) throw new PlanLimitError(rejected.resetsAt);
     const detail = stderr.length ? ` ${stderr.slice(-3).join(" ")}` : "";
     throw new AgentError(`The agent couldn't run: ${error instanceof Error ? error.message : String(error)}.${detail}`);
   } finally {
+    sendTask(false);
     endInput();
     session.close();
   }
@@ -531,6 +553,26 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
     );
   }
   return { summary: result.result, fixRounds };
+}
+
+/** `promise`'s value; an AgentError with `message` if it takes longer than `ms`, or the signal's reason once it's aborted. */
+async function within<T>(promise: Promise<T>, ms: number, signal: AbortSignal, message: string): Promise<T> {
+  let timer: NodeJS.Timeout | undefined;
+  let onAbort = () => {};
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new AgentError(message)), ms);
+        onAbort = () => reject(signal.reason);
+        if (signal.aborted) onAbort();
+        else signal.addEventListener("abort", onAbort, { once: true });
+      }),
+    ]);
+  } finally {
+    clearTimeout(timer);
+    signal.removeEventListener("abort", onAbort);
+  }
 }
 
 /** One line per model in the server log, so a generation's use of the plan can be traced. */

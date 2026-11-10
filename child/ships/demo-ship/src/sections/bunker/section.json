@@ -24,26 +24,6 @@
     "components": 47,
     "extractedAt": "2026-11-07T05:03:23.229Z"
   },
-  "codegen": {
-    "runId": "4f11c2a8a6c5",
-    "status": "failed",
-    "lineDiagram": "lineDiagram-a413b9fc.png",
-    "requestedAt": "2026-11-10T09:34:42.643Z",
-    "engine": "cli",
-    "drawingHash": "4533f00b98b0a7732e4db437219ac5f427040f9169e30f855eafbbbfd801be5c",
-    "mode": "first",
-    "startedAt": "2026-11-10T09:34:42.689Z",
-    "finishedAt": "2026-11-10T09:34:48.606Z",
-    "error": "Claude Code CLI requires ANTHROPIC_API_KEY; this isolated CLI run does not use OAuth or keychain credentials.",
-    "usage": {
-      "model": "claude-opus-5-5",
-      "inputTokens": 0,
-      "outputTokens": 0,
-      "cacheCreationInputTokens": 0,
-      "cacheReadInputTokens": 0,
-      "turns": 0
-    }
-  },
   "lineDiagram": {
     "name": "Copy of page_48 (1).pdf_20261110_143045_0000.png",
     "size": 132153,
