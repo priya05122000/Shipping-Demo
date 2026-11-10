@@ -42,14 +42,14 @@ import { diagnosticsBlock, type Diagnostic } from "./typecheck";
  *   CODEGEN_MODEL            default claude-opus-5-5
  *   CODEGEN_EFFORT           low | medium | high | xhigh | max, default high
  */
-const MODEL = process.env.CODEGEN_MODEL || "claude-opus-5-5";
+export const MODEL = process.env.CODEGEN_MODEL || "claude-opus-5-5";
 const EFFORTS: readonly EffortLevel[] = ["low", "medium", "high", "xhigh", "max"];
-const EFFORT: EffortLevel = EFFORTS.find((level) => level === process.env.CODEGEN_EFFORT) ?? "high";
-const MAX_TURNS = positiveNumber(process.env.CODEGEN_MAX_TURNS) ?? 120;
-const MAX_BUDGET_USD = /^(none|off)$/i.test(process.env.CODEGEN_MAX_BUDGET_USD ?? "")
+export const EFFORT: EffortLevel = EFFORTS.find((level) => level === process.env.CODEGEN_EFFORT) ?? "high";
+export const MAX_TURNS = positiveNumber(process.env.CODEGEN_MAX_TURNS) ?? 120;
+export const MAX_BUDGET_USD = /^(none|off)$/i.test(process.env.CODEGEN_MAX_BUDGET_USD ?? "")
   ? undefined
   : (positiveNumber(process.env.CODEGEN_MAX_BUDGET_USD) ?? 5);
-const MAX_FIX_ROUNDS = wholeNumber(process.env.CODEGEN_FIX_ROUNDS) ?? 3;
+export const MAX_FIX_ROUNDS = wholeNumber(process.env.CODEGEN_FIX_ROUNDS) ?? 3;
 
 const SERVER_NAME = "ship";
 const TYPECHECK_TOOL = `mcp__${SERVER_NAME}__typecheck`;
@@ -125,14 +125,24 @@ export interface AgentRequest {
   onProgress: (step: string) => void;
   /** Called with the usage so far, as it grows and at the end (however the generation ends). */
   onUsage: (usage: CodegenUsage) => void;
+  /** The interactive Claude Code CLI session ID, when supplied by its init event. */
+  onCliSession?: (sessionId: string) => void;
+  /** The CLI process exit code. */
+  onCliExit?: (exitCode: number | null) => void;
+  /** Per-invocation limits; used to account for CLI repair sessions. */
+  maxTurns?: number;
+  maxBudgetUsd?: number;
 }
 
 export interface AgentOutcome {
   /** The agent's closing summary. */
   summary: string;
-  costUsd: number;
+  costUsd?: number;
   /** How often the agent was sent back to fix its code when it wanted to finish. */
   fixRounds: number;
+  sessionId?: string;
+  exitCode?: number;
+  turns?: number;
 }
 
 /** The agent didn't finish its task. */
@@ -485,7 +495,6 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
       },
     },
   });
-
   const meter = new UsageMeter();
   let result: SDKResultMessage | undefined;
   try {
@@ -523,7 +532,7 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
       "fixRounds",
     );
   }
-  return { summary: result.result, costUsd: result.total_cost_usd, fixRounds };
+  return { summary: result.result, costUsd: result.total_cost_usd, fixRounds, turns: result.num_turns };
 }
 
 /** One line per model in the server log, so the cost of a generation can be traced. */

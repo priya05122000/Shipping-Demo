@@ -484,9 +484,17 @@ const MANUAL_FIELD = "manual";
 const LINE_DIAGRAM_FIELD = "lineDiagram";
 
 /** A newly queued code generation, when a save uploads a section's line diagram; undefined otherwise. */
-function codegenFor(slug: CollectionSlug, saved: Record<string, StoredFile>): SectionCodegen | undefined {
+function codegenFor(
+  slug: CollectionSlug,
+  saved: Record<string, StoredFile>,
+  options: { engine?: "sdk" | "cli"; drawingHash?: string } = {},
+): SectionCodegen | undefined {
   const lineDiagram = slug === "sections" ? saved[LINE_DIAGRAM_FIELD] : undefined;
-  return lineDiagram ? queueRun(lineDiagram.storedName) : undefined;
+  return lineDiagram ? queueRun(lineDiagram.storedName, options) : undefined;
+}
+
+function hashDrawing(bytes: Uint8Array): string {
+  return crypto.createHash("sha256").update(bytes).digest("hex");
 }
 
 /**
@@ -543,7 +551,12 @@ async function copyTemplate(dir: string, folder: string) {
 }
 
 /** `projectId` is required for collections inside a project. */
-export async function createRecord(slug: CollectionSlug, form: FormData, projectId?: string) {
+export async function createRecord(
+  slug: CollectionSlug,
+  form: FormData,
+  projectId?: string,
+  options: { codegenEngine?: "sdk" | "cli" } = {},
+) {
   const def = collectionDef(slug);
   const name = parseName(form);
   const folderName = def.folderFromName ? folderNameFor(name) : null;
@@ -578,7 +591,7 @@ export async function createRecord(slug: CollectionSlug, form: FormData, project
       const saved = await saveUploads(scope, { folder, id, name }, files);
       if (manualData?.json) await writeManualData(scope, folder, manualData.json);
       const now = new Date().toISOString();
-      const codegen = codegenFor(slug, saved);
+      const codegen = codegenFor(slug, saved, { engine: options.codegenEngine });
       const record: StoredRecord = {
         id,
         folder,
@@ -603,7 +616,13 @@ export async function createRecord(slug: CollectionSlug, form: FormData, project
 }
 
 /** Renaming keeps the folder and the ID: neither ever changes. `projectId` is required for collections inside a project. */
-export async function updateRecord(slug: CollectionSlug, id: string, form: FormData, projectId?: string) {
+export async function updateRecord(
+  slug: CollectionSlug,
+  id: string,
+  form: FormData,
+  projectId?: string,
+  options: { codegenEngine?: "sdk" | "cli" } = {},
+) {
   const name = parseName(form);
   const files = parseFiles(slug, form, false);
   const removals = parseRemovals(slug, form, files);
@@ -618,6 +637,23 @@ export async function updateRecord(slug: CollectionSlug, id: string, form: FormD
     const existing = data.items.find((item) => item.id === id);
     if (!existing) throw new ApiError(404, `${id} no longer exists.`);
     const { folder } = existing;
+    let drawingHash: string | undefined;
+    const newDrawing = slug === "sections" ? files.get(LINE_DIAGRAM_FIELD) : undefined;
+    if (newDrawing) {
+      const newBytes = Buffer.from(await newDrawing.arrayBuffer());
+      drawingHash = hashDrawing(newBytes);
+      const oldDrawing = existing[LINE_DIAGRAM_FIELD] as StoredFile | undefined;
+      if (oldDrawing) {
+        const oldBytes = await fs.readFile(path.join(recordDir(scope, folder), oldDrawing.storedName)).catch((error) => {
+          if (errorCode(error) === "ENOENT") return null;
+          throw error;
+        });
+        if (oldBytes && hashDrawing(oldBytes) === drawingHash) {
+          files.delete(LINE_DIAGRAM_FIELD);
+          drawingHash = undefined;
+        }
+      }
+    }
     const saved = await saveUploads(scope, { folder, id, name }, files);
     // Fields without a new upload keep their existing file.
     const record: StoredRecord = { ...existing, ...saved, ...links, id, folder, name, updatedAt: new Date().toISOString() };
@@ -629,7 +665,7 @@ export async function updateRecord(slug: CollectionSlug, id: string, form: FormD
     if (manualData) record.manualData = manualData.summary;
     else if (manualData === null) delete record.manualData;
     // A new line diagram replaces any earlier generation; the routes then stop a job still working on the old one.
-    const codegen = codegenFor(slug, saved);
+    const codegen = codegenFor(slug, saved, { engine: options.codegenEngine, drawingHash });
     if (codegen) record.codegen = codegen;
     let restoreManualData: (() => Promise<void>) | undefined;
     try {

@@ -13,8 +13,8 @@ export async function PUT(request: Request, { params }: Context) {
     assertSameOrigin(request);
     const { projectId, collection, id } = await params;
     const slug = parseProjectCollection(collection);
-    const result = await updateRecord(slug, id, await request.formData(), projectId);
-    if (slug === "sections") reconcileCodegen(projectId, result.record);
+    const result = await updateRecord(slug, id, await request.formData(), projectId, { codegenEngine: "cli" });
+    if (slug === "sections") await reconcileCodegen(projectId, result.record);
     return Response.json(result);
   });
 }

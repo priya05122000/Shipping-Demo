@@ -76,13 +76,14 @@ The viewer shows a section's line diagram (**2D**), its objects (**3D**; the gen
 
 ## Generated 2D and 3D code
 
-When a section's line diagram is uploaded (with a new section, or replacing one), the parent turns it into React code with the [Claude Agent SDK](https://code.claude.com/docs/en/agent-sdk/overview): Claude looks at the drawing and writes the code into the ship's project, where the ship's viewer shows it.
+When a section is created with a line diagram or an administrator saves a changed drawing while editing it, the parent automatically runs Claude Code CLI in three prompts. **Generate again (SDK)** in the section's View modal remains available for an explicit Claude Agent SDK run.
 
 - **What's written:** the section's `Diagram2D.tsx` (SVG) and `Diagram3D.tsx` ([react-three-fiber](https://r3f.docs.pmnd.rs/)) in its folder, plus the ship's **shared schematic components** in `src/shared/schematic/` (one 2D and one 3D component per kind of equipment, pipes, and the types that describe a drawing), which every section's code uses. It builds on the shared viewer (`@shipdocs/viewer-core`: `SectionViewProps`, `ObjectSymbol2D`, `ObjectModel3D`, `objectPort`…), which it reads but **never changes**: the viewer is every ship's, so a generation for one ship can't change another. Something the shared viewer lacks is written in the ship, and suggested in the agent's summary for people to add to `child/core` (see **Only the ship** below). It's ordinary code: change it in the editor like any other file.
 - **Two prompts**, in `src/server/codegen/prompts/` (Markdown, read again for each generation, so edits apply straight away):
   - `first.md` for a ship's **first** generation: creates the shared components, simply.
   - `second.md` for **every later** generation of the ship: reuses the shared components, adding to them only in ways that keep the other sections working.
-  - `rules.md` goes with both: where code goes and what the viewer expects (file names, `SectionViewProps`), reading before writing, and fixing errors. Change it together with the viewer.
+  - A Claude Code CLI run executes three prompts against the same staged project: the selected `first.md` or `second.md` builds both views, `cli-2d.md` reviews/refines the 2D view, and `cli-3d.md` refines the 3D view and checks their integration. Each prompt runs as its own CLI invocation; the total turn, cost and repair limits are shared across the three.
+  - `rules.md` goes with the generation prompt and both CLI review prompts: where code goes and what the viewer expects (file names, `SectionViewProps`), reading before writing, and fixing errors. Change it together with the viewer.
 
   Both prompts include the **file trees** of the ship's project and of the shared viewer (`{{projectTree}}` and `{{coreTree}}`, without `node_modules`, `dist` and `codegen/`), so the agent starts from the projects' real structure.
 
@@ -123,7 +124,7 @@ Configure it in `.env.local` (Next loads it; it's git-ignored):
 
 | Variable | Default | |
 | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | | Required, unless Claude Code is signed in on this machine |
+| `ANTHROPIC_API_KEY` | | Required for CLI runs; SDK runs may use signed-in Claude Code authentication |
 | `CODEGEN_MODEL` | `claude-opus-5-5` | The Claude model |
 | `CODEGEN_EFFORT` | `high` | `low`, `medium`, `high`, `xhigh` or `max` |
 | `CODEGEN_MAX_BUDGET_USD` | `5` | Stops a generation when its estimated cost reaches this, and discards it. `none` for no limit |
@@ -227,7 +228,7 @@ The limits are `MAX_FILE_SIZE` and `MAX_PDF_SIZE` in `src/lib/files.ts`.
 | `POST /api/projects/:id/:collection` | Create a record (multipart: `name`, file fields, and for sections one `objectIds` value per object) |
 | `PUT /api/projects/:id/:collection/:recordId` (e.g. `/api/projects/SHP-001/sections/SEC-001`) | Update the name and/or replace files; omitted files are kept, `remove=<field>` clears an optional one. `objectIds` replaces the section's list (send none to clear it) |
 | `DELETE /api/projects/:id/:collection/:recordId` | Delete a record's folder; 409 for an object a section still uses |
-| `POST /api/projects/:id/sections/:recordId/codegen` | Generate a section's code again from its line diagram (202); 400 without a line diagram |
+| `POST /api/projects/:id/sections/:recordId/codegen` | Generate a section's code again from its line diagram (202; optional JSON `{ "engine": "cli" }` to retry with CLI); 400 without a line diagram |
 | `PUT /api/projects/:id/sections/:recordId/codegen` | Switch a section's code to one of its versions, from JSON `{ "version": 2 }`; 409 if it doesn't type-check with the ship's current shared components (nothing changes), or while the ship's code is being generated |
 | `DELETE /api/projects/:id/sections/:recordId/codegen` | Stop a section's code generation; responds once its files are rolled back |
 | `GET /api/files/:ship/:collection/:folder/:file` | Serve a file from a record's folder, by folder names (e.g. `/api/files/mv-aurora/sections/engine-room/manual-a1c2e3f4.pdf`) |

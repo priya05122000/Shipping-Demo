@@ -62,6 +62,7 @@ export interface Project extends BaseRecord {
 }
 
 export type CodegenStatus = "queued" | "running" | "done" | "failed" | "cancelled";
+export type CodegenEngine = "sdk" | "cli";
 
 /**
  * Which prompt a generation used: "first" for the ship's first generation (it creates the ship's shared schematic
@@ -77,6 +78,18 @@ export interface SectionCodegen {
   /** Identifies one generation. A new upload or "Generate again" starts a new one. */
   runId: string;
   status: CodegenStatus;
+  /** Which Claude integration ran this generation. Older records default to the Agent SDK. */
+  engine?: CodegenEngine;
+  /** SHA-256 of the uploaded drawing; used to avoid repeat runs for unchanged content. */
+  drawingHash?: string;
+  /** Claude Code CLI's session ID, when the CLI was used. */
+  cliSessionId?: string;
+  /** Latest parsed execution event, never raw terminal output. */
+  latestEvent?: string;
+  /** CLI process exit code. */
+  exitCode?: number;
+  /** Set only after the generated entry points pass type-checking and the viewer build. */
+  validation?: "passed";
   /** Stored name of the line diagram the code is made from, e.g. "lineDiagram-9f2c1a7b.png". */
   lineDiagram: string;
   /** Set when the generation starts. */

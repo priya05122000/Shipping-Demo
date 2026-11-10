@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { isCodegenActive, readCodegen } from "@/lib/codegen";
-import type { SectionCodegen } from "@/types/records";
+import type { CodegenEngine, SectionCodegen } from "@/types/records";
 
 /**
  * State of this server process's code generations, kept on globalThis so every route bundle shares it (like the
@@ -28,7 +28,7 @@ export interface Job {
 
 interface Runtime {
   /** Generations this process knows about (queued or running), by run ID, with what each is doing right now. */
-  runs: Map<string, { progress?: string }>;
+  runs: Map<string, { progress?: string; latestEvent?: string }>;
   /** Jobs by Job.key. */
   jobs: Map<string, Job>;
   /**
@@ -55,10 +55,29 @@ shared.jobChain ??= Promise.resolve();
 export const runtime = shared as Runtime;
 
 /** A new queued generation for a section whose line diagram was just saved, known to this process from now on. */
-export function queueRun(lineDiagram: string): SectionCodegen {
+export function queueRun(
+  lineDiagram: string,
+  options: { engine?: CodegenEngine; drawingHash?: string } = {},
+): SectionCodegen {
   const runId = crypto.randomBytes(6).toString("hex");
   runtime.runs.set(runId, {});
-  return { runId, status: "queued", lineDiagram, requestedAt: new Date().toISOString() };
+  return {
+    runId,
+    status: "queued",
+    lineDiagram,
+    requestedAt: new Date().toISOString(),
+    engine: options.engine ?? "sdk",
+    ...(options.drawingHash && { drawingHash: options.drawingHash }),
+  };
+}
+
+/** Publishes a parsed agent event to section listings while the job is active. */
+export function setRunEvent(runId: string, event: string) {
+  const run = runtime.runs.get(runId);
+  if (run) {
+    run.progress = event;
+    run.latestEvent = event;
+  }
 }
 
 /**
@@ -76,5 +95,7 @@ export function presentCodegen(value: unknown): SectionCodegen | undefined {
       error: "Interrupted: the server stopped before the code was finished. Use Generate again to retry.",
     };
   }
-  return run.progress ? { ...codegen, progress: run.progress } : codegen;
+  return run.progress || run.latestEvent
+    ? { ...codegen, ...(run.progress && { progress: run.progress }), ...(run.latestEvent && { latestEvent: run.latestEvent }) }
+    : codegen;
 }
