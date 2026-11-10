@@ -24,7 +24,7 @@ import type { BaseRecord, CodegenVersion, CollectionSnapshot, SectionCodegen, St
 
 /**
  * Storage for the Library, inside each ship's viewer project so the viewer can use the files:
- *   child/ships/<ship>/ship.json                    one project (ship): a copy of child/template, plus this file
+ *   child/ships/<ship>/ship.json                    one project (ship): made from child/template, plus this file
  *   child/ships/<ship>/<dir>/<folder>/<metaFile>    one of its records, e.g. .../src/sections/engine-room/section.json
  *   child/ships/<ship>/<dir>/<folder>/<file>        that record's uploaded files, e.g. lineDiagram-9f2c1a7b.png, or for
  *                                                   an object fuel-pump-2d-77aa01ff.png and fuel-pump-3d-3be0d14c.glb
@@ -518,7 +518,11 @@ async function writeManualData(scope: Scope, folder: string, json: string | null
 /** Template files a new ship doesn't get: installed packages, build output, and its placeholder ship.json (the ship's own is written last). */
 const TEMPLATE_SKIP = new Set(["node_modules", "dist", "ship.json"]);
 
-/** Fills a new ship's folder with a copy of the viewer template (child/template), named after the folder. */
+/**
+ * Fills a new ship's folder from the template (child/template), named after the folder: a ship's project without data,
+ * whose code is the shared viewer (child/core, @shipdocs/viewer-core). Nothing of the viewer is copied, so a change to
+ * it reaches every ship, existing or new, the next time each is built.
+ */
 async function copyTemplate(dir: string, folder: string) {
   const packageFile = path.join(dir, "package.json");
   try {

@@ -1,7 +1,19 @@
 import type { NextConfig } from "next";
 
-/** Vite dev server for the ships' viewers in ./child/ships (see child/vite.config.ts). */
-const CHILD_DEV_URL = process.env.CHILD_DEV_URL ?? "http://localhost:5173";
+/**
+ * Where the ships' viewers are hosted, each at <SHIP_VIEWER_URL>/<ship>/. They're built and deployed separately from
+ * this app (see child/README.md):
+ *   development  the child's Vite dev server (`npm run dev:child`), which serves every ship under /child/
+ *   production   any static host the built ships (child/dist/<ship>/) are uploaded to, e.g. https://ships.example.com,
+ *                or http://localhost:4173/child for `npm run serve:ships`. Read when the app is built.
+ */
+const SHIP_VIEWER_URL = (process.env.SHIP_VIEWER_URL ?? (process.env.NODE_ENV === "development" ? "http://localhost:5173/child" : ""))
+  .trim()
+  .replace(/\/+$/, "");
+
+if (!SHIP_VIEWER_URL) {
+  console.warn("SHIP_VIEWER_URL isn't set, so ships' viewers can't be shown: set it to where the built ships are hosted.");
+}
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -18,22 +30,14 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  // Each ship's viewer is served under /child/<ship>/. In production they're static files in public/child (built by
-  // `npm run build -w child`). In development they're proxied to Vite; beforeFiles so a stale build can't shadow them.
+  // Each ship's viewer is served on this origin under /child/<ship>/, proxied to wherever it's hosted, so the viewer
+  // and this app can talk with postMessage on one origin. Nothing from child/ is part of this app's build.
+  // Its responses, caching headers included, are the ships' host's (see child/serve-ships.mjs).
   async rewrites() {
-    if (process.env.NODE_ENV !== "development") return [];
+    if (!SHIP_VIEWER_URL) return [];
     return {
-      beforeFiles: [{ source: "/child/:path*", destination: `${CHILD_DEV_URL}/child/:path*` }],
+      beforeFiles: [{ source: "/child/:path*", destination: `${SHIP_VIEWER_URL}/:path*` }],
     };
-  },
-  async headers() {
-    // Vite puts a content hash in every built asset name, so they never change.
-    return [
-      {
-        source: "/child/:ship/assets/:path*",
-        headers: [{ key: "Cache-Control", value: "public, max-age=31536000, immutable" }],
-      },
-    ];
   },
 };
 

@@ -95,7 +95,10 @@ export interface SectionCodegen {
   costUsd?: number;
   /** The version the generation created. Set when it's done. */
   version?: number;
-  /** What happened to the generation's change to the template, if it made one. Set when it's done. */
+  /**
+   * What happened to the generation's change to the template, from generations made when they could change it (now
+   * they can't: ships share child/core, which only people change). Kept so those records still show it.
+   */
   sharedChange?: SharedChange;
   /** Tokens and cost, as the Claude Agent SDK reported them. Set when the generation ends, however it ends. */
   usage?: CodegenUsage;
@@ -138,9 +141,9 @@ export interface CodegenUsage {
 }
 
 /**
- * A generation's change to the template (child/template/), the shared code new ships are copied from. It's kept only
- * if the template still type-checks with it and it wouldn't break any existing ship that has the changed files (see
- * src/server/codegen/shared-check.ts); otherwise it's rejected: rolled back, while the section's own code is kept.
+ * A generation's change to the template (child/template/), when ships were copies of it and generations could change
+ * it: kept if the template still type-checked with it and it broke no existing ship that had the changed files,
+ * otherwise rejected (rolled back, while the section's own code was kept). Only older records have one.
  */
 export interface SharedChange {
   status: "kept" | "rejected";

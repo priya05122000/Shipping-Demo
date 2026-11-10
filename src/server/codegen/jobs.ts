@@ -11,23 +11,14 @@ import {
   readCodegen,
 } from "@/lib/codegen";
 import { getExtension } from "@/lib/files";
-import { CHILD_DIR, errorCode, SHIP_TEMPLATE_DIR, writeAtomic } from "@/server/child-dir";
-import { ApiError, findCodegenTarget, listShips, patchSectionCodegen, type CodegenState, type CodegenTarget } from "@/server/storage";
-import type {
-  CodegenLimit,
-  CodegenMode,
-  CodegenObjects,
-  CodegenUsage,
-  CodegenVersion,
-  SectionCodegen,
-  SharedChange,
-} from "@/types/records";
+import { CHILD_DIR, errorCode, writeAtomic } from "@/server/child-dir";
+import { ApiError, findCodegenTarget, patchSectionCodegen, type CodegenState, type CodegenTarget } from "@/server/storage";
+import type { CodegenLimit, CodegenMode, CodegenObjects, CodegenUsage, CodegenVersion, SectionCodegen } from "@/types/records";
 import { AgentError, IMAGE_MEDIA_TYPES, runAgent, type AgentImage } from "./agent";
 import { checkCards, objectAccess, objectImages, objectReads, objectsPrompt, planObjects, settleCards, type ObjectPlan } from "./objects";
 import { assertPlainPath, CodegenPolicy, FileJournal, listGeneratedFiles, pathProblem, toLabel } from "./policy";
 import { renderPrompt, type PromptValues } from "./prompts";
 import { queueRun, runtime, type Job } from "./runtime";
-import { checkSharedChange, type SharedCheckResult, type TemplateChange } from "./shared-check";
 import { applyStage, createStage, discardStage, discardStaleStages, removeTree, type AppliedStage, type Stage } from "./staging";
 import { projectTree, requiredReads } from "./structure";
 import { diagnosticsBlock, formatDiagnostics, newDiagnostics, typecheck, TypeChecker, type Diagnostic } from "./typecheck";
@@ -37,27 +28,24 @@ import { dataBlock, quoteText } from "./untrusted";
  * Generates a section's 2D and 3D React code from its line diagram, with the Claude Agent SDK (see agent.ts):
  *   1. Uploading a line diagram queues a generation in section.json (storage.ts); the API route then calls
  *      reconcileCodegen, which starts a job for it, and stops a job still working on an older one.
- *   2. Jobs run one at a time, across ships: a ship's jobs share its components, and any job may change the template.
- *      When a job's turn comes, the ship's codegen/generations.json decides the prompt: "first" if it lists no
- *      finished generation, "second" if it does. The prompt includes the file trees of the ship's project and the
- *      template, and the agent must read the files its code builds on before it writes anything (structure.ts).
+ *   2. Jobs run one at a time, across ships, so generations don't compete for the machine (each type-checks a whole
+ *      project) and a stage left over is always a stopped one's (staging.ts). When a job's turn comes, the ship's
+ *      codegen/generations.json decides the prompt: "first" if it lists no finished generation, "second" if it does.
+ *      The prompt includes the file trees of the ship's project and of the shared viewer (child/core), and the agent
+ *      must read the files its code builds on before it writes anything (structure.ts).
  *   3. The agent writes the code into the ship's project: the section's Diagram2D.tsx and Diagram3D.tsx, and shared
- *      components in src/shared/schematic/. A change every ship needs also goes in the template (child/template/);
- *      nothing outside child/ can change (policy.ts). After each file it writes, the new type errors of the project
- *      it's in are sent back to it; when it wants to finish, anything still wrong (a missing entry file, new type
- *      errors in the ship, or a change to the template that breaks it or an existing ship) sends it back to fix it, a
- *      few times at most. The job then checks once more, so `npm run build` keeps working:
- *        - the section's own code: both entry files, and no new type errors in the ship. Otherwise everything fails.
- *        - the shared change, when the run changed shared code (the ship's src/shared/ or the template): the template
- *          is type-checked, and its changes are tried on every existing ship that has the changed files, in memory
- *          (shared-check.ts). If that fails, only the template's changes are rolled back (rejected); the section's
- *          code is kept, and section.json says why (`sharedChange`).
+ *      components in src/shared/schematic/. It builds on the shared viewer (@shipdocs/viewer-core), which it reads but
+ *      can't change: it's every ship's, maintained by people, so a generation for one ship never changes another
+ *      (policy.ts). After each file it writes, the ship's new type errors are sent back to it; when it wants to
+ *      finish, anything still wrong (a missing entry file, new type errors in the ship) sends it back to fix it, a few
+ *      times at most. The job then checks once more, so the ship's build keeps working: both entry files, and no new
+ *      type errors in the ship. Otherwise everything fails.
  *   3b. The section's objects (picked in the Library): the agent looks at an object's image only the first time a
  *      generation uses it, and writes its card; later generations get the card as text instead (objects.ts). The
  *      code draws objects with the viewer's ObjectSymbol2D and ObjectModel3D, which show their files at runtime.
- *   4. The agent works on a copy of the ship and the template (its stage, staging.ts), so the real ones only change
- *      once everything passed: the stage's changes are then applied (each path checked again; nothing at all if a
- *      real file changed meanwhile), and the section's generated files become its next version (v1, v2…): copied to
+ *   4. The agent works on a copy of the ship (its stage, staging.ts), so the real one only changes once everything
+ *      passed: the stage's changes are then applied (each path checked again; nothing at all if a real file changed
+ *      meanwhile), and the section's generated files become its next version (v1, v2…): copied to
  *      codegen/<section ID>/v<N>/ and listed in section.json, so restoreCodegenVersion can switch back to it. If it
  *      fails, is stopped, or reaches a limit (budget, turns, fix rounds), the stage is discarded and nothing changes.
  *   5. However it ends, its status, tokens and cost are saved in section.json (`usage`) and added to the ship's
@@ -165,8 +153,7 @@ function startJob(projectId: string, sectionId: string, runId: string) {
     replaced: earlier ? finished(earlier) : Promise.resolve(),
   };
   runtime.jobs.set(key, job);
-  // Waits for the ship's earlier jobs and restores, and for every earlier job of any ship, since jobs may change the
-  // template.
+  // Waits for the ship's earlier jobs and restores, and for every earlier job of any ship, since jobs run one at a time.
   const previous = Promise.all([runtime.queues.get(projectId), runtime.jobChain]).then(() => undefined);
   job.done = runJob(job, previous)
     .catch((error) => console.error(`Code generation for ${key} failed unexpectedly:`, error))
@@ -242,11 +229,11 @@ async function runJob(job: Job, previous: Promise<void>) {
     await save(job, (current) => ({ ...current, status: "running", mode: runMode, startedAt: now() }));
 
     // The agent works on a copy (staging.ts), so nothing real changes until its code has passed every check.
-    setProgress(job, "Copying the ship and the template to work on");
+    setProgress(job, "Copying the ship to work on");
     await discardStaleStages();
     const workStage = await createStage(job.runId, target.shipDir, section.dir);
     stage = workStage;
-    const policy = await CodegenPolicy.open({ ship: workStage.ship, section: workStage.section, template: workStage.template, stage: workStage.dir });
+    const policy = await CodegenPolicy.open({ ship: workStage.ship, section: workStage.section, stage: workStage.dir });
     const runJournal = new FileJournal(policy);
 
     // The objects new to the ship's code are looked at (and get cards); the others are described by their cards.
@@ -254,30 +241,13 @@ async function runJob(job: Job, previous: Promise<void>) {
     const objectPlan = await planObjects(target.objects, target.shipDir, workStage.ship);
     policy.allowObjects(objectAccess(objectPlan));
 
-    // The projects the agent may change, each checked against its errors from before the run. The template's errors
-    // are given with its absolute path, as the agent sees it.
+    // The ship's project, the only one the agent may change, checked against its errors from before the run (the
+    // shared viewer's files are part of it, as the ship's build compiles them).
     setProgress(job, "Type-checking the project");
-    const templateDir = policy.label(policy.template);
-    const [shipChecker, templateChecker] = await Promise.all([
-      TypeChecker.open(workStage.ship, { signal }),
-      TypeChecker.open(workStage.template, { signal, prefix: `${templateDir}/` }),
-    ]);
+    const shipChecker = await TypeChecker.open(workStage.ship, { signal });
     signal.throwIfAborted();
-    // The template only counts once the agent has changed it.
-    const changedTemplate = () => runJournal.hasFilesIn(policy.template);
-    // The section's own code must be right, or the generation fails. The shared change is checked on its own: if it's
-    // wrong, only it is rejected.
+    // The section's code must be right, or the generation fails.
     const ownProblems = () => findProblems(workStage.section, () => shipChecker.fresh());
-    const sharedCheck = (againstShips: boolean) =>
-      checkShared({
-        projectId: job.projectId,
-        policy,
-        journal: runJournal,
-        templateChecker,
-        againstShips,
-        signal,
-        onProgress: (step) => setProgress(job, step),
-      });
 
     const values = await promptValues(target, workStage, policy, objectPlan);
     const [system, prompt] = await Promise.all([renderPrompt("rules", values), renderPrompt(runMode, values)]);
@@ -289,18 +259,13 @@ async function runJob(job: Job, previous: Promise<void>) {
       policy,
       journal: runJournal,
       controller: job.controller,
-      typecheck: async () => {
-        const [ship, template] = await Promise.all([shipChecker.report(), changedTemplate() ? templateChecker.report() : null]);
-        return template ? `This ship's project: ${ship}\n\nThe template (${templateDir}/): ${template}` : ship;
-      },
-      errorsAfterWrite: (written) => (policy.inTemplate(written) ? templateChecker : shipChecker).fresh(),
-      readFirst: [...(await requiredReads(workStage.ship, CODEGEN_SHARED_DIR)), ...objectReads(objectPlan, policy)],
-      verify: async () => {
-        const own = describeProblems(await ownProblems(), values.sectionDir);
-        // Other ships are only tried once this ship's own code is right, since it may still change.
-        const shared = describeShared(await sharedCheck(!own), templateDir);
-        return { own, shared, cards: await checkCards(objectPlan, runJournal, policy) };
-      },
+      typecheck: () => shipChecker.report(),
+      errorsAfterWrite: () => shipChecker.fresh(),
+      readFirst: [...(await requiredReads(workStage.ship, CODEGEN_SHARED_DIR, policy.core)), ...objectReads(objectPlan, policy)],
+      verify: async () => ({
+        own: describeProblems(await ownProblems(), values.sectionDir),
+        cards: await checkCards(objectPlan, runJournal, policy),
+      }),
       stop: (reason) => {
         job.failure ??= reason;
         job.controller.abort();
@@ -328,30 +293,11 @@ async function runJob(job: Job, previous: Promise<void>) {
       );
     }
 
-    // The shared change is kept only if the template type-checks with it and it breaks no existing ship that has the
-    // changed files. Otherwise it's rejected on its own (left out of what's applied): the section's code doesn't use
-    // the template.
-    const report = await sharedCheck(true);
-    signal.throwIfAborted();
-    let sharedChange: SharedChange | undefined;
-    if (report && report.templateFiles.length) {
-      const checkedShips = report.ships?.checked.map((ship) => ship.name) ?? [];
-      const problem = describeShared(report, templateDir, 5);
-      if (problem) {
-        setProgress(job, "Rejecting the change to the template");
-        await runJournal.restoreIn(policy.template);
-        console.warn(`Code generation for ${job.key}: its change to the template was rejected.\n${problem}`);
-        sharedChange = { status: "rejected", files: report.templateFiles, checkedShips, reason: problem };
-      } else {
-        sharedChange = { status: "kept", files: report.templateFiles, checkedShips };
-      }
-    }
-
-    // Everything passed: the stage's changes go to the real ship and template, each path checked again as it's
-    // written, and none at all if a real file changed meanwhile.
+    // Everything passed: the stage's changes go to the real ship, each path checked again as it's written, and none at
+    // all if a real file changed meanwhile.
     signal.throwIfAborted();
     setProgress(job, "Applying the checked changes");
-    const realPolicy = await CodegenPolicy.open({ ship: target.shipDir, section: section.dir, template: SHIP_TEMPLATE_DIR });
+    const realPolicy = await CodegenPolicy.open({ ship: target.shipDir, section: section.dir });
     applied = await applyStage(workStage, runJournal, realPolicy);
     const files = applied.files.map((file) => path.relative(target.shipDir, file).split(path.sep).join("/")).sort();
 
@@ -369,7 +315,7 @@ async function runJob(job: Job, previous: Promise<void>) {
     await recordGeneration(target.shipDir, { sectionId: section.id, section: section.name, version, mode: runMode, finishedAt, files });
     const summary = outcome.summary.trim().slice(0, SUMMARY_MAX);
     await save(job, (current, state) => ({
-      codegen: { ...current, status: "done", finishedAt, files, summary, costUsd, version, sharedChange, usage, objects, error: undefined },
+      codegen: { ...current, status: "done", finishedAt, files, summary, costUsd, version, usage, objects, error: undefined },
       versions: [...state.versions.filter((other) => other.version !== version), entry],
       activeVersion: version,
     }));
@@ -511,85 +457,6 @@ function describeProblems({ missing, fresh }: Problems, sectionDir: string): str
   return parts.length ? parts.join("\n\n") : null;
 }
 
-/** A ship's shared code: the viewer's building blocks and the generated schematic components. */
-const SHIP_SHARED_DIR = "src/shared";
-
-/** A check of the run's shared change (see checkShared). */
-interface SharedReport {
-  /** The template's files the run changed, relative to the template's folder. */
-  templateFiles: string[];
-  /** The template's new type errors, with paths relative to the ship's folder. */
-  templateErrors: Diagnostic[];
-  /** The check against the other ships; unset when it wasn't made. */
-  ships?: SharedCheckResult;
-}
-
-interface SharedCheckOptions {
-  projectId: string;
-  policy: CodegenPolicy;
-  journal: FileJournal;
-  templateChecker: TypeChecker;
-  /** Whether to try the template's changes on the other ships (the slow part). */
-  againstShips: boolean;
-  signal: AbortSignal;
-  onProgress: (step: string) => void;
-}
-
-/**
- * Checks the run's shared change, if it made one (it changed the ship's src/shared/, or the template): the template
- * is type-checked, and the template's changes are tried on the existing ships that have the changed files (see
- * shared-check.ts). The ship itself is checked with the section's code. Null if the run changed no shared code.
- */
-async function checkShared(options: SharedCheckOptions): Promise<SharedReport | null> {
-  const { policy, journal, templateChecker, signal, onProgress } = options;
-  const templateChanges = await journal.changesIn(policy.template);
-  const shipShared = await journal.changesIn(path.join(policy.root, ...SHIP_SHARED_DIR.split("/")));
-  if (templateChanges.length === 0 && shipShared.length === 0) return null;
-
-  onProgress("Type-checking the template");
-  const templateErrors = await templateChecker.fresh();
-  const changes: TemplateChange[] = templateChanges.map(({ target, before, after }) => ({
-    file: path.relative(policy.template, target).split(path.sep).join("/"),
-    before: before?.toString("utf8") ?? null,
-    after: after?.toString("utf8") ?? null,
-  }));
-  let ships: SharedCheckResult | undefined;
-  if (options.againstShips && changes.length) {
-    onProgress("Checking the change to the template against the other ships");
-    const others = (await listShips()).filter((ship) => ship.id !== options.projectId);
-    ships = await checkSharedChange(changes, others, signal);
-  }
-  return { templateFiles: changes.map((change) => change.file), templateErrors, ships };
-}
-
-/**
- * What's wrong with the run's change to the template, or null if nothing is (or it made none). Paths are as the agent
- * sees them: the template's and other ships' are absolute. `limit` caps the errors listed per project.
- */
-function describeShared(report: SharedReport | null, templateDir: string, limit?: number): string | null {
-  if (!report || report.templateFiles.length === 0) return null;
-  const list = (errors: Diagnostic[]) =>
-    limit !== undefined && errors.length > limit
-      ? `${diagnosticsBlock(errors.slice(0, limit))}\n…and ${errors.length - limit} more.`
-      : diagnosticsBlock(errors);
-  const parts: string[] = [];
-  if (report.templateErrors.length) {
-    parts.push(`The template (${templateDir}/) has ${report.templateErrors.length} new type error(s) with your change:\n${list(report.templateErrors)}`);
-  }
-  for (const { ship, errors } of report.ships?.broken ?? []) {
-    const folder = toLabel(ship.dir);
-    const located = errors.map((error) => (error.file ? { ...error, file: `${folder}/${error.file}` } : error));
-    parts.push(
-      `Your change to the template would break the existing ship ${quoteText(ship.name)} (${folder}/), which has its own copy of the files you ` +
-        `changed: with the change applied there, it has ${errors.length} new type error(s):\n${list(located)}`,
-    );
-  }
-  for (const { ship, reason } of report.ships?.unchecked ?? []) {
-    parts.push(`Your change to the template couldn't be checked against the existing ship ${quoteText(ship.name)}: ${reason}`);
-  }
-  return parts.length ? parts.join("\n\n") : null;
-}
-
 /**
  * The drawing as an image for the prompt, or undefined for an SVG, which the agent reads as text instead. Its path is
  * checked first: it's sent to the Claude API, so it mustn't be a link to some other file.
@@ -630,8 +497,8 @@ async function promptValues(target: CodegenTarget, stage: Stage, policy: Codegen
       ? "This section already has generated code, made from an earlier drawing: read it first, then change it to match this one, keeping what still fits."
       : "",
     projectTree: dataBlock(await projectTree(stage.ship)),
-    templateDir: policy.label(policy.template),
-    templateTree: dataBlock(await projectTree(stage.template)),
+    coreDir: policy.label(policy.core),
+    coreTree: dataBlock(await projectTree(policy.core)),
     childDir: toLabel(policy.child),
     objects: objectsPrompt(objectPlan, policy),
   };
@@ -751,7 +618,7 @@ async function restoreVersion(projectId: string, sectionId: string, version: num
     }
   }
 
-  const policy = await CodegenPolicy.open({ ship: shipDir, section: section.dir, template: SHIP_TEMPLATE_DIR });
+  const policy = await CodegenPolicy.open({ ship: shipDir, section: section.dir });
   const journal = new FileJournal(policy);
   const baseline = await typecheck(shipDir);
   try {

@@ -1,6 +1,6 @@
 <!--
 The first prompt: sent for a ship's first code generation, when its codegen.json lists no finished generation.
-Placeholders: {{shipName}} {{sectionName}} {{sectionId}} {{sectionDir}} {{drawing}} {{generatedSections}} {{previousCode}} {{projectTree}} {{templateDir}} {{templateTree}} {{childDir}} {{objects}}
+Placeholders: {{shipName}} {{sectionName}} {{sectionId}} {{sectionDir}} {{drawing}} {{generatedSections}} {{previousCode}} {{projectTree}} {{coreDir}} {{coreTree}} {{childDir}} {{objects}}
 Names arrive quoted and trees fenced as data, so they're used as they are (see src/server/codegen/untrusted.ts).
 This comment isn't sent.
 -->
@@ -39,13 +39,13 @@ Current project structure:
 
 `{{projectTree}}`
 
-Shared template directory:
+Shared viewer directory (`@shipdocs/viewer-core`, read-only, used by every ship):
 
-`{{templateDir}}/`
+`{{coreDir}}/`
 
-Template project structure:
+Shared viewer structure:
 
-`{{templateTree}}`
+`{{coreTree}}`
 
 Objects from the Library:
 
@@ -85,9 +85,15 @@ Before writing code, inspect the following existing files and directories.
 
 ### Mandatory shared files
 
-- `src/shared/diagram/section.ts`
-- `src/shared/catalog/`
-- `src/shared/ui/`
+In the shared viewer (read-only, imported as `@shipdocs/viewer-core/...`):
+
+- `{{coreDir}}/src/shared/diagram/section.ts` (`@shipdocs/viewer-core/diagram`)
+- `{{coreDir}}/src/shared/catalog/` (`@shipdocs/viewer-core/catalog`)
+- `{{coreDir}}/src/shared/ui/` (`@shipdocs/viewer-core/ui`)
+- `{{coreDir}}/src/objects/` (`@shipdocs/viewer-core/objects`, `@shipdocs/viewer-core/objects/model3d`)
+
+In the current ship's project:
+
 - `src/shared/schematic/`
 
 ### Mandatory section files
@@ -102,9 +108,9 @@ Inspect the following files inside `{{sectionDir}}/` if they exist:
 - `index.ts`
 - Other related section files.
 
-### Template inspection
+### Shared viewer inspection
 
-Inspect corresponding files inside `{{templateDir}}/`.
+Inspect the relevant files inside `{{coreDir}}/`. Never write to it: every ship runs it, and people maintain it.
 
 Identify:
 
@@ -591,16 +597,11 @@ Animation is a visualization of configured operating information, not a validate
 
 ---
 
-## 15. PHASE 12 — TEMPLATE SYNCHRONIZATION
+## 15. PHASE 12 — SHARED CODE
 
-The template directory is:
+Every ship runs the same shared viewer, `{{coreDir}}/` (`@shipdocs/viewer-core`). It is read-only for you: people change it, and every ship picks up the change when it is next built.
 
-`{{templateDir}}/`
-
-If a change is required by every ship, update both:
-
-1. Current ship's corresponding shared file.
-2. Matching template shared file.
+Put code that this ship's sections can share in the ship's own `src/shared/schematic/`.
 
 Examples:
 
@@ -611,13 +612,9 @@ Examples:
 - Shared theme.
 - Reusable interaction logic.
 
-Do not copy section-specific information into the template.
+Do not copy the shared viewer's files into the ship to change them.
 
-Do not overwrite the template with the entire ship project.
-
-Only synchronize changes that genuinely apply to every ship.
-
-Keep the current ship's implementation and template implementation compatible.
+If the section needs something the shared viewer doesn't provide, implement it in the ship, and describe the missing shared capability in your final report as a suggestion for people to add to the shared viewer.
 
 ---
 
@@ -626,7 +623,7 @@ Keep the current ship's implementation and template implementation compatible.
 Follow this exact implementation order:
 
 1. Inspect existing files.
-2. Inspect project and template structures.
+2. Inspect the project and shared viewer structures.
 3. Inspect the drawing.
 4. Identify equipment and pipes.
 5. Match Library objects and engineering data.
@@ -641,7 +638,7 @@ Follow this exact implementation order:
 14. Create section `Diagram2D.tsx`.
 15. Create section `Diagram3D.tsx`.
 16. Implement or connect Overview using existing architecture.
-17. Synchronize common changes with the template.
+17. Note any capability the shared viewer is missing, for the report.
 18. Run typecheck.
 19. Fix all introduced TypeScript errors.
 20. Run the available build and tests.
@@ -696,7 +693,7 @@ List:
 - Reused components.
 - Newly created equipment components.
 - Newly created pipe components.
-- Updated template files.
+- Suggested additions to the shared viewer.
 - Integrated data sources.
 
 ### D. Feature validation
@@ -760,7 +757,7 @@ List:
 10. Never break existing application functionality.
 11. Never duplicate the generic engine for individual sections.
 12. Always reuse existing project architecture.
-13. Always synchronize genuinely shared changes with the template.
+13. Never modify the shared viewer (`@shipdocs/viewer-core`); keep reusable code in `src/shared/schematic/`.
 14. Always validate TypeScript.
 15. Always report unresolved engineering uncertainties.
 

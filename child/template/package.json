@@ -9,20 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.9",
-    "@react-three/fiber": "^9.8.2",
+    "@shipdocs/viewer-core": "file:../../core",
     "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "three": "^0.187.0"
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.187.0",
-    "@vitejs/plugin-react": "^6",
-    "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^8"
   }

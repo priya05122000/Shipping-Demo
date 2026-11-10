@@ -1,6 +1,6 @@
 <!--
 The second prompt: sent for every code generation after a ship's first one, so it reuses the ship's shared components.
-Placeholders: {{shipName}} {{sectionName}} {{sectionId}} {{sectionDir}} {{drawing}} {{generatedSections}} {{previousCode}} {{projectTree}} {{templateDir}} {{templateTree}} {{childDir}} {{objects}}
+Placeholders: {{shipName}} {{sectionName}} {{sectionId}} {{sectionDir}} {{drawing}} {{generatedSections}} {{previousCode}} {{projectTree}} {{coreDir}} {{coreTree}} {{childDir}} {{objects}}
 Names arrive quoted and trees fenced as data, so they're used as they are (see src/server/codegen/untrusted.ts).
 This comment isn't sent.
 -->
@@ -20,17 +20,17 @@ The ship's project files (excluding installed packages and build output):
 
 `{{projectTree}}`
 
-### 2. Original Template Project
+### 2. Shared Viewer
 
-The template from which this ship's project was copied:
+The viewer every ship runs (`@shipdocs/viewer-core`): its UI, how it reads the ship's data, and the contracts your code builds on. It is read-only: people maintain it, and every ship picks up their changes when it is next built.
 
-Template directory: `{{templateDir}}/`
+Shared viewer directory: `{{coreDir}}/`
 
-Template project structure:
+Shared viewer structure:
 
-`{{templateTree}}`
+`{{coreTree}}`
 
-Any genuinely reusable changes required across all ships must also be applied to the corresponding template files.
+Import only what its `package.json` exports (`@shipdocs/viewer-core/diagram`, `/objects`, `/objects/model3d`, `/catalog`, `/data`, `/ui`). Reusable code for this ship goes in its own `src/shared/schematic/`.
 
 ### 3. Section Objects from the Library
 
@@ -87,7 +87,7 @@ Read and understand these files before implementing anything:
 
 1. `src/shared/schematic/` — inspect all relevant shared schematic components.
 2. At least one existing section's code that uses the shared components.
-3. `src/shared/diagram/section.ts` — understand the section props and interfaces.
+3. `{{coreDir}}/src/shared/diagram/section.ts` — understand the section props and interfaces (imported as `@shipdocs/viewer-core/diagram`).
 4. `{{sectionDir}}/` — inspect the entire target section directory.
 5. `{{sectionDir}}/manual-data.json` — inspect if it exists.
 6. `{{sectionDir}}/data.json` — inspect the completed engineering data if it exists.
@@ -244,11 +244,9 @@ If an existing shared component needs improvement:
 - Do not remove existing functionality.
 - Do not introduce section-specific hardcoding into shared components.
 
-If a change is required by every ship, apply the same change to the corresponding file in `{{templateDir}}/`.
+These are the ship's own shared components, in `src/shared/schematic/`. The common engine, the shared viewer `{{coreDir}}/`, is never modified: every ship runs it, and people maintain it.
 
-Do not modify the common engine unless a genuine reusable improvement is essential.
-
-If an essential common-engine modification is necessary, explain its reason and expected impact before making the change.
+If the section needs something the shared viewer doesn't provide, implement it in the ship, and describe the missing shared capability in your final report as a suggestion for people to add to the shared viewer.
 
 ---
 
@@ -685,7 +683,7 @@ Use actual results: Passed, Failed, Blocked or Not Tested.
 11. Ask me before implementing uncertain engineering identities, values or connections.
 12. Keep 2D and 3D representations synchronized.
 13. Make genuinely reusable shared changes backward-compatible.
-14. Apply changes required by every ship to the corresponding template files.
+14. Never modify the shared viewer (`@shipdocs/viewer-core`); import what it exports.
 15. Fix introduced type errors before proceeding.
 16. Run `typecheck` before finishing.
 17. Run the build only when permitted by the existing build configuration.

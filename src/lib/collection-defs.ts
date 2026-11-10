@@ -58,7 +58,7 @@ export interface CollectionDef {
 /**
  * Collection definitions shared by the API routes (validation, storage paths) and the UI (forms, IDs).
  * The slug is used in URLs. Records are saved in the child folder, one folder each:
- *   child/ships/<ship>/ship.json                       a project (ship): a standalone viewer project, made from child/template
+ *   child/ships/<ship>/ship.json                       a project (ship): its data and generated code, made from child/template
  *   child/ships/<ship>/<dir>/<folder>/<metaFile>       its sections and objects, plus their uploaded files
  */
 export const COLLECTIONS = {

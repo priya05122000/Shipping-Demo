@@ -18,14 +18,14 @@ import { diagnosticsBlock, type Diagnostic } from "./typecheck";
  * The agent gets only file tools (Read, Write, Edit, Glob, Grep) and a `typecheck` tool, so it can't run commands or
  * reach the web. Hooks keep it to the project, its rules and its errors:
  *   PreToolUse    every tool call is checked against the CodegenPolicy before it runs: the path it names (no "..",
- *                 inside child/, no links, writes only in the stage's ship and template, not protected files), the
+ *                 inside child/, no links, writes only in the stage's ship, not protected files), the
  *                 tree a search reads, and, for typecheck, the stage. The checked absolute path replaces the one the
  *                 agent gave, so the tool uses exactly what was checked. Writes are refused until the agent has read
  *                 the files its code builds on (`readFirst`), and recorded in the journal before they're allowed.
  *   PostToolUse   after every tool call, the same path is checked again, and the stage scanned for links, in case
  *                 something changed in between (TOCTOU): then the tool's result is withheld and the generation is
- *                 stopped (`stop`), and the job discards the stage. After a Write or Edit, the project the file is
- *                 in is type-checked and the new errors are added to the result, so the agent fixes them right away.
+ *                 stopped (`stop`), and the job discards the stage. After a Write or Edit, the ship's project is
+ *                 type-checked and the new errors are added to the result, so the agent fixes them right away.
  *   Stop          when the agent wants to finish, checks the code (`verify`); if something's wrong, the errors are
  *                 sent back and it keeps going, up to CODEGEN_FIX_ROUNDS times. Missing or wrong object cards are
  *                 sent back too, but never fail the generation: the job leaves such a card out (see objects.ts).
@@ -100,17 +100,14 @@ export interface AgentRequest {
    * images of the objects new to the ship's code.
    */
   images: AgentImage[];
-  /** The policy for the stage: its copies of the ship and template are where the agent works. */
+  /** The policy for the stage: its copy of the ship is where the agent works. */
   policy: CodegenPolicy;
   journal: FileJournal;
   /** Aborting it stops the agent. */
   controller: AbortController;
-  /** For the typecheck tool: the type errors to fix, in the ship's project and, once it's changed, the template. */
+  /** For the typecheck tool: the type errors to fix in the ship's project. */
   typecheck: () => Promise<string>;
-  /**
-   * After a write to `target` (absolute): the new type errors of the project it's in (the ship's or the template),
-   * with paths as the agent sees them (policy.label).
-   */
+  /** After a write to `target` (absolute): the ship's new type errors, with paths relative to its folder. */
   errorsAfterWrite: (target: string) => Promise<Diagnostic[]>;
   /**
    * Files the agent must read before its first write, relative to the ship's folder; one ending in "/" means any
@@ -118,11 +115,10 @@ export interface AgentRequest {
    */
   readFirst: string[];
   /**
-   * What's still wrong, for the agent to fix, each null when nothing is: `own`, the section's own code (if it stays
-   * wrong, the generation fails); `shared`, its change to the template (if it stays wrong, only that is rejected);
-   * `cards`, the cards of the objects it was shown (if they stay wrong, they're left out).
+   * What's still wrong, for the agent to fix, each null when nothing is: `own`, the section's code (if it stays
+   * wrong, the generation fails); `cards`, the cards of the objects it was shown (if they stay wrong, they're left out).
    */
-  verify: () => Promise<{ own: string | null; shared: string | null; cards: string | null }>;
+  verify: () => Promise<{ own: string | null; cards: string | null }>;
   /** Stops the generation because something went wrong (a path changed under a tool call): it fails, with `reason`. */
   stop: (reason: string) => void;
   /** Called with a short description of each step, e.g. "Writing src/sections/bunker/Diagram2D.tsx". */
@@ -326,7 +322,7 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
     tools: [
       tool(
         "typecheck",
-        "Type-check the whole ship project the way its build does (tsc with tsconfig.app.json), and the template too once you've changed it. Reports the type errors to fix, apart from any the projects already had.",
+        "Type-check the whole ship project the way its build does (tsc with tsconfig.app.json, which includes the shared viewer it imports). Reports the type errors to fix, apart from any the project already had.",
         {},
         async () => ({ content: [{ type: "text", text: await request.typecheck() }] }),
       ),
@@ -389,24 +385,21 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
 
   // When the agent wants to finish: anything still wrong sends it back to fix it, CODEGEN_FIX_ROUNDS times at most.
   // Still wrong after that is a limit reached: the generation fails and everything is discarded. Problems only with
-  // the template change or the object cards, just as they were when it was last sent back, mean it chose to leave
-  // them (it may): it's let go, and the job rejects the template change, or leaves those cards out, alone. Object
-  // cards alone never reach the limit.
+  // the object cards, just as they were when it was last sent back, mean it chose to leave them (it may): it's let
+  // go, and the job leaves those cards out. Object cards alone never reach the limit.
   let fixRounds = 0;
-  let lastShared: string | null = null;
   let lastCards: string | null = null;
   let fixLimit: string | null = null;
   const checkFinish: HookCallback = async (input) => {
     if (input.hook_event_name !== "Stop") return {};
     request.onProgress("Checking the generated code");
-    const { own, shared, cards } = await request.verify();
-    if (!own && !shared && !cards) return {};
-    if (!own && shared === lastShared && cards === lastCards) return {};
+    const { own, cards } = await request.verify();
+    if (!own && !cards) return {};
+    if (!own && cards === lastCards) return {};
     if (fixRounds >= MAX_FIX_ROUNDS) {
-      if (own || shared !== lastShared) fixLimit = [own, shared].filter(Boolean).join("\n\n");
+      if (own) fixLimit = own;
       return {};
     }
-    lastShared = shared;
     lastCards = cards;
     fixRounds += 1;
     request.onProgress(`Fixing errors in the generated code (round ${fixRounds} of ${MAX_FIX_ROUNDS})`);
@@ -414,14 +407,6 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
     const parts: string[] = [];
     if (own) {
       parts.push(`The code isn't finished yet:\n\n${own}\n\nRead the files involved, and fix these. Run typecheck until it reports no new errors.`);
-    }
-    if (shared) {
-      parts.push(
-        `Your change to the template can't be kept as it is:\n\n${shared}\n\nMake it work for the template and for those ships, ` +
-          "for example with a new optional prop rather than a changed one, and read their files if you need to (you can't " +
-          "change other ships). If it can't be, leave it as it is: the change to the template is then rejected (undone), " +
-          "and the change stays in this ship only.",
-      );
     }
     if (cards) {
       parts.push(
@@ -463,8 +448,8 @@ export async function runAgent(request: AgentRequest): Promise<AgentOutcome> {
     prompt: input(),
     options: {
       cwd: policy.root,
-      // So Claude Code's own file tools reach the stage's template and the other ships (to read); the PreToolUse hook
-      // still decides every call.
+      // So Claude Code's own file tools reach the shared viewer (child/core) and the other ships (to read); the
+      // PreToolUse hook still decides every call.
       additionalDirectories: [policy.child],
       model: MODEL,
       effort: EFFORT,

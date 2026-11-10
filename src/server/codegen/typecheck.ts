@@ -1,4 +1,5 @@
-import { execFile, spawn } from "node:child_process";
+import { execFile } from "node:child_process";
+import fs from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { CHILD_DIR } from "@/server/child-dir";
@@ -22,8 +23,14 @@ const GLOBAL_ERROR = /^error (TS\d+): (.*)$/;
 /** The most errors shown to the agent at once. */
 const SHOWN_MAX = 60;
 
-/** tsc from the child toolchain, as child/build-ships.mjs runs it. */
+/**
+ * tsc from the child app's own install (child/node_modules), as child/build-ships.mjs runs it. Ships import the shared
+ * viewer from there too, so without that install they can't be checked at all.
+ */
 function tscPath(): string {
+  if (!fs.existsSync(path.join(CHILD_DIR, "node_modules", "@shipdocs", "viewer-core"))) {
+    throw new Error("The child app's packages aren't installed, so the ship can't be type-checked: run `npm run install:child`.");
+  }
   return createRequire(path.join(CHILD_DIR, "package.json")).resolve("typescript/bin/tsc");
 }
 
@@ -49,46 +56,6 @@ export async function typecheck(shipDir: string, signal?: AbortSignal): Promise<
     );
   });
   return parseDiagnostics(output);
-}
-
-/** See the script's own comment. Run from the source folder, like the prompts (see prompts.ts). */
-const OVERLAY_SCRIPT = path.join(process.cwd(), "src", "server", "codegen", "overlay-typecheck.mjs");
-
-/**
- * Type-checks a project the way typecheck() does, once per variant, with the variant's files replaced in memory (by
- * absolute path; null for a file that doesn't exist), and writes nothing. Returns each variant's errors, with files
- * relative to the project. Aborting `signal` stops it.
- */
-export function typecheckVariants(
-  projectDir: string,
-  variants: Record<string, string | null>[],
-  signal?: AbortSignal,
-): Promise<Diagnostic[][]> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, [OVERLAY_SCRIPT, CHILD_DIR], {
-      cwd: projectDir,
-      timeout: TIMEOUT_MS * variants.length,
-      windowsHide: true,
-      signal,
-    });
-    let stdout = "";
-    let stderr = "";
-    child.stdout.setEncoding("utf8").on("data", (chunk: string) => (stdout += chunk));
-    child.stderr.setEncoding("utf8").on("data", (chunk: string) => (stderr += chunk));
-    // The script may end before reading all of its input; the exit code says what happened.
-    child.stdin.on("error", () => undefined);
-    child.on("error", reject);
-    child.on("close", (code) => {
-      const problem = (stderr.trim().split(/\r?\n/).slice(-3).join(" ") || `exit code ${code}`).trim();
-      if (code !== 0) return reject(new Error(`The type check couldn't run: ${problem}`));
-      try {
-        resolve(JSON.parse(stdout) as Diagnostic[][]);
-      } catch {
-        reject(new Error(`The type check gave no result: ${problem}`));
-      }
-    });
-    child.stdin.end(JSON.stringify({ project: projectDir, variants }));
-  });
 }
 
 function parseDiagnostics(output: string): Diagnostic[] {
@@ -135,20 +102,14 @@ export function diagnosticsBlock(diagnostics: Diagnostic[]): string {
 export interface CheckOptions {
   /** Aborting it stops every check. */
   signal?: AbortSignal;
-  /**
-   * Put before each error's file, so paths are relative to the ship's folder as the agent sees them, e.g.
-   * "../../template/" for the template's errors.
-   */
-  prefix?: string;
 }
 
-async function checkProject(projectDir: string, { signal, prefix = "" }: CheckOptions): Promise<Diagnostic[]> {
-  const diagnostics = await typecheck(projectDir, signal);
-  return prefix ? diagnostics.map((diagnostic) => (diagnostic.file ? { ...diagnostic, file: prefix + diagnostic.file } : diagnostic)) : diagnostics;
+function checkProject(projectDir: string, { signal }: CheckOptions): Promise<Diagnostic[]> {
+  return typecheck(projectDir, signal);
 }
 
 /**
- * The type checks of one project (a ship's, or the template) during a code generation: its errors from before the
+ * The type checks of a ship's project during a code generation: its errors from before the
  * run (`baseline`), and checks of its files as they are now, for the agent's typecheck tool, the check after each file
  * it writes, and the check before it finishes. Checks run one at a time, since each sees the whole project: a caller
  * that arrives while one is running gets the next one, which starts after the caller's own writes, and shares it with

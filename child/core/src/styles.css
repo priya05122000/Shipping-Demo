@@ -1,0 +1,50 @@
+/*
+ * The viewer's styles, which every ship imports from its own src/styles.css:
+ *   @import "@shipdocs/viewer-core/styles.css";
+ *   @source "./";
+ * Tailwind looks for class names in this package (below) and in the ship's src (its own @source), which holds the
+ * generated views.
+ */
+@import "tailwindcss";
+@source "./";
+
+/* Light-only, matching the parent dashboard. */
+html {
+  color-scheme: light;
+  background-color: var(--color-slate-50);
+}
+
+/* Diagram hotspots (shared/view2d): invisible until hovered, focused or selected. Colour comes from `color` on the <g>. */
+.hotspot {
+  cursor: pointer;
+  outline: none;
+}
+.hotspot rect {
+  fill: currentColor;
+  fill-opacity: 0;
+  stroke: currentColor;
+  stroke-opacity: 0;
+  stroke-width: 2;
+  transition:
+    fill-opacity 120ms ease-out,
+    stroke-opacity 120ms ease-out;
+}
+.hotspot:hover rect,
+.hotspot:focus-visible rect {
+  fill-opacity: 0.08;
+  stroke-opacity: 0.9;
+}
+.hotspot[aria-pressed="true"] rect {
+  fill-opacity: 0.16;
+  stroke-opacity: 1;
+  stroke-width: 3;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

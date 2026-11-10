@@ -1,0 +1,5 @@
+{
+  // Type-checks this package on its own (`npm run typecheck`): its src as ships compile it, and its Vite preset.
+  "files": [],
+  "references": [{ "path": "./tsconfig.src.json" }, { "path": "./tsconfig.node.json" }]
+}

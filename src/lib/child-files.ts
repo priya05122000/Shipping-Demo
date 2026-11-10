@@ -2,19 +2,19 @@ import { getExtension } from "@/lib/files";
 
 /**
  * Rules for the editor pages, which edit the child app's source (./child). Shared by the API routes and the UI.
- * Paths use "/" and are relative to the child folder, e.g. "template/src/app/App.tsx", or in a ship's editor to
- * the folder of ships, e.g. "mv-aurora/src/app/App.tsx".
+ * Paths use "/" and are relative to the child folder, e.g. "core/src/app/App.tsx", or in a ship's editor to
+ * the folder of ships, e.g. "mv-aurora/src/main.tsx".
  */
 
 /** Largest file the editor opens or saves. */
 export const CHILD_FILE_MAX_BYTES = 1024 * 1024;
 
 /**
- * Never listed, opened or written: installed packages, git internals, and code generations' working copies (see
- * src/server/codegen/staging.ts), which the editor mustn't change under a running generation. Compared
- * case-insensitively.
+ * Never listed, opened or written: installed packages, build output (the built ships in child/dist, to deploy), git
+ * internals, and code generations' working copies (see src/server/codegen/staging.ts), which the editor mustn't
+ * change under a running generation. Compared case-insensitively.
  */
-const HIDDEN_NAMES = new Set(["node_modules", ".git", ".codegen-stage"]);
+const HIDDEN_NAMES = new Set(["node_modules", "dist", ".git", ".codegen-stage"]);
 
 /** Shown in the file tree but not opened as text. The server also refuses any file that isn't UTF-8 text. */
 const BINARY_EXTENSIONS = new Set([
@@ -24,8 +24,9 @@ const BINARY_EXTENSIONS = new Set([
 ]);
 
 /**
- * The part of ./child an editor works on. null is /editor: the shared files, i.e. everything but the ships (the
- * template new ships are copied from, and the dev server and build scripts). A project folder name, e.g. "mv-aurora",
+ * The part of ./child an editor works on. null is /editor: the shared files, i.e. everything but the ships (the viewer
+ * every ship runs, in core/, where a change reaches every ship; the template new ships are made from; and the dev
+ * server and build scripts). A project folder name, e.g. "mv-aurora",
  * is that ship's Editor page: only ships/mv-aurora. The server refuses any path outside the scope.
  */
 export type ChildScope = string | null;

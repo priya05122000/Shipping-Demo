@@ -40,8 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# child (viewer) app: dependencies and build output served by Next
+# child app (the ships' viewers, installed, built and deployed on its own): dependencies and build output
 /child/node_modules
+/child/dist
+# where ship builds went before they were deployed on their own; no longer used
 /public/child
 # code generations' working copies (src/server/codegen/staging.ts)
 /child/.codegen-stage

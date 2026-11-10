@@ -57,7 +57,7 @@ interface EditorWorkspaceProps {
   /**
    * A ship's project folder name, e.g. "mv-aurora": the editor shows and edits only child/ships/mv-aurora, with paths
    * like "mv-aurora/src/main.tsx". Without it, the editor shows the shared files: everything in ./child but the ships,
-   * with paths like "template/src/main.tsx".
+   * with paths like "core/src/app/App.tsx" (the viewer every ship runs) or "template/src/main.tsx".
    */
   projectFolder?: string;
 }
@@ -88,8 +88,8 @@ function Workspace({ projectFolder }: EditorWorkspaceProps) {
   const restoredRef = useRef(false);
 
   const active = files.find((file) => file.path === activePath) ?? null;
-  // A ship's src starts open; in the shared files, the template does.
-  const openByDefault = useMemo(() => (scope === null ? ["template"] : [`${scope}/src`]), [scope]);
+  // A ship's src starts open; in the shared files, the shared viewer's does (a change there reaches every ship).
+  const openByDefault = useMemo(() => (scope === null ? ["core", "core/src"] : [`${scope}/src`]), [scope]);
   const dirtyPaths = useMemo(() => new Set(files.filter((file) => file.dirty).map((file) => file.path)), [files]);
   const hasUnsaved = dirtyPaths.size > 0;
 
@@ -444,7 +444,7 @@ function Workspace({ projectFolder }: EditorWorkspaceProps) {
       {dialog?.type === "new" && (
         <NewFileModal
           scope={scope}
-          folder={active ? folderOf(active.path) : scope === null ? "template/src/" : `${scope}/src/`}
+          folder={active ? folderOf(active.path) : scope === null ? "core/src/" : `${scope}/src/`}
           onClose={() => setDialog(null)}
           onCreated={handleCreated}
         />

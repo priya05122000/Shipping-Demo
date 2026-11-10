@@ -1,8 +1,10 @@
-// Builds the ships in ./ships, each as `npm run build` in its folder would (type-check, then Vite with its own
-// vite.config.ts), using this folder's toolchain, so no ship needs its own `npm install`:
-//   node build-ships.mjs                     every ship into ../public/child/<ship>/, which Next serves as static files
-//   node build-ships.mjs --standalone        every ship into its own ships/<ship>/dist/, a static site to host on its own
-//   node build-ships.mjs [--standalone] <ship>...    only the named ships (their folder names in ./ships)
+// Builds the ships in ./ships, each on its own as `npm run build` in its folder would (type-check, then Vite with its
+// own vite.config.ts), into ./dist/<ship>/, using this folder's toolchain, so no ship needs its own `npm install`:
+//   node build-ships.mjs              every ship
+//   node build-ships.mjs <ship>...    only the named ships (their folder names in ./ships)
+// Each dist/<ship>/ is a complete static site with relative URLs: deploy it on its own, to any static host. For Ship
+// Docs (the parent), it goes at <SHIP_VIEWER_URL>/<ship>/ (see ../next.config.ts); `npm run serve` serves them all
+// locally. A ship that fails to build doesn't stop the others, and has no output; the exit code is 1 if any failed.
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import { createRequire } from "node:module";
@@ -12,15 +14,13 @@ import { build } from "vite";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const shipsDir = path.join(here, "ships");
-const publicDir = path.join(here, "..", "public", "child");
+const distDir = path.join(here, "dist");
 const tsc = createRequire(import.meta.url).resolve("typescript/bin/tsc");
 
 const args = process.argv.slice(2);
 const flags = args.filter((arg) => arg.startsWith("-"));
-const named = args.filter((arg) => !arg.startsWith("-"));
-const unknownFlags = flags.filter((flag) => flag !== "--standalone");
-if (unknownFlags.length) fail(`Unknown option ${unknownFlags.join(", ")}. The only option is --standalone.`);
-const standalone = flags.includes("--standalone");
+if (flags.length) fail(`Unknown option ${flags.join(", ")}. Name the ships to build, or none to build them all.`);
+const named = args;
 
 // A ship folder is listed once its ship.json is written (see src/server/storage.ts in the parent).
 const allShips = fs
@@ -34,29 +34,45 @@ if (unknownShips.length) {
 }
 const ships = named.length ? [...new Set(named)] : allShips;
 
-// Building every ship for Next starts clean, so deleted ships don't linger in the build.
-if (!standalone && !named.length) fs.rmSync(publicDir, { recursive: true, force: true });
-
-const built = [];
-for (const ship of ships) {
-  const root = path.join(shipsDir, ship);
-  const outDir = standalone ? path.join(root, "dist") : path.join(publicDir, ship);
-  console.log(`\nShip: ${ship}`);
-  execFileSync(process.execPath, [tsc, "-b", root], { stdio: "inherit" });
-  await build({
-    root,
-    configFile: path.join(root, "vite.config.ts"),
-    build: { outDir, emptyOutDir: true },
-  });
-  built.push({ ship, outDir });
+// Building every ship removes the output of ships that no longer exist, so they aren't deployed by mistake.
+if (!named.length && fs.existsSync(distDir)) {
+  for (const entry of fs.readdirSync(distDir)) {
+    if (!allShips.includes(entry)) fs.rmSync(path.join(distDir, entry), { recursive: true, force: true });
+  }
 }
 
-const count = `${built.length} ship${built.length === 1 ? "" : "s"}`;
-if (standalone) {
-  console.log(`\nBuilt ${count}, each a static site to host on its own (upload the folder's contents):`);
-  for (const { ship, outDir } of built) console.log(`  ${ship}: ${path.relative(path.join(here, ".."), outDir)}`);
-} else {
-  console.log(`\nBuilt ${count} into public/child.`);
+const built = [];
+const failed = [];
+for (const ship of ships) {
+  const root = path.join(shipsDir, ship);
+  const outDir = path.join(distDir, ship);
+  console.log(`\nShip: ${ship}`);
+  // A failed build leaves nothing behind, so an older build of the ship can't be deployed as if it were new.
+  fs.rmSync(outDir, { recursive: true, force: true });
+  try {
+    execFileSync(process.execPath, [tsc, "-b", root], { stdio: "inherit" });
+    await build({
+      root,
+      configFile: path.join(root, "vite.config.ts"),
+      build: { outDir, emptyOutDir: true },
+    });
+    built.push(ship);
+  } catch (error) {
+    fs.rmSync(outDir, { recursive: true, force: true });
+    failed.push(ship);
+    // tsc already printed its errors; Vite's are in the error.
+    if (!(error && typeof error === "object" && "status" in error)) console.error(error instanceof Error ? error.message : error);
+  }
+}
+
+const plural = (count) => `${count} ship${count === 1 ? "" : "s"}`;
+if (built.length) {
+  console.log(`\nBuilt ${plural(built.length)}, each a static site to deploy on its own:`);
+  for (const ship of built) console.log(`  ${ship}: child/dist/${ship}/`);
+}
+if (failed.length) {
+  console.error(`\n${plural(failed.length)} failed to build: ${failed.join(", ")}.`);
+  process.exit(1);
 }
 
 function fail(message) {

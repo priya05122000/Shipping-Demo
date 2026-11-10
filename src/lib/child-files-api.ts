@@ -10,7 +10,7 @@ const jsonBody = (body: unknown): RequestInit => ({
 
 /**
  * Client for the child app's files (see src/server/child-files.ts), as one editor sees them: the shared files
- * (e.g. "template/src/main.tsx"), or one ship's folder (e.g. "mv-aurora/src/main.tsx"). Errors are RequestErrors.
+ * (e.g. "core/src/app/App.tsx"), or one ship's folder (e.g. "mv-aurora/src/main.tsx"). Errors are RequestErrors.
  */
 export function childFiles(scope: ChildScope) {
   // Every request names the scope, so the server refuses paths outside it.

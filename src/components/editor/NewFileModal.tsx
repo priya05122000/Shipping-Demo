@@ -12,7 +12,7 @@ import { COLLECTIONS } from "@/lib/collection-defs";
 interface NewFileModalProps {
   /** The editor's scope; the server refuses a path outside it. */
   scope: ChildScope;
-  /** Folder the path starts with, e.g. "template/src/app/". */
+  /** Folder the path starts with, e.g. "core/src/app/". */
   folder: string;
   onClose: () => void;
   onCreated: (file: ChildFile) => void;

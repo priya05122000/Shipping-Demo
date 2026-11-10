@@ -259,7 +259,10 @@ function ObjectsNote({ objects }: { objects: CodegenObjects }) {
   return <p className="text-slate-700">Objects: {parts.join("; ")}.</p>;
 }
 
-/** What happened to a generation's change to the template (child/template/), which new ships are copied from. */
+/**
+ * What happened to a generation's change to the template, in records from when generations could change it (they no
+ * longer can: every ship runs the shared viewer in child/core, which only people change).
+ */
 function SharedChangeNote({ change }: { change: SharedChange }) {
   const files = (
     <ul className="mt-1 space-y-0.5 font-mono text-xs break-all">

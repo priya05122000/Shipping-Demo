@@ -36,10 +36,10 @@ export interface PromptValues {
   previousCode: string;
   /** The ship's project folder as an indented file tree, fenced as data (see structure.ts). */
   projectTree: string;
-  /** The template's folder the agent works on, absolute, with forward slashes. */
-  templateDir: string;
-  /** The template's folder as an indented file tree, fenced as data. */
-  templateTree: string;
+  /** The shared viewer's folder (child/core, @shipdocs/viewer-core), read-only, absolute, with forward slashes. */
+  coreDir: string;
+  /** The shared viewer's folder as an indented file tree, fenced as data. */
+  coreTree: string;
   /** child/, absolute, with forward slashes: where the other ships are, to read. */
   childDir: string;
   /**

@@ -12,9 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // The child app has its own toolchain (type-checked by `tsc -b` in its build); public/child is its build output.
+    // The ships' viewers are a separate app, with their own toolchain (type-checked by `tsc -b` in their build).
     "child/**",
-    "public/child/**",
     // Monaco's prebuilt files, copied from node_modules by scripts/copy-monaco.mjs.
     "public/monaco/**",
   ]),

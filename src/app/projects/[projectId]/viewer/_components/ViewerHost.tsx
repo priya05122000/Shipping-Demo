@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import type { SectionSummary, SelectedItem, ViewerEvent } from "@child/protocol";
+import type { SectionSummary, SelectedItem, ViewerEvent } from "@/lib/viewer-protocol";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { AlertIcon, ExternalIcon, ShipIcon } from "@/components/ui/icons";
@@ -33,7 +33,7 @@ export function ViewerHost() {
   const [sectionId, setSectionId] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedItem | null>(null);
 
-  // A ship added after `npm run build` has no viewer until the next build: say so rather than wait for "ready".
+  // A ship added since the ships were last built and deployed has no viewer yet: say so rather than wait for "ready".
   useEffect(() => {
     let cancelled = false;
     fetch(src, { method: "HEAD", cache: "no-store" })
@@ -156,8 +156,8 @@ export function ViewerHost() {
             ) : status === "missing" ? (
               <EmptyState
                 icon={<ShipIcon className="size-6" />}
-                title="This ship's viewer isn't built yet"
-                description="While npm run dev runs, new ships show up straight away. After npm run build, rebuild to include ships added since."
+                title="This ship's viewer isn't deployed yet"
+                description={`While npm run dev runs, new ships show up straight away. Otherwise, build it (npm run build:ships -- ${project.folder}) and deploy child/dist/${project.folder}/ to the ships' host.`}
                 action={
                   <Button variant="secondary" onClick={retry}>
                     Try again
@@ -168,7 +168,7 @@ export function ViewerHost() {
               <EmptyState
                 icon={<AlertIcon className="size-6 text-red-500" />}
                 title="Viewer didn't load"
-                description="In development, make sure the child dev server is running (npm run dev:child), then try again."
+                description="In development, make sure the child dev server is running (npm run dev:child). Otherwise, check that SHIP_VIEWER_URL points at the ships' host. Then try again."
                 action={
                   <Button variant="secondary" onClick={retry}>
                     Try again

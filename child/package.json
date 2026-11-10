@@ -2,27 +2,27 @@
   "name": "ship-viewer",
   "version": "0.1.0",
   "private": true,
+  "description": "The ships' viewers, separate from the Ship Docs app (the parent): their own install, build and deploy.",
   "type": "module",
+  "workspaces": [
+    "core"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc -p tsconfig.json && node build-ships.mjs",
-    "build:standalone": "node build-ships.mjs --standalone"
+    "typecheck": "tsc -p tsconfig.json && npm run typecheck -w @shipdocs/viewer-core",
+    "build": "node build-ships.mjs",
+    "serve": "node serve-ships.mjs",
+    "migrate": "node scripts/migrate-ship.mjs"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.9",
-    "@react-three/fiber": "^9.8.2",
     "react": "19.3.0",
-    "react-dom": "19.3.0",
-    "three": "^0.187.0"
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/three": "^0.187.0",
-    "@vitejs/plugin-react": "^6",
-    "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^8"
   }

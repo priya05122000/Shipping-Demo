@@ -1,9 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { OBJECT_CARD_FILE } from "@/lib/codegen";
-import { COLLECTIONS } from "@/lib/collection-defs";
 import { fileKindFromExtension, getExtension } from "@/lib/files";
-import { CHILD_DIR, errorCode, writeAtomic } from "@/server/child-dir";
+import { CHILD_DIR, CORE_DIR, errorCode, writeAtomic } from "@/server/child-dir";
 import type { CodegenObject } from "@/server/storage";
 import type { CodegenObjects } from "@/types/records";
 import { IMAGE_MEDIA_TYPES, type AgentImage } from "./agent";
@@ -15,8 +14,9 @@ import { dataBlock, quoteText } from "./untrusted";
  * time a generation uses it, and writes the object's card: card.json in the object's folder, with its kind, what it
  * looks like, its aspect ratio and its connection points. Every later generation, for any section of the ship, gets
  * the card as text instead of the image, which saves the image's tokens on every request of the run. The generated
- * code draws objects with the viewer's ObjectSymbol2D and ObjectModel3D (child/template/src/objects/), which show the
- * object's image and 3D model at runtime, so the agent never needs the files themselves.
+ * code draws objects with the shared viewer's ObjectSymbol2D and ObjectModel3D (child/core/src/objects/, imported as
+ * @shipdocs/viewer-core/objects), which show the object's image and 3D model at runtime, so the agent never needs the
+ * files themselves.
  *
  * A card belongs to one image: its `image` is that file's stored name, which changes with every upload. Replacing an
  * object's image in the Library makes its card stale, and the next generation that uses the object looks at it again.
@@ -37,7 +37,7 @@ const MAX_NEW_OBJECTS = 12;
 const MAX_ATTACHED_BYTES = 8 * 1024 * 1024;
 /** The biggest SVG image the agent reads as text. */
 const MAX_SVG_BYTES = 100 * 1024;
-/** The viewer's object components the prompts rely on, in the ship's objects folder. Ships made before them don't have them. */
+/** The shared viewer's object components the prompts rely on, in its objects folder. */
 const VIEWER_FILES = ["card.ts", "ObjectSymbol2D.tsx", "ObjectModel3D.tsx"];
 
 const KIND_MAX = 60;
@@ -52,7 +52,7 @@ export interface ObjectCardPort {
   y: number;
 }
 
-/** An object's card.json, as the viewer reads it (child/template/src/objects/card.ts). */
+/** An object's card.json, as the viewer reads it (child/core/src/objects/card.ts). */
 export interface ObjectCard {
   /** Stored name of the 2D image it was made from, e.g. "fuel-pump-2d-9f2c1a7b.png" (or "lineDiagram-9f2c1a7b.png" for older objects). */
   image: string;
@@ -207,8 +207,8 @@ export function imageSize(bytes: Buffer, extension: string): { width: number; he
  * objects `objects` lists; `stageShip` is the stage's copy, where everything is read and the cards are written.
  */
 export async function planObjects(objects: CodegenObject[], shipDir: string, stageShip: string): Promise<ObjectPlan> {
-  const objectsDir = path.join(stageShip, ...COLLECTIONS.objects.dir.split("/"));
-  const supported = (await Promise.all(VIEWER_FILES.map((name) => isFile(path.join(objectsDir, name))))).every(Boolean);
+  const viewerObjectsDir = path.join(CORE_DIR, "src", "objects");
+  const supported = (await Promise.all(VIEWER_FILES.map((name) => isFile(path.join(viewerObjectsDir, name))))).every(Boolean);
   const planned: PlannedObject[] = [];
   let looked = 0;
   let attachedBytes = 0;
@@ -218,7 +218,7 @@ export async function planObjects(objects: CodegenObject[], shipDir: string, sta
     await assertPlainPath(CHILD_DIR, image);
     const skip = (reason: string, aspect: number | null = null) => planned.push({ object, dir, image, aspect, how: "skip", reason });
     if (!supported) {
-      skip("this ship's viewer has no object components");
+      skip("the shared viewer has no object components");
       continue;
     }
 
@@ -310,8 +310,8 @@ export function objectsPrompt(plan: ObjectPlan, policy: CodegenPolicy): string {
   const name = ({ object }: PlannedObject) => `${object.id} ${quoteText(object.name)} (${objectFiles(object)})`;
   if (!plan.supported) {
     return (
-      "This section uses these objects from the Library, but this ship's viewer has no object components " +
-      "(`src/objects/ObjectSymbol2D.tsx` and `src/objects/ObjectModel3D.tsx`), so draw them like the drawing's other " +
+      "This section uses these objects from the Library, but the shared viewer has no object components " +
+      "(`ObjectSymbol2D` and `ObjectModel3D`), so draw them like the drawing's other " +
       `equipment, and write no cards: ${plan.objects.map(name).join(", ")}.`
     );
   }

@@ -1,10 +1,6 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { App } from "@/app/App";
+import manifest from "virtual:ship-manifest";
+import { mountShip } from "@shipdocs/viewer-core";
 import "./styles.css";
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+// The viewer is @shipdocs/viewer-core, shared by every ship; the manifest is this ship's data (ship.json, src/sections, src/objects).
+mountShip(manifest);

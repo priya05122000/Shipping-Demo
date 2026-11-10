@@ -3,15 +3,17 @@ import path from "node:path";
 import { CODEGEN_DIR, OBJECT_CARD_FILE } from "@/lib/codegen";
 import { COLLECTIONS, COUNTER_FILE, MANUAL_DATA_FILE } from "@/lib/collection-defs";
 import { VIEW_FILE_NAME } from "@/lib/files";
-import { CHILD_DIR, errorCode, writeAtomic } from "@/server/child-dir";
+import { CHILD_DIR, CORE_DIR, errorCode, SHIP_TEMPLATE_DIR, writeAtomic } from "@/server/child-dir";
 
 /**
  * What the code generation agent may touch. agent.ts checks every tool call against it before the call runs, and
  * again after (see verify and scanForLinks), so a path changed in between (TOCTOU) is caught; the server's own file
  * operations for a generation use the same checks.
  *   - Only child/: nothing outside it, such as the Ship Docs app (the parent), can be read or written.
- *   - The agent works on a copy, the stage (staging.ts): it may write only in the stage's copies of its ship and of the
- *     template. The real ship and template change only when the job applies the finished, checked changes.
+ *   - The agent works on a copy, the stage (staging.ts): it may write only in the stage's copy of its ship. The real
+ *     ship changes only when the job applies the finished, checked changes. The viewer every ship runs (child/core,
+ *     @shipdocs/viewer-core) and the template are read-only: a generation for one ship can never change another, and
+ *     shared UI is changed by people, in child/core, where it reaches every ship.
  *   - It may read anything in child/ except earlier versions of generated code (each ship's codegen/), other stages,
  *     and the ships' objects' uploaded files (images and 3D models): an object's card describes it instead, and the
  *     viewer draws its files. The only exceptions are the images a generation allows (see allowObjects).
@@ -77,10 +79,10 @@ function isUploadedFile(name: string): boolean {
  */
 const BUILD_FILE = /^(package(-lock)?\.json|vite\.config\.[cm]?[jt]s|tsconfig(\.[A-Za-z0-9_-]+)?\.json)$/i;
 /**
- * The messages between Ship Docs and a ship's viewer. Ship Docs (the parent) type-checks against the template's copy
- * (its "@child/protocol" alias), and every ship's copy must match what it sends, so neither may change.
+ * A ship's entry files, the same in every ship (from the template): they start the shared viewer with the ship's data,
+ * and give its code the viewer's types and styles.
  */
-const PROTOCOL_FILE = "src/app/protocol.ts";
+const ENTRY_FILES = new Set(["src/main.tsx", "src/env.d.ts", "src/styles.css"]);
 /** A project's objects folder, as names from the project's folder down, in lower case: ["src", "objects"]. */
 const OBJECTS_DIR = COLLECTIONS.objects.dir.toLowerCase().split("/");
 
@@ -99,8 +101,8 @@ function pathKey(target: string): string {
 }
 
 /**
- * Why a file in a project the agent may write in (the ship's or the template, given as its names from the project's
- * folder down) is protected, or null if it isn't. Names are compared without case, as Windows does.
+ * Why a file in the ship's project (given as its names from the project's folder down) is protected, or null if it
+ * isn't. Names are compared without case, as Windows does.
  */
 function protectedReason(names: string[]): string | null {
   const lower = names.map((name) => name.toLowerCase());
@@ -111,8 +113,8 @@ function protectedReason(names: string[]): string | null {
   if (lower.length > 1 && top === "dist") return "dist/ is build output.";
   if (lower.includes("node_modules")) return "Installed packages can't be changed.";
   if (lower.length === 1 && BUILD_FILE.test(name)) return `${name} decides how the project is built and checked, so it can't be changed.`;
-  if (lower.join("/") === PROTOCOL_FILE) {
-    return `${PROTOCOL_FILE} is the message contract with Ship Docs, which type-checks against the template's copy, so it can't be changed.`;
+  if (ENTRY_FILES.has(lower.join("/"))) {
+    return `${names.join("/")} starts the shared viewer (@shipdocs/viewer-core) with this ship's data, the same in every ship, so it can't be changed.`;
   }
   if (LIBRARY_FILES.has(lowerName)) return `${name} is written by Ship Docs' Library, so it can't be changed here.`;
   if (isUploadedFile(name)) return `${name} was uploaded in the Library, so it can't be changed.`;
@@ -214,8 +216,6 @@ export interface PolicyDirs {
   ship: string;
   /** The section's folder, inside `ship`. */
   section: string;
-  /** The template's folder: the stage's copy, or the real one. */
-  template: string;
   /** The stage's folder, during a generation. */
   stage?: string;
 }
@@ -252,7 +252,6 @@ export class CodegenPolicy {
     return new CodegenPolicy(child, path.join(child, COLLECTIONS.projects.dir), path.join(child, STAGES_DIR_NAME), {
       ship: await plain(dirs.ship),
       section: await plain(dirs.section),
-      template: await plain(dirs.template),
       stage: dirs.stage ? await plain(dirs.stage) : undefined,
     });
   }
@@ -266,9 +265,9 @@ export class CodegenPolicy {
     return this.dirs.section;
   }
 
-  /** The template's folder, for changes every ship needs. */
-  get template(): string {
-    return this.dirs.template;
+  /** The viewer every ship runs (child/core), which the agent reads but never changes. */
+  get core(): string {
+    return path.resolve(CORE_DIR);
   }
 
   /** child/: what the agent can reach at all. */
@@ -284,11 +283,6 @@ export class CodegenPolicy {
   /** A path as the agent sees it: relative to the ship's folder (its working directory) inside it, else absolute. */
   label(target: string): string {
     return isSameOrInside(this.dirs.ship, target) ? path.relative(this.dirs.ship, target).split(path.sep).join("/") : toLabel(target);
-  }
-
-  /** Whether an absolute path is in the template. */
-  inTemplate(target: string): boolean {
-    return isInside(this.dirs.template, target);
   }
 
   /**
@@ -317,7 +311,7 @@ export class CodegenPolicy {
   async resolve(requested: string): Promise<{ target: string } | { refused: string }> {
     if (!requested || requested.includes("\0")) return { refused: "No usable path was given." };
     if (requested.split(/[\\/]/).includes("..")) {
-      return { refused: `Paths can't contain "..". Use the absolute path instead, e.g. ${toLabel(this.dirs.template)}/src/main.tsx.` };
+      return { refused: `Paths can't contain "..". Use the absolute path instead, e.g. ${toLabel(this.core)}/src/shared/diagram/section.ts.` };
     }
     const target = path.resolve(this.dirs.ship, requested);
     if (!isSameOrInside(this.childDir, target)) {
@@ -378,25 +372,31 @@ export class CodegenPolicy {
     const resolved = await this.resolve(requested);
     if ("refused" in resolved) return resolved;
     const { target } = resolved;
-    const project = [this.dirs.ship, this.dirs.template].find((dir) => isInside(dir, target));
-    if (!project) {
-      const template = toLabel(this.dirs.template);
-      return {
-        refused: isSameOrInside(this.shipsDir, target)
-          ? this.dirs.stage
-            ? `This generation works on a copy: write in ${toLabel(this.dirs.ship)}/ (your working directory) or ${template}/. Other ships can't be changed.`
-            : "Other ships are projects of their own, so they can't be changed."
-          : `Only this ship's project (${toLabel(this.dirs.ship)}/) and the template (${template}/) can be changed.`,
-      };
+    if (!isInside(this.dirs.ship, target)) {
+      const ship = toLabel(this.dirs.ship);
+      let refused: string;
+      if (isSameOrInside(this.core, target)) {
+        refused =
+          `${toLabel(this.core)}/ is the viewer every ship runs (@shipdocs/viewer-core), maintained by people: it can't be changed ` +
+          `here. Import what it exports, and put components your sections share in ${ship}/src/shared/schematic/.`;
+      } else if (isSameOrInside(path.resolve(SHIP_TEMPLATE_DIR), target)) {
+        refused = "The template is what new ships are made from, maintained by people: it can't be changed here.";
+      } else if (isSameOrInside(this.shipsDir, target)) {
+        refused = this.dirs.stage
+          ? `This generation works on a copy: write in ${ship}/ (your working directory). Other ships can't be changed.`
+          : "Other ships are projects of their own, so they can't be changed.";
+      } else {
+        refused = `Only this ship's project (${ship}/) can be changed.`;
+      }
+      return { refused };
     }
-    const names = path.relative(project, target).split(path.sep);
+    const names = path.relative(this.dirs.ship, target).split(path.sep);
     if (!names.every((name) => SAFE_NAME.test(name) && !name.endsWith("."))) {
       return { refused: "Use plain file and folder names: letters, digits, '.', '_' and '-'." };
     }
     const refused = protectedReason(names);
     if (refused) return { refused };
     if (objectsPart(names.map((name) => name.toLowerCase()))) {
-      if (project === this.dirs.template) return { refused: "The template has no objects, so it has no object cards." };
       if (this.objectAccess && !this.objectAccess.cardDirs.has(pathKey(path.dirname(target)))) {
         return {
           refused: `Only the cards of the objects whose images this task shows you can be written. The others already have theirs, or are looked at in a later generation.`,
@@ -494,7 +494,7 @@ export class FileJournal {
     return this.restoreWhere(() => true);
   }
 
-  /** Puts the files in `dir` (absolute) back as they were before, e.g. a rejected change to the template; the others stay. */
+  /** Puts the files in `dir` (absolute) back as they were before, e.g. an object card that's left out; the others stay. */
   restoreIn(dir: string): Promise<void> {
     return this.restoreWhere((target) => isInside(dir, target));
   }

@@ -1,18 +1,16 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { CODEGEN_DIR } from "@/lib/codegen";
-import { CHILD_DIR, errorCode, SHIP_TEMPLATE_DIR, writeAtomic } from "@/server/child-dir";
+import { CHILD_DIR, errorCode, writeAtomic } from "@/server/child-dir";
 import { assertPlainPath, CodegenPolicy, FileJournal, pathProblem, STAGES_DIR_NAME, toLabel } from "./policy";
 
 /**
- * A generation works on a copy of its ship and of the template, its stage, and the real ones change only once the
- * code is checked:
+ * A generation works on a copy of its ship, its stage, and the real ship changes only once the code is checked:
  *   child/.codegen-stage/<run ID>/ships/<ship folder>/   the ship's project, without node_modules, dist and codegen/
- *   child/.codegen-stage/<run ID>/template/              the template, without node_modules and dist
- * It's in child/ so packages resolve as they do for the real ships; the editor and git leave it out. The agent reads
- * and writes there, so the real ship and template never hold half-written code, and discarding a generation (it
- * failed, was stopped, or hit a limit) is just removing its stage. applyStage copies the changes over, checking each
- * path again right before it's written and refusing a file that changed meanwhile.
+ * It's in child/ so packages (@shipdocs/viewer-core among them) resolve as they do for the real ships; the editor and
+ * git leave it out. The agent reads and writes there, so the real ship never holds half-written code, and discarding a
+ * generation (it failed, was stopped, or hit a limit) is just removing its stage. applyStage copies the changes over,
+ * checking each path again right before it's written and refusing a file that changed meanwhile.
  * Links (symlinks, junctions) and hard-linked files aren't copied, so the stage starts with none.
  */
 
@@ -26,11 +24,9 @@ export interface Stage {
   /** The copies the agent works on. */
   ship: string;
   section: string;
-  template: string;
   /** The real folders they were copied from. */
   realShip: string;
   realSection: string;
-  realTemplate: string;
 }
 
 /** Copies a folder tree, leaving out links, hard-linked files and `skip` (names, compared without case, relative to the top). */
@@ -73,18 +69,15 @@ export async function removeTree(dir: string) {
   await fs.rm(dir, { recursive: true, force: true });
 }
 
-/** Copies the ship's project and the template into a new stage. */
+/** Copies the ship's project into a new stage. */
 export async function createStage(runId: string, shipDir: string, sectionDir: string): Promise<Stage> {
   await assertPlainPath(CHILD_DIR, shipDir);
   await assertPlainPath(CHILD_DIR, sectionDir);
-  await assertPlainPath(CHILD_DIR, SHIP_TEMPLATE_DIR);
   const dir = path.join(STAGES_DIR, runId);
   await removeTree(dir);
   const ship = path.join(dir, path.relative(CHILD_DIR, shipDir));
-  const template = path.join(dir, path.relative(CHILD_DIR, SHIP_TEMPLATE_DIR));
   try {
     await copyTree(shipDir, ship, new Set([CODEGEN_DIR]));
-    await copyTree(SHIP_TEMPLATE_DIR, template, new Set());
   } catch (error) {
     await removeTree(dir);
     throw error;
@@ -93,10 +86,8 @@ export async function createStage(runId: string, shipDir: string, sectionDir: st
     dir,
     ship,
     section: path.join(ship, path.relative(shipDir, sectionDir)),
-    template,
     realShip: shipDir,
     realSection: sectionDir,
-    realTemplate: SHIP_TEMPLATE_DIR,
   };
 }
 
@@ -121,14 +112,9 @@ export async function discardStaleStages(keep?: string) {
 
 /** The real file a file in the stage stands for. */
 function toReal(stage: Stage, staged: string): string {
-  for (const [copy, real] of [
-    [stage.ship, stage.realShip],
-    [stage.template, stage.realTemplate],
-  ]) {
-    const rel = path.relative(copy, staged);
-    if (rel && !rel.startsWith("..") && !path.isAbsolute(rel)) return path.join(real, rel);
-  }
-  throw new Error(`${toLabel(staged)} isn't in the stage's ship or template.`);
+  const rel = path.relative(stage.ship, staged);
+  if (rel && !rel.startsWith("..") && !path.isAbsolute(rel)) return path.join(stage.realShip, rel);
+  throw new Error(`${toLabel(staged)} isn't in the stage's ship.`);
 }
 
 function sameContent(a: Buffer | null, b: Buffer | null): boolean {
@@ -146,7 +132,7 @@ export interface AppliedStage {
 }
 
 /**
- * Applies the stage's changes (as its journal recorded them) to the real ship and template:
+ * Applies the stage's changes (as its journal recorded them) to the real ship:
  *   1. every change is checked first, before anything is written: its real path must pass the same rules as the
  *      agent's writes (realPolicy: no "..", no links, not protected), and the real file must still be as it was when
  *      the stage was copied. Otherwise nothing is written (a StageConflict for a changed file).
@@ -161,7 +147,8 @@ export async function applyStage(stage: Stage, journal: FileJournal, realPolicy:
     const real = toReal(stage, target);
     const checked = await realPolicy.checkWrite(real);
     if ("refused" in checked) throw new Error(`${toLabel(real)} can't be written: ${checked.refused}`);
-    const current = await fs.readFile(real).catch(() => null);
+    // A ship's file in child/, read at run time: the build mustn't trace it (an unknown path would bundle the project).
+    const current = await fs.readFile(/*turbopackIgnore: true*/ real).catch(() => null);
     if (!sameContent(current, before)) {
       throw new StageConflict(
         `${toLabel(path.relative(CHILD_DIR, real))} changed while the code was being generated, so none of it was applied. Generate again.`,

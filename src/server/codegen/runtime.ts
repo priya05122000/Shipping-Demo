@@ -37,8 +37,8 @@ interface Runtime {
    */
   queues: Map<string, Promise<void>>;
   /**
-   * Settles once every job started so far, of any ship, has finished: jobs run one at a time across ships too, since
-   * any of them may change the template. Never rejects.
+   * Settles once every job started so far, of any ship, has finished: jobs run one at a time across ships too, so
+   * generations don't compete for the machine. Never rejects.
    */
   jobChain: Promise<void>;
   /** Restores of a section's version in progress, by Job.key; each settles when it has finished or rolled back. */

@@ -1,10 +1,10 @@
 <!--
 Rules for every code generation, first or later: appended to Claude Code's system prompt. They describe the contract the
-ship's viewer relies on (file names, props, folders), so change them together with the viewer
-(child/template/src/sections/index.ts and src/shared/diagram/section.ts).
-Placeholders: {{shipName}} {{sectionName}} {{sectionId}} {{sectionDir}} {{drawing}} {{generatedSections}} {{previousCode}} {{projectTree}} {{templateDir}} {{templateTree}} {{childDir}} {{objects}}
-The "Objects from the Library" section describes the viewer's src/objects/ (ObjectSymbol2D, ObjectModel3D, objectPort,
-card.ts) and src/server/codegen/objects.ts, which checks the cards: change them together.
+ship's viewer relies on (file names, props, folders, imports), so change them together with the shared viewer
+(child/core: src/sections/registry.ts, src/shared/diagram/section.ts, vite.js's manifest).
+Placeholders: {{shipName}} {{sectionName}} {{sectionId}} {{sectionDir}} {{drawing}} {{generatedSections}} {{previousCode}} {{projectTree}} {{coreDir}} {{coreTree}} {{childDir}} {{objects}}
+The "Objects from the Library" section describes the shared viewer's src/objects/ (ObjectSymbol2D, ObjectModel3D,
+objectPort, card.ts) and src/server/codegen/objects.ts, which checks the cards: change them together.
 This comment isn't sent.
 -->
 
@@ -57,13 +57,13 @@ Current ship project structure:
 
 `{{projectTree}}`
 
-Template directory:
+Shared viewer directory (`@shipdocs/viewer-core`, read-only):
 
-`{{templateDir}}/`
+`{{coreDir}}/`
 
-Template project structure:
+Shared viewer structure:
 
-`{{templateTree}}`
+`{{coreTree}}`
 
 Objects supplied from the Library:
 
@@ -95,19 +95,18 @@ Everything is contained within `{{childDir}}/`.
 
 You may read the available files inside this permitted area.
 
-You may write only to:
+You may write only to the current ship's project working directory.
 
-1. The current ship's project working directory.
-2. The corresponding template directory `{{templateDir}}/`.
+The shared viewer `{{coreDir}}/` (`@shipdocs/viewer-core`) is every ship's viewer: its UI, how it reads the ship's data, and its build configuration. Read it to understand the contracts your code builds on, and import what it exports, but never write to it: it is maintained by people, and a change there would change every ship.
 
-Do not write to the `child/` directory's own application files, development scripts or build infrastructure.
+Do not write to the template, to other ships, or to the `child/` directory's own application files, development scripts or build infrastructure.
 
 Never access, inspect, modify or create files outside the permitted working area.
 
 ## 3.2 Path safety
 
 - Use project-relative paths as supplied.
-- Use absolute paths for template files.
+- Use absolute paths for the shared viewer's files.
 - Never use `..` in file paths.
 - Never follow symbolic links, junctions or other linked paths.
 - Never bypass file permission restrictions.
@@ -120,12 +119,11 @@ Never modify:
 - `package.json`
 - `vite.config.ts`
 - `tsconfig*.json`
-- `src/app/protocol.ts`
-- `src/objects/objects.ts`
-- `src/objects/card.ts`
-- `src/objects/ObjectSymbol2D.tsx`
-- `src/objects/ObjectModel3D.tsx`
-- `src/objects/index.ts`
+- `src/main.tsx`
+- `src/env.d.ts`
+- `src/styles.css`
+- Anything in the shared viewer `{{coreDir}}/`.
+- Files directly in `src/objects/`.
 - `ship.json`
 - `section.json`
 - `object.json`
@@ -181,15 +179,23 @@ Inspect the actual application architecture, existing sections and reusable comp
 
 ### Mandatory shared locations
 
-`src/shared/diagram/section.ts`
+In the shared viewer (read-only; generated code imports it as `@shipdocs/viewer-core/...`):
 
-`src/shared/schematic/`
+`{{coreDir}}/src/shared/diagram/section.ts` (imported as `@shipdocs/viewer-core/diagram`)
 
-`src/shared/catalog/`
+`{{coreDir}}/src/shared/catalog/` (imported as `@shipdocs/viewer-core/catalog`)
 
-`src/shared/ui/`
+`{{coreDir}}/src/shared/ui/` (imported as `@shipdocs/viewer-core/ui`)
 
-`src/objects/`
+`{{coreDir}}/src/objects/` (imported as `@shipdocs/viewer-core/objects` and `@shipdocs/viewer-core/objects/model3d`)
+
+In the current ship's project (writable):
+
+`src/shared/schematic/` (imported as `@/shared/schematic/...`)
+
+`src/objects/` (the Library's objects: their uploaded files and cards)
+
+Only what the shared viewer's `package.json` exports can be imported from it. Never import its other files by path.
 
 ### Mandatory section locations
 
@@ -229,14 +235,6 @@ Understand:
 - Overview.
 - Details panels.
 
-### Template inspection
-
-Inspect corresponding template files before changing them.
-
-The template may differ from the current ship's project.
-
-Never overwrite an existing template file using an uninspected ship file.
-
 ### Data-source rules
 
 - `data.json` is the primary source for section engineering information.
@@ -267,7 +265,7 @@ Both must default-export React components accepting:
 Example:
 
 ```tsx
-import type { SectionViewProps } from "@/shared/diagram";
+import type { SectionViewProps } from "@shipdocs/viewer-core/diagram";
 
 export default function Diagram2D({
   selectedId,
@@ -279,7 +277,7 @@ export default function Diagram2D({
 
 Follow the actual interface defined in:
 
-`src/shared/diagram/section.ts`
+`{{coreDir}}/src/shared/diagram/section.ts`
 
 Do not invent a new props interface.
 
@@ -498,7 +496,7 @@ Use:
 />
 ```
 
-Import from the existing `@/objects` entry point.
+Import from the shared viewer's `@shipdocs/viewer-core/objects` entry point.
 
 The component displays the object's actual symbol image.
 
@@ -523,7 +521,7 @@ Use:
 
 Import from:
 
-`@/objects/ObjectModel3D`
+`@shipdocs/viewer-core/objects/model3d`
 
 Use its existing scaling and model behavior.
 
@@ -1022,13 +1020,17 @@ Visual animation must not be represented as a validated hydraulic simulation or 
 
 ---
 
-# 17. PHASE 14 — TEMPLATE SYNCHRONIZATION
+# 17. PHASE 14 — SHARED CODE
 
-The template is:
+Every ship runs the same shared viewer:
 
-`{{templateDir}}/`
+`{{coreDir}}/` (`@shipdocs/viewer-core`)
 
-A genuinely common change is an improvement that can be used by every ship.
+It is read-only for you. People change it, and every ship picks up the change the next time it is built.
+
+Reusable code for this ship's sections belongs in the ship's own:
+
+`src/shared/schematic/`
 
 Examples:
 
@@ -1037,40 +1039,20 @@ Examples:
 - Common geometry types.
 - Generic utilities.
 - Shared interaction logic.
-- Common rendering improvements.
 
-For a common change:
+For a reusable change:
 
-1. Inspect the ship's existing file.
-2. Inspect the corresponding template file.
-3. Modify the ship's file.
-4. Make the equivalent compatible change in the template.
-5. Preserve the template's existing structure.
-6. Validate the template independently.
+1. Inspect the ship's existing `src/shared/schematic/` files.
+2. Extend them compatibly, so the ship's other generated sections keep working.
+3. Prefer optional props and additive changes over breaking interface changes.
 
-### Template restrictions
+### Shared viewer restrictions
 
-The template has no generated sections, objects or ship-specific data.
+Never write to `{{coreDir}}/`, and never copy its files into the ship to change them there.
 
-Never copy the current ship's:
+Import only what its `package.json` exports (`@shipdocs/viewer-core/diagram`, `/objects`, `/objects/model3d`, `/catalog`, `/data`, `/ui`).
 
-- Sections.
-- Drawings.
-- Object records.
-- Engineering data.
-- Ship-specific geometry.
-
-Do not overwrite the template with the ship project.
-
-The template must continue to work independently.
-
-`src/app/protocol.ts` is protected and must never be changed.
-
-A template modification must remain backward-compatible with existing ships.
-
-Prefer optional props and additive changes over breaking interface changes.
-
-If a shared modification fails compatibility checks, revert the template change and retain only a permitted ship-specific implementation.
+If the section needs something the shared viewer doesn't provide, implement it in the ship (in the section or in `src/shared/schematic/`), and describe the missing shared capability in your final report as a suggestion for people to add to the shared viewer.
 
 ---
 
@@ -1085,7 +1067,7 @@ Follow this order:
 1. Inspect project structure.
 2. Inspect shared architecture.
 3. Inspect existing sections.
-4. Inspect template files.
+4. Inspect the shared viewer's contracts.
 5. Inspect section data.
 6. Analyze the drawing.
 7. Identify all components and pipes.
@@ -1099,7 +1081,7 @@ Follow this order:
 15. Implement `Diagram2D.tsx`.
 16. Implement `Diagram3D.tsx`.
 17. Integrate existing Overview and selection behavior.
-18. Synchronize common changes with the template.
+18. Note any capability the shared viewer is missing, for the final report.
 19. Validate all modified files.
 20. Run final typecheck.
 
@@ -1140,8 +1122,6 @@ Run the actual project `typecheck` validation.
 Both entry files must exist.
 
 The ship's project must have no newly introduced type errors.
-
-Template changes must also pass their required compatibility checks.
 
 Report pre-existing errors separately.
 
@@ -1212,7 +1192,7 @@ Verify:
 **Compatibility**
 - Existing sections.
 - Shared components.
-- Template.
+- Shared viewer unchanged.
 - Parent-child communication.
 
 **Integrity**
@@ -1246,8 +1226,7 @@ List all newly created files and their purpose.
 List each modified file and explain:
 
 - Why it was modified.
-- Whether it is section-specific or shared.
-- Whether its template counterpart was updated.
+- Whether it is section-specific or shared by the ship's sections (`src/shared/schematic/`).
 
 ### D. Reused components and assets
 
@@ -1311,7 +1290,6 @@ Report:
 | Typecheck | |
 | Build | |
 | Existing section compatibility | |
-| Template compatibility | |
 | data.json integrity | |
 
 Use:
@@ -1331,6 +1309,7 @@ Clearly list:
 - Unknown dimensions.
 - Unverified pipe connections.
 - Unsupported equipment.
+- Capabilities the shared viewer is missing (suggestions for people to add to `@shipdocs/viewer-core`).
 - Remaining work.
 
 Never present assumptions as verified engineering information.
@@ -1359,8 +1338,8 @@ Never present assumptions as verified engineering information.
 18. Never break existing sections.
 19. Keep 2D and 3D consistent.
 20. Keep shared components backward-compatible.
-21. Synchronize genuinely common changes with the template.
-22. Keep template changes ship-independent.
+21. Never modify the shared viewer (`@shipdocs/viewer-core`); import what it exports.
+22. Keep reusable code in the ship's `src/shared/schematic/`.
 23. Fix type errors incrementally.
 24. Run final typecheck.
 25. Build only when permitted.

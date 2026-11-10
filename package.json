@@ -2,17 +2,16 @@
   "name": "ship",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "child"
-  ],
   "scripts": {
-    "dev": "concurrently -n parent,child -c blue,magenta \"next dev\" \"npm run dev -w child\"",
+    "dev": "concurrently -n parent,child -c blue,magenta \"next dev\" \"npm --prefix child run dev\"",
     "dev:parent": "next dev",
-    "dev:child": "npm run dev -w child",
-    "build": "npm run build -w child && next build",
-    "build:standalone": "npm run build:standalone -w child --",
+    "dev:child": "npm --prefix child run dev",
+    "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "install:child": "npm --prefix child install",
+    "build:ships": "npm --prefix child run build --",
+    "serve:ships": "npm --prefix child run serve",
     "postinstall": "node scripts/copy-monaco.mjs"
   },
   "dependencies": {
