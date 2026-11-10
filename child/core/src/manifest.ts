@@ -1,3 +1,4 @@
+import type { ShipCustomization } from "./customization";
 import type { SectionData } from "./shared/data";
 import type { Diagram, SectionView } from "./shared/diagram";
 import type { StoredFileMeta } from "./shared/records";
@@ -15,6 +16,11 @@ export interface ShipManifest {
   sections: SectionFiles;
   /** src/objects/<id>/… */
   objects: ObjectFiles;
+  /**
+   * The ship's customizations (layer 2, see customization.ts): src/custom/index.ts(x)'s default export, keyed like
+   * "./index.tsx", or empty when it has none. Optional for manifests made before it existed.
+   */
+  customization?: Record<string, ShipCustomization>;
 }
 
 /** Shape of a ship.json, as written by the Library (the parent app). Only the fields the viewer uses. */

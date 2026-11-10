@@ -14,6 +14,7 @@ import {
 } from "three";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
+import { accentColor } from "../ship";
 import { findObject } from "./lookup";
 
 export type ObjectModel3DProps = Omit<ThreeElements["group"], "children" | "id"> & {
@@ -47,7 +48,7 @@ export function ObjectModel3D({ id, size = 1, color = "#94a3b8", selected = fals
       {selected && (
         <mesh>
           <boxGeometry args={[size * 1.15, size * 1.15, size * 1.15]} />
-          <meshBasicMaterial color="#4f46e5" wireframe />
+          <meshBasicMaterial color={accentColor()} wireframe />
         </mesh>
       )}
     </group>

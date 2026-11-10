@@ -83,6 +83,11 @@ const BUILD_FILE = /^(package(-lock)?\.json|vite\.config\.[cm]?[jt]s|tsconfig(\.
  * and give its code the viewer's types and styles.
  */
 const ENTRY_FILES = new Set(["src/main.tsx", "src/env.d.ts", "src/styles.css"]);
+/**
+ * A ship's customizations (child/core/src/customization.ts: layer 2, the UI and functionality for that ship only),
+ * made by people. The agent reads them, but its code (layer 3) never changes them.
+ */
+const CUSTOM_DIR = "src/custom";
 /** A project's objects folder, as names from the project's folder down, in lower case: ["src", "objects"]. */
 const OBJECTS_DIR = COLLECTIONS.objects.dir.toLowerCase().split("/");
 
@@ -115,6 +120,9 @@ function protectedReason(names: string[]): string | null {
   if (lower.length === 1 && BUILD_FILE.test(name)) return `${name} decides how the project is built and checked, so it can't be changed.`;
   if (ENTRY_FILES.has(lower.join("/"))) {
     return `${names.join("/")} starts the shared viewer (@shipdocs/viewer-core) with this ship's data, the same in every ship, so it can't be changed.`;
+  }
+  if (lower.join("/").startsWith(`${CUSTOM_DIR}/`) || lower.join("/") === CUSTOM_DIR) {
+    return `${CUSTOM_DIR}/ holds this ship's customizations, made by people, so it can't be changed here (it can be read).`;
   }
   if (LIBRARY_FILES.has(lowerName)) return `${name} is written by Ship Docs' Library, so it can't be changed here.`;
   if (isUploadedFile(name)) return `${name} was uploaded in the Library, so it can't be changed.`;

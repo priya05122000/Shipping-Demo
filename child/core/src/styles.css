@@ -8,6 +8,20 @@
 @import "tailwindcss";
 @source "./";
 
+/*
+ * The accent colour of active and selected things (bg-accent-50, text-accent-700…): indigo, unless a ship's theme sets
+ * its own (src/theme.ts replaces these variables at run time, so it can't be `@theme inline`).
+ */
+@theme {
+  --color-accent-50: oklch(96.2% 0.018 272.314);
+  --color-accent-100: oklch(93% 0.034 272.788);
+  --color-accent-200: oklch(87% 0.065 274.039);
+  --color-accent-500: oklch(58.5% 0.233 277.117);
+  --color-accent-600: oklch(51.1% 0.262 276.966);
+  --color-accent-700: oklch(45.7% 0.24 277.023);
+  --color-accent-800: oklch(39.8% 0.195 277.366);
+}
+
 /* Light-only, matching the parent dashboard. */
 html {
   color-scheme: light;

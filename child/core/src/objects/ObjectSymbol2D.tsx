@@ -24,7 +24,8 @@ export function ObjectSymbol2D({ id, x, y, width, height, selected = false }: Ob
         <rect x={x} y={y} width={width} height={height} rx={4} fill="#f8fafc" stroke="#94a3b8" strokeDasharray="4 3" />
       )}
       {selected && (
-        <rect x={x - 4} y={y - 4} width={width + 8} height={height + 8} rx={6} fill="none" stroke="#4f46e5" strokeWidth={2} />
+        // The accent colour, the ship's own if its theme sets one.
+        <rect x={x - 4} y={y - 4} width={width + 8} height={height + 8} rx={6} fill="none" style={{ stroke: "var(--color-accent-600)" }} strokeWidth={2} />
       )}
     </g>
   );

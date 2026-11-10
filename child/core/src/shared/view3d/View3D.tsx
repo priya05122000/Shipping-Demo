@@ -34,7 +34,7 @@ export function View3D({ section }: { section: Section }) {
                 <a
                   href={object.model}
                   download={object.modelName || undefined}
-                  className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50"
+                  className="shrink-0 rounded-md px-2 py-1 text-xs font-medium text-accent-600 hover:bg-accent-50"
                 >
                   Download
                 </a>

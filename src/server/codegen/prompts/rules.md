@@ -123,6 +123,7 @@ Never modify:
 - `src/env.d.ts`
 - `src/styles.css`
 - Anything in the shared viewer `{{coreDir}}/`.
+- Anything in `src/custom/` (this ship's customizations, made by people).
 - Files directly in `src/objects/`.
 - `ship.json`
 - `section.json`
@@ -195,7 +196,13 @@ In the current ship's project (writable):
 
 `src/objects/` (the Library's objects: their uploaded files and cards)
 
+In the current ship's project (read-only):
+
+`src/custom/` (this ship's customizations: its theme, labels, replaced components, extra views and hooks, which apply to this ship only). Read it when it matters to the section, e.g. a theme or a view that shows the same equipment; never write to it, and don't import it from generated code.
+
 Only what the shared viewer's `package.json` exports can be imported from it. Never import its other files by path.
+
+For selection and highlight colours, use the viewer's accent palette (Tailwind classes `accent-50` to `accent-800`, e.g. `stroke-accent-600`, or the CSS variable `var(--color-accent-600)`), so a ship's theme applies to them too.
 
 ### Mandatory section locations
 

@@ -1,23 +1,22 @@
 import { useSyncExternalStore } from "react";
+import type { ShipCustomization, ShipInfo } from "./customization";
 import type { ShipManifest } from "./manifest";
 import { buildObjects, type SharedObject } from "./objects/registry";
 import { buildSections } from "./sections/registry";
 import type { Section } from "./shared/diagram";
+import { applyTheme, DEFAULT_ACCENT } from "./theme";
 
-/** The ship the viewer shows, from its ship.json. ship.json is rewritten by the Library when the ship is renamed. */
-export interface ShipInfo {
-  /** Unique, e.g. "SHP-001". The parent checks it when it embeds the viewer. */
-  id: string;
-  name: string;
-}
+export type { ShipInfo };
 
-/** Everything the viewer shows, read from one ship's manifest (see manifest.ts). */
+/** Everything the viewer shows, read from one ship's manifest (see manifest.ts): layers 2 and 3 (see customization.ts). */
 export interface LoadedShip {
   ship: ShipInfo;
-  /** Every drawing, in menu order (oldest first, as in the Library). */
+  /** Every drawing the viewer offers, in menu order (oldest first, as in the Library, unless the ship orders them). */
   sections: Section[];
   /** Every shared object, oldest first. */
   objects: SharedObject[];
+  /** The ship's customizations (its src/custom/), or none. */
+  customization: ShipCustomization;
 }
 
 let current: LoadedShip | null = null;
@@ -25,19 +24,30 @@ const listeners = new Set<() => void>();
 
 function load(manifest: ShipManifest): LoadedShip {
   const objects = buildObjects(manifest.objects);
+  // A ship has at most one src/custom/index.ts(x).
+  const customization: ShipCustomization = Object.values(manifest.customization ?? {})[0] ?? {};
+  const all = buildSections(manifest.sections, objects);
+  let sections = all;
+  try {
+    sections = customization.hooks?.sections?.(all) ?? all;
+  } catch (error) {
+    console.error("This ship's sections hook failed, so every section is shown:", error);
+  }
   return {
     ship: { id: manifest.ship.id ?? "", name: manifest.ship.name ?? "Ship" },
-    sections: buildSections(manifest.sections, objects),
+    sections,
     objects,
+    customization,
   };
 }
 
 /**
  * Sets the ship the viewer shows: by mountShip() at startup, and again when a dev hot update changes the ship's data
- * (a section or object added, changed or removed), which re-renders the viewer and keeps its state.
+ * or customizations, which re-renders the viewer and keeps its state.
  */
 export function setShip(manifest: ShipManifest) {
   current = load(manifest);
+  applyTheme(current.customization.theme);
   for (const listener of listeners) listener();
 }
 
@@ -63,4 +73,9 @@ export function findSection(id: string): Section | undefined {
 
 export function findObject(id: string): SharedObject | undefined {
   return getShip().objects.find((object) => object.id === id);
+}
+
+/** The accent colour as a CSS colour, for what can't use the CSS variables (e.g. three.js materials). */
+export function accentColor(): string {
+  return current?.customization.theme?.accent ?? DEFAULT_ACCENT;
 }

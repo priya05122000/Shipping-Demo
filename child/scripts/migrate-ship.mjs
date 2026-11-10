@@ -10,7 +10,9 @@
 //     "@/shared/diagram" -> "@shipdocs/viewer-core/diagram", "@/objects" -> "@shipdocs/viewer-core/objects"…
 // The ship's data (ship.json, sections, objects), src/shared/schematic and codegen/ stay. Run it on a clean Git tree,
 // so `git diff` shows what changed: a ship whose copy of the viewer was changed by hand loses those changes, which
-// then belong in child/core.
+// then belong in child/core (for every ship) or in the ship's src/custom/ (for that ship only).
+// Every ship without a src/custom/ (its customizations, layer 2 of child/core/src/customization.ts) also gets the
+// template's empty one; one it has is never changed.
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -94,14 +96,29 @@ function rewriteImports(source) {
   return result;
 }
 
+/** The template's customizations entry, which a ship without its own gets. */
+const CUSTOM_ENTRY = "src/custom/index.tsx";
+
+/** Gives a ship the template's empty src/custom/ if it has no customizations entry of its own. */
+function addCustomization(ship, dir) {
+  if (["index.ts", "index.tsx"].some((name) => exists(path.join(dir, "src", "custom", name)))) return false;
+  log(`${ship}:   add      ${CUSTOM_ENTRY}`);
+  if (!dryRun) {
+    fs.mkdirSync(path.join(dir, "src", "custom"), { recursive: true });
+    fs.copyFileSync(path.join(templateDir, ...CUSTOM_ENTRY.split("/")), path.join(dir, ...CUSTOM_ENTRY.split("/")));
+  }
+  return true;
+}
+
 let migrated = 0;
 for (const ship of named.length ? [...new Set(named)] : allShips) {
   const dir = path.join(shipsDir, ship);
   if (!LEGACY_MARKERS.some((file) => exists(path.join(dir, file)))) {
-    console.log(`${ship}: already uses @shipdocs/viewer-core.`);
+    if (!addCustomization(ship, dir)) console.log(`${ship}: already uses @shipdocs/viewer-core.`);
     continue;
   }
   log(`${ship}:`);
+  addCustomization(ship, dir);
 
   for (const rel of LEGACY) {
     const target = path.join(dir, rel);

@@ -52,7 +52,8 @@ function shipFolderOf(file) {
 /**
  * The manifest of the ship in `folder` (relative to Vite's root, with "/"; "" when the root is the ship's folder).
  * Its globs are relative to the ship's own folders (the `base` option), so their keys are like "./engine-room/section.json".
- * On a hot update (a section or object added, changed or removed) it gives the viewer the new data, which keeps its state.
+ * On a hot update (a section, object or customization added, changed or removed) it gives the viewer the new data, which
+ * keeps its state.
  * @param {string} folder
  */
 function manifestModule(folder) {
@@ -60,6 +61,7 @@ function manifestModule(folder) {
   const at = (file) => JSON.stringify(path.posix.join("/", folder, file));
   const sections = at("src/sections");
   const objects = at("src/objects");
+  const custom = at("src/custom");
   return `import ship from ${at(SHIP_FILE)};
 import { setShip } from "@shipdocs/viewer-core";
 
@@ -78,6 +80,8 @@ const manifest = {
     urls: import.meta.glob("./*/*.{${MODEL_EXTENSIONS.join(",")},png,jpg,jpeg,webp,svg}", { base: ${objects}, eager: true, query: "?url", import: "default" }),
     cards: import.meta.glob("./*/card.json", { base: ${objects}, eager: true, import: "default" }),
   },
+  // Layer 2: this ship's customizations, if it has any (see src/customization.ts).
+  customization: import.meta.glob("./index.{ts,tsx}", { base: ${custom}, eager: true, import: "default" }),
 };
 export default manifest;
 

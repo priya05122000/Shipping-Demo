@@ -59,7 +59,7 @@ class ViewBoundary extends Component<ViewBoundaryProps, { error: Error | null }>
         <button
           type="button"
           onClick={() => this.setState({ error: null })}
-          className="mt-3 rounded-md px-2 py-1 text-xs font-medium text-indigo-600 hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-indigo-600"
+          className="mt-3 rounded-md px-2 py-1 text-xs font-medium text-accent-600 hover:bg-accent-50 focus-visible:outline-2 focus-visible:outline-accent-600"
         >
           Try again
         </button>

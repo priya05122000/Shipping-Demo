@@ -14,9 +14,13 @@ and writes the ship's data into it:
   ship's finished generations. It's outside `src/`, so it isn't part of the build.
 - `src/objects/<id>/`: one folder per object, with its `object.json`, 3D model and line diagram.
 
+- `src/custom/`: this ship's **customizations**, UI and functionality for this ship only: its theme, labels, replaced
+  or wrapped components, extra views and hooks (`src/custom/index.tsx`, see child/README.md). Made by people; code
+  generation reads it but never changes it.
+
 Everything else (the viewer's UI, how it reads this ship's data, and the Vite config) is `@shipdocs/viewer-core`, in
 `child/core/`, which every ship shares. A change there reaches every ship the next time it's built, so there's nothing
-to copy into ships.
+to copy into ships; whatever `src/custom/` doesn't customize stays the shared viewer's.
 
 ```bash
 npm run dev       # http://localhost:5173

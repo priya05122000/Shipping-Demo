@@ -2,7 +2,7 @@
 
 An admin UI for **Ships**, each with its own **Sections** and **Objects**:
 
-- A **ship** is one project: a **React + Vite viewer project** of its own (`child/ships/<ship>/`), which is built and deployed on its own. It holds only the ship's data and generated code; the viewer itself is shared by every ship (`child/core/`), so a change there reaches every ship when it's rebuilt. A ship has a name and, optionally, an IMO number, a vessel type and a description. Everything else belongs to one ship.
+- A **ship** is one project: a **React + Vite viewer project** of its own (`child/ships/<ship>/`), which is built and deployed on its own. It holds the ship's data and generated code, and its own customizations (UI and functionality for that ship only); the viewer itself is shared by every ship (`child/core/`), so a change there reaches every ship when it's rebuilt. A ship has a name and, optionally, an IMO number, a vessel type and a description. Everything else belongs to one ship.
 - A **section** is one drawing of a ship. It holds **one line diagram**, **one manual** (PDF), and the objects it uses.
 - An **object** (3D model + line diagram) is **shared** within its ship, so any of that ship's sections can use it.
 
@@ -28,9 +28,16 @@ npm run lint
 The repo holds two apps, installed, built and deployed separately:
 
 - **Parent** (this folder): the Next.js admin, which owns the `/api` routes and saves ships, sections and objects into the child's folders. Its install, type check and build don't include anything from `child/` (no npm workspace, no import, no build step), so a change in the child can't break them.
-- **Child** (`child/`, see [child/README.md](child/README.md)): the ships' **viewers** for interactive line diagrams, with their own `package.json`, lockfile and `node_modules`:
-  - `child/core/`: **`@shipdocs/viewer-core`, the viewer every ship runs**: its UI (app shell, section list, 2D/3D/manual views, the objects' components), how it reads a ship's data, the message bridge, and the ships' Vite config. Ships import it, so **one change here reaches every ship** the next time it's built (at once, in the dev server).
-  - `child/ships/<ship>/`: **one project per ship**, holding only that ship's data (`ship.json`, sections, objects) and generated code, plus a few small files that start the shared viewer (`src/main.tsx`, `vite.config.ts`…). Each is built, deployed and run on its own.
+- **Child** (`child/`, see [child/README.md](child/README.md)): the ships' **viewers** for interactive line diagrams, with their own `package.json`, lockfile and `node_modules`. Each ship's viewer is built from **three layers**:
+
+  | Layer | Where | Reaches | Changed by |
+  | --- | --- | --- | --- |
+  | 1. **Common**: the viewer (UI, data loading, message bridge, Vite config) | `child/core/` (`@shipdocs/viewer-core`) | every ship | people |
+  | 2. **Ship customization**: theme, labels, replaced or wrapped components, extra views, buttons, hooks, and CSS for its buttons and other UI | `child/ships/<ship>/src/custom/` | that ship only | people |
+  | 3. **Ship content**: data and generated code | `child/ships/<ship>/` `ship.json`, `src/sections/`, `src/objects/`, `src/shared/schematic/` | that ship only | the Library and code generation |
+
+  - `child/core/`: **`@shipdocs/viewer-core`, the viewer every ship runs**: its UI (app shell, section list, 2D/3D/manual views, the objects' components), how it reads a ship's content and customizations, the message bridge, and the ships' Vite config. Ships import it, so **one change here reaches every ship** the next time it's built (at once, in the dev server), including what customized ships don't override.
+  - `child/ships/<ship>/`: **one project per ship**, holding that ship's content and its **customizations** (`src/custom/index.tsx`: `defineShipCustomization({ theme, labels, components, views, actions, hooks })`, and CSS it imports, which can restyle the viewer's buttons and other parts through their `data-ui` attributes, see [child/README.md](child/README.md#customizing-one-ship-layer-2)), plus a few small files that start the shared viewer (`src/main.tsx`, `vite.config.ts`…). Each is built, deployed and run on its own, so a ship's customizations reach that ship only.
   - `child/template/`: what a new ship's folder is made from: those small files, without data.
   - `child/vite.config.ts`, `child/build-ships.mjs`, `child/serve-ships.mjs`: one Vite dev server for every ship, the build of each ship on its own into `child/dist/<ship>/`, and a local static server for those builds.
   - `child/scripts/migrate-ship.mjs` (`npm --prefix child run migrate`): turns a ship made before `child/core` existed (with its own copy of the viewer's code) into one that uses it.
@@ -100,6 +107,7 @@ When a section's line diagram is uploaded (with a new section, or replacing one)
   - the Library's records, which the parent writes: `ship.json`, `section.json`, `object.json`, `next-id.json`, `manual-data.json` and the uploaded files (`lineDiagram-…`, `manual-…`, objects' `<name>-2d-…` and `<name>-3d-…`, and older objects' `lineDiagram-…` and `model-…`);
   - the build and check settings: `package.json`, `package-lock.json`, `vite.config.*` and `tsconfig*.json`, since a change could run code on this machine at the next build, or switch off the type check that catches the agent's errors;
   - the ship's entry files, `src/main.tsx`, `src/env.d.ts` and `src/styles.css`, which start the shared viewer and are the same in every ship;
+  - the ship's customizations, `src/custom/`, which people make (the agent reads them);
   - files directly in `src/objects/`, and in an object's folder anything but its `card.json`, which can be written only for the objects whose images the generation shows it. Objects' uploaded files (images and models) can't be read either, apart from the SVG images it's told to read;
   - `codegen/`, `dist/` and `node_modules/`.
 
@@ -153,6 +161,7 @@ child/ships/
       index.html, tsconfig*.json,        start the shared viewer (child/core) with this ship's data
       README.md, src/main.tsx,
       src/env.d.ts, src/styles.css
+    src/custom/                        this ship's customizations (index.tsx, and what it uses), made by people
     src/shared/schematic/              shared components of the generated code, written by its first generation
     src/sections/
       next-id.json                     ID counter for this ship's sections
@@ -255,10 +264,11 @@ Code used by only one page lives next to that page in a `_components/` folder (f
 | `src/lib/monaco.ts`, `scripts/copy-monaco.mjs` | Loads Monaco from `public/monaco`, which is copied there on install |
 | `child/package.json` | The child app: its own install (`npm run install:child`), with `core/` as its one npm workspace |
 | `child/vite.config.ts`, `child/build-ships.mjs`, `child/serve-ships.mjs` | Development server for every ship; the build of every ship (or the named ones), each on its own, into `child/dist/<ship>/`; a local static server for those builds |
-| `child/core/` | `@shipdocs/viewer-core`, the viewer every ship runs. `vite.js`: the ships' Vite config, and the plugin that gives each ship its `virtual:ship-manifest` (its data, through `import.meta.glob`) and its `@/` imports. `src/index.tsx`: `mountShip`. `src/ship.ts`: the loaded ship, kept up to date by hot updates |
-| `child/core/src/app/` | Viewer shell, message bridge and protocol |
+| `child/core/` | `@shipdocs/viewer-core`, the viewer every ship runs (layer 1). `vite.js`: the ships' Vite config, and the plugin that gives each ship its `virtual:ship-manifest` (its content and customizations, through `import.meta.glob`) and its `@/` imports. `src/index.tsx`: `mountShip`. `src/ship.ts`: the loaded ship, kept up to date by hot updates |
+| `child/core/src/customization.ts`, `customize.ts`, `theme.ts` | The extension points of layer 2 (`ShipCustomization`, `defineShipCustomization`), what `@shipdocs/viewer-core/customize` offers a ship's `src/custom/`, and the theme's accent colour |
+| `child/core/src/app/` | Viewer shell (applying a ship's customizations: `customized.tsx`), message bridge and protocol |
 | `child/core/src/sections/`, `child/core/src/objects/` | Reading a ship's sections and objects from its manifest; `ObjectSymbol2D`, `ObjectModel3D`, `objectPort` and cards for generated code |
 | `child/core/src/shared/` | Viewer building blocks: `catalog`, `diagram`, `data`, `records`, `operations` (viewer state), `view2d`, `view3d`, `manual`, `ui`, `components` (including `GeneratedView`, which loads a section's generated view), `assets` |
 | `child/template/` | What each new ship's folder is made from (its `ship.json` is a placeholder) |
-| `child/ships/<ship>/` | One ship's project: its data, its generated code (`src/sections/*/Diagram*.tsx`, `src/shared/schematic/`), and the small files that start the shared viewer |
+| `child/ships/<ship>/` | One ship's project: its customizations (`src/custom/`, layer 2), its data and generated code (`src/sections/*/Diagram*.tsx`, `src/shared/schematic/`, layer 3), and the small files that start the shared viewer |
 | `child/scripts/migrate-ship.mjs` | Turns ships made before `child/core` into ones that use it |
