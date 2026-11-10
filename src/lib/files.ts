@@ -4,6 +4,30 @@ export const MAX_PDF_SIZE = 5 * 1024 * 1024;
 
 export type FileKind = "image" | "model3d" | "pdf";
 
+/**
+ * The view an object's file is shown in: "2d", its line diagram (ObjectSymbol2D draws it), or "3d", its 3D diagram
+ * (ObjectModel3D shows it). Both can be images for now, so the view, not the format, tells them apart. It's part of the
+ * file's stored name and of its metadata, so the code generation agent, the Library and the viewer read it the same way.
+ */
+export type DiagramView = "2d" | "3d";
+
+/**
+ * Stored name of a file uploaded for one view: made from its record's name and tagged with the view, then a unique
+ * part, e.g. "fuel-pump-2d-77aa01ff.png" and "fuel-pump-3d-3be0d14c.glb". The view is the tag right before the unique
+ * part, so a name that itself ends in "2d" or "3d" still reads correctly ("pump-2d-3d-3be0d14c.png" is a 3D file).
+ */
+export const VIEW_FILE_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*-(2d|3d)-[0-9a-f]{8}\.[a-z0-9]+$/;
+
+/** The stored name for a file uploaded for `view`. `baseName` is made by slugify(), `unique` is 8 hex digits. */
+export function viewFileName(baseName: string, view: DiagramView, unique: string, extension: string): string {
+  return `${baseName}-${view}-${unique}.${extension}`;
+}
+
+/** The view a stored name is tagged with, or null for a name without one (e.g. "manual-a1c2e3f4.pdf"). */
+export function viewOfStoredName(storedName: string): DiagramView | null {
+  return (VIEW_FILE_NAME.exec(storedName)?.[1] as DiagramView | undefined) ?? null;
+}
+
 export interface FileRule {
   kind: FileKind;
   extensions: readonly string[];

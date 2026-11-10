@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { CODEGEN_DIR, OBJECT_CARD_FILE } from "@/lib/codegen";
 import { COLLECTIONS, COUNTER_FILE, MANUAL_DATA_FILE } from "@/lib/collection-defs";
+import { VIEW_FILE_NAME } from "@/lib/files";
 import { CHILD_DIR, errorCode, writeAtomic } from "@/server/child-dir";
 
 /**
@@ -58,10 +59,17 @@ const LIBRARY_FILES = new Set<string>(
   [...Object.values(COLLECTIONS).map((def) => def.metaFile), COUNTER_FILE, MANUAL_DATA_FILE].map((name) => name.toLowerCase()),
 );
 /** Files uploaded in the Library, by the names storage.ts stores them under, e.g. "lineDiagram-9f2c1a7b.png". */
-const UPLOADED_FILE = new RegExp(
+const FIELD_UPLOAD = new RegExp(
   `^(${[...new Set(Object.values(COLLECTIONS).flatMap((def) => Object.keys(def.fileFields)))].join("|")})-[0-9a-f]{8}\\.[a-z0-9]+$`,
   "i",
 );
+/**
+ * Whether a file name is one the Library stores uploads under: named after the field, or, for an object's files, from
+ * its name and tagged with the view (VIEW_FILE_NAME, e.g. "fuel-pump-3d-3be0d14c.glb"). Without case, as Windows does.
+ */
+function isUploadedFile(name: string): boolean {
+  return FIELD_UPLOAD.test(name) || VIEW_FILE_NAME.test(name.toLowerCase());
+}
 /**
  * Files at the top of a project that decide how it's built and checked: a change could run code on this machine at
  * the next build (package.json scripts, vite.config.ts), or switch off the type check that catches the agent's errors
@@ -107,7 +115,7 @@ function protectedReason(names: string[]): string | null {
     return `${PROTOCOL_FILE} is the message contract with Ship Docs, which type-checks against the template's copy, so it can't be changed.`;
   }
   if (LIBRARY_FILES.has(lowerName)) return `${name} is written by Ship Docs' Library, so it can't be changed here.`;
-  if (UPLOADED_FILE.test(name)) return `${name} was uploaded in the Library, so it can't be changed.`;
+  if (isUploadedFile(name)) return `${name} was uploaded in the Library, so it can't be changed.`;
   const inObjects = objectsPart(lower);
   if (inObjects?.length === 1) {
     return `${names.join("/")} is the viewer's registry of objects, written by hand: use what it exports (ObjectSymbol2D, objectPort, and ObjectModel3D).`;
@@ -299,7 +307,7 @@ export class CodegenPolicy {
     else if (isInside(this.shipsDir, target)) names = path.relative(this.shipsDir, target).split(path.sep).slice(1);
     else return false;
     const inObjects = objectsPart(names.map((name) => name.toLowerCase()));
-    return inObjects?.length === 2 && UPLOADED_FILE.test(inObjects[1]);
+    return inObjects?.length === 2 && isUploadedFile(inObjects[1]);
   }
 
   /**

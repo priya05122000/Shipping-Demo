@@ -134,6 +134,7 @@ Never modify:
 - Uploaded drawings.
 - Uploaded manuals.
 - Uploaded models.
+- Objects' uploaded 2D and 3D files (`<name>-2d-…`, `<name>-3d-…`, `lineDiagram-…`, `model-…`).
 - `codegen/`
 - `dist/`
 - `node_modules/`
@@ -467,6 +468,21 @@ The viewer provides:
 
 `objectPort`
 
+### An object's 2D and 3D files
+
+Every Library object has two uploaded files in `src/objects/<ID>/`. The name of each says which view it is for: the object's name (as a file name), then `2d` or `3d`, then a unique part.
+
+| File | View | What it is | Shown by |
+| --- | --- | --- | --- |
+| `<name>-2d-<unique>.<ext>`, e.g. `fuel-pump-2d-77aa01ff.png` | 2D | The object's line diagram symbol. Its card describes this image: `kind`, `description`, `aspect` and `ports`. | `ObjectSymbol2D` |
+| `<name>-3d-<unique>.<ext>`, e.g. `fuel-pump-3d-3be0d14c.glb` | 3D | The object's 3D diagram: a model (GLB, GLTF, OBJ, FBX or STL), or for now an image (PNG, JPG, WEBP or SVG) that stands in for one and is shown as a flat picture. | `ObjectModel3D` |
+
+Objects saved before this convention have `lineDiagram-<unique>.<ext>` (2D) and `model-<unique>.<ext>` (3D) instead. In `object.json`, `lineDiagram` is always the 2D file and `model` the 3D file, each with `"view": "2d"` or `"view": "3d"`. The list of available objects above names both files of every object.
+
+- Go by the view (`2d` or `3d`), never by the file format: both files can be images.
+- An image sent with the task, or an SVG you are told to read, is always the object's 2D image.
+- Never describe the 3D diagram in a card, and never use it as the 2D symbol.
+
 ### 2D object rendering
 
 Use:
@@ -549,9 +565,9 @@ Do not recreate an object's symbol when the Library object already provides it.
 
 # 9. PHASE 6 — OBJECT CARD GENERATION
 
-For an object that is new to this ship's code, the task may provide its reference image.
+For an object that is new to this ship's code, the task may provide its 2D image (its `-2d-` file).
 
-Inspect the supplied image and create only the corresponding card:
+Inspect the supplied 2D image and create only the corresponding card:
 
 `src/objects/<ID>/card.json`
 

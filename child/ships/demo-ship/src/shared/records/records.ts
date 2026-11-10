@@ -8,8 +8,13 @@
 export interface StoredFileMeta {
   /** Original file name, as uploaded. */
   name: string;
-  /** File name in the record's folder, e.g. "lineDiagram-9f2c1a7b.png". */
+  /**
+   * File name in the record's folder, e.g. "lineDiagram-9f2c1a7b.png", or for an object's files, named from the
+   * object and tagged with their view, "fuel-pump-2d-77aa01ff.png" (line diagram) and "fuel-pump-3d-3be0d14c.glb" (3D diagram).
+   */
   storedName: string;
+  /** For an object's files: "2d" (its line diagram) or "3d" (its 3D diagram). Missing from files saved before it existed. */
+  view?: "2d" | "3d";
 }
 
 /** The folder name in a glob key, e.g. "./engine-room/section.json" -> "engine-room". */

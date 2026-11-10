@@ -54,7 +54,7 @@ export interface ObjectCardPort {
 
 /** An object's card.json, as the viewer reads it (child/template/src/objects/card.ts). */
 export interface ObjectCard {
-  /** Stored name of the image it was made from, e.g. "lineDiagram-9f2c1a7b.png". */
+  /** Stored name of the 2D image it was made from, e.g. "fuel-pump-2d-9f2c1a7b.png" (or "lineDiagram-9f2c1a7b.png" for older objects). */
   image: string;
   kind: string;
   description: string;
@@ -245,7 +245,9 @@ export async function planObjects(objects: CodegenObject[], shipDir: string, sta
       }
       attachedBytes += bytes.length;
       looked += 1;
-      const caption = `The image of the object ${object.id} (${quoteText(object.name)}), from the Library:`;
+      const caption =
+        `The 2D image of the object ${object.id} (${quoteText(object.name)}), \`${object.lineDiagram.storedName}\`, from ` +
+        "the Library: the symbol ObjectSymbol2D draws, which its card describes (not its 3D diagram):";
       planned.push({ object, dir, image, aspect, how: "attach", attachment: { caption, mediaType, data: bytes.toString("base64") } });
     } else if (extension === "svg" && bytes.length <= MAX_SVG_BYTES) {
       looked += 1;
@@ -279,11 +281,23 @@ export function objectReads(plan: ObjectPlan, policy: CodegenPolicy): string[] {
   return plan.objects.filter((planned) => planned.how === "read").map((planned) => policy.label(planned.image));
 }
 
+/** What an object's 3D diagram is, for the prompt. */
 function modelFormat(object: CodegenObject): string {
   const extension = getExtension(object.model.storedName);
   // For now an image may be uploaded in place of a 3D model; ObjectModel3D shows it as a flat picture.
-  if (fileKindFromExtension(extension) === "image") return `none yet, a ${extension.toUpperCase()} image stands in for it`;
-  return extension.toUpperCase() || "none";
+  if (fileKindFromExtension(extension) === "image") return `a ${extension.toUpperCase()} image standing in for a 3D model`;
+  return extension ? `a ${extension.toUpperCase()} model` : "no model";
+}
+
+/**
+ * An object's two files, by the view each is for (see VIEW_FILE_NAME in src/lib/files.ts), so the agent never takes
+ * one for the other, even when both are images. Stored names are made by storage.ts from letters, digits and "-" only.
+ */
+function objectFiles(object: CodegenObject): string {
+  return (
+    `2D image \`${object.lineDiagram.storedName}\`; ` +
+    `3D diagram \`${object.model.storedName}\`, ${modelFormat(object)}`
+  );
 }
 
 function point(port: ObjectCardPort): string {
@@ -293,7 +307,7 @@ function point(port: ObjectCardPort): string {
 /** The {{objects}} placeholder: the section's objects, and what to do with each. */
 export function objectsPrompt(plan: ObjectPlan, policy: CodegenPolicy): string {
   if (plan.objects.length === 0) return "This section uses no objects from the Library.";
-  const name = ({ object }: PlannedObject) => `${object.id} ${quoteText(object.name)} (3D model: ${modelFormat(object)})`;
+  const name = ({ object }: PlannedObject) => `${object.id} ${quoteText(object.name)} (${objectFiles(object)})`;
   if (!plan.supported) {
     return (
       "This section uses these objects from the Library, but this ship's viewer has no object components " +
@@ -325,13 +339,13 @@ export function objectsPrompt(plan: ObjectPlan, policy: CodegenPolicy): string {
       const card = `\`${policy.label(path.join(planned.dir, OBJECT_CARD_FILE))}\``;
       const where =
         planned.how === "attach"
-          ? "its image is attached to this message"
-          : `its image is an SVG, \`${policy.label(planned.image)}\`: read it with the Read tool before you write anything`;
-      const aspect = planned.aspect ? ` Its image's aspect (width ÷ height) is ${planned.aspect}.` : "";
+          ? "its 2D image is attached to this message"
+          : `its 2D image is an SVG, \`${policy.label(planned.image)}\`: read it with the Read tool before you write anything`;
+      const aspect = planned.aspect ? ` Its 2D image's aspect (width ÷ height) is ${planned.aspect}.` : "";
       return `- ${name(planned)}: ${where}. Write its card, ${card}.${aspect}`;
     });
     parts.push(
-      "Objects new to this ship's code. Look at each one's image, and write its card (see \"Objects from the Library\" in " +
+      "Objects new to this ship's code. Look at each one's 2D image, and write its card (see \"Objects from the Library\" in " +
         `your rules), so later generations can place it without the image:\n\n${lines.join("\n")}`,
     );
   }

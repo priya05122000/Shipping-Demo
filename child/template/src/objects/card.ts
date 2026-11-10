@@ -15,7 +15,7 @@ export interface ObjectCardPort {
 }
 
 export interface ObjectCard {
-  /** Stored name of the image the card was made from, e.g. "lineDiagram-9f2c1a7b.png". */
+  /** Stored name of the 2D image the card was made from, e.g. "fuel-pump-2d-9f2c1a7b.png" ("lineDiagram-9f2c1a7b.png" for older objects). */
   image: string;
   /** Kind of equipment, e.g. "gate valve", "tank", "pipe joint". */
   kind: string;

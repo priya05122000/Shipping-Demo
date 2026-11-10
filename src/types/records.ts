@@ -1,3 +1,5 @@
+import type { DiagramView } from "@/lib/files";
+
 /** Metadata for an uploaded file; the bytes live in the local data folder. */
 export interface StoredFile {
   /** Original file name as uploaded. */
@@ -8,12 +10,18 @@ export interface StoredFile {
   type: string;
   /** Lower-case extension without the dot, e.g. "png". */
   extension: string;
-  /** File name on disk, inside the record's folder, e.g. "lineDiagram-9f2c1a7b.png". Unique per upload. */
+  /**
+   * File name on disk, inside the record's folder. Unique per upload. "<field>-<unique>.<ext>" for a section's files,
+   * e.g. "lineDiagram-9f2c1a7b.png"; for an object's, made from its name and tagged with the view, e.g.
+   * "fuel-pump-2d-77aa01ff.png" and "fuel-pump-3d-3be0d14c.glb" (objects saved before that have "lineDiagram-…" and "model-…").
+   */
   storedName: string;
   /** URL the parent serves the file from, by folder, e.g. "/api/files/mv-aurora/sections/engine-room/lineDiagram-9f2c1a7b.png". */
   url: string;
   /** ISO timestamp. */
   uploadedAt: string;
+  /** For an object's files: the view it's shown in, "2d" (its line diagram) or "3d" (its 3D diagram). From the field. */
+  view?: DiagramView;
 }
 
 export interface BaseRecord {

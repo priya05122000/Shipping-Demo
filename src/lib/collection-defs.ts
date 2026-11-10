@@ -1,4 +1,4 @@
-import { FILE_RULES, type FileRule } from "@/lib/files";
+import { FILE_RULES, type DiagramView, type FileRule } from "@/lib/files";
 import { normalizeImo, validateImo } from "@/lib/imo";
 
 export type CollectionSlug = "projects" | "sections" | "objects";
@@ -10,6 +10,13 @@ export interface FileFieldDef {
   rule: FileRule;
   /** Required fields must be uploaded on create and can't be removed later. Optional ones can be added or removed any time. */
   required: boolean;
+  /**
+   * For a file shown in one view (an object's line diagram in 2D, its 3D diagram in 3D): its stored name is made from
+   * the record's name and tagged with the view (VIEW_FILE_NAME, e.g. "fuel-pump-3d-3be0d14c.glb"), and its metadata
+   * says the view, so the code generation agent can tell an object's 2D and 3D files apart even when both are images.
+   * Without it, a file is stored as "<field>-<unique>.<ext>", e.g. "manual-a1c2e3f4.pdf".
+   */
+  view?: DiagramView;
 }
 
 /** An optional line or paragraph of text, e.g. a ship's IMO number. Left empty, it isn't saved. */
@@ -88,8 +95,8 @@ export const COLLECTIONS = {
     dir: "src/objects",
     metaFile: "object.json",
     fileFields: {
-      model: { rule: FILE_RULES.model3d, required: true },
-      lineDiagram: { rule: FILE_RULES.image, required: true },
+      model: { rule: FILE_RULES.model3d, required: true, view: "3d" },
+      lineDiagram: { rule: FILE_RULES.image, required: true, view: "2d" },
     },
   },
 } as const satisfies Record<CollectionSlug, CollectionDef>;
