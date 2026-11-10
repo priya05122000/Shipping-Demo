@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { OBJECT_CARD_FILE } from "@/lib/codegen";
 import { COLLECTIONS } from "@/lib/collection-defs";
-import { getExtension } from "@/lib/files";
+import { fileKindFromExtension, getExtension } from "@/lib/files";
 import { CHILD_DIR, errorCode, writeAtomic } from "@/server/child-dir";
 import type { CodegenObject } from "@/server/storage";
 import type { CodegenObjects } from "@/types/records";
@@ -280,7 +280,10 @@ export function objectReads(plan: ObjectPlan, policy: CodegenPolicy): string[] {
 }
 
 function modelFormat(object: CodegenObject): string {
-  return getExtension(object.model.storedName).toUpperCase() || "none";
+  const extension = getExtension(object.model.storedName);
+  // For now an image may be uploaded in place of a 3D model; ObjectModel3D shows it as a flat picture.
+  if (fileKindFromExtension(extension) === "image") return `none yet, a ${extension.toUpperCase()} image stands in for it`;
+  return extension.toUpperCase() || "none";
 }
 
 function point(port: ObjectCardPort): string {

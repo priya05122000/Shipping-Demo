@@ -1,7 +1,17 @@
 import { Component, Suspense, useEffect, useMemo, type ReactNode } from "react";
-import { useFBX, useGLTF } from "@react-three/drei";
+import { Billboard, useFBX, useGLTF } from "@react-three/drei";
 import { useLoader, type ThreeElements } from "@react-three/fiber";
-import { Box3, Group, Mesh, MeshStandardMaterial, Vector3, type Object3D } from "three";
+import {
+  Box3,
+  DoubleSide,
+  Group,
+  Mesh,
+  MeshStandardMaterial,
+  SRGBColorSpace,
+  TextureLoader,
+  Vector3,
+  type Object3D,
+} from "three";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { findObject } from "./objects";
@@ -11,7 +21,7 @@ export type ObjectModel3DProps = Omit<ThreeElements["group"], "children" | "id">
   id: string;
   /** Length of the model's largest side, in scene units. */
   size?: number;
-  /** Colour of a model without its own materials (STL), and of the placeholder box. */
+  /** Colour of a model without its own materials (STL), and of the placeholder box. Not used for an image. */
   color?: string;
   /** Draws a selection outline around it. */
   selected?: boolean;
@@ -19,7 +29,8 @@ export type ObjectModel3DProps = Omit<ThreeElements["group"], "children" | "id">
 
 /**
  * An object from the Library in a 3D (react-three-fiber) view: its 3D model, scaled so its largest side is `size` and
- * centred on the group's position. GLB, GLTF, OBJ, FBX and STL models are loaded; a BLEND file, a missing model, or
+ * centred on the group's position. GLB, GLTF, OBJ, FBX and STL models are loaded; for now an image (PNG, JPG, WEBP,
+ * SVG) uploaded in place of a model is shown as a flat picture that faces the camera. A BLEND file, a missing model, or
  * one that fails to load shows a plain box instead. Other props (position, rotation, onClick…) go to its group.
  * Import it from "@/objects/ObjectModel3D", so 2D views don't load three.js.
  */
@@ -72,6 +83,12 @@ function Model({ url, format, size, color, fallback }: ModelProps) {
       return <ObjModel url={url} size={size} />;
     case "stl":
       return <StlModel url={url} size={size} color={color} />;
+    case "png":
+    case "jpg":
+    case "jpeg":
+    case "webp":
+    case "svg":
+      return <ImageModel url={url} size={size} />;
     default:
       return fallback;
   }
@@ -95,6 +112,32 @@ function StlModel({ url, size, color }: { url: string; size: number; color: stri
   useEffect(() => () => material.dispose(), [material]);
   const mesh = useMemo(() => new Mesh(geometry, material), [geometry, material]);
   return <Fitted source={mesh} size={size} />;
+}
+
+/**
+ * For now: an image uploaded in place of a 3D model, as a flat picture whose largest side is `size`, turned to face
+ * the camera so it reads from any angle.
+ */
+function ImageModel({ url, size }: { url: string; size: number }) {
+  const loaded = useLoader(TextureLoader, url);
+  // The loader caches the texture, so its colour space is set on a copy.
+  const texture = useMemo(() => {
+    const copy = loaded.clone();
+    copy.colorSpace = SRGBColorSpace;
+    return copy;
+  }, [loaded]);
+  useEffect(() => () => texture.dispose(), [texture]);
+  const image = loaded.image as HTMLImageElement | undefined;
+  const aspect = image && image.naturalWidth > 0 && image.naturalHeight > 0 ? image.naturalWidth / image.naturalHeight : 1;
+  const [width, height] = aspect >= 1 ? [size, size / aspect] : [size * aspect, size];
+  return (
+    <Billboard>
+      <mesh>
+        <planeGeometry args={[width, height]} />
+        <meshBasicMaterial map={texture} transparent side={DoubleSide} toneMapped={false} />
+      </mesh>
+    </Billboard>
+  );
 }
 
 /** A copy of a loaded model (loaders cache it, so it may be shown several times), centred and scaled to `size`. */

@@ -208,7 +208,7 @@ child/ships/
 | Field | Formats | Max size |
 | --- | --- | --- |
 | Line diagram / image | JPG, JPEG, PNG, WEBP, SVG | 2 MB |
-| 3D diagram | GLB, GLTF, OBJ, FBX, STL, BLEND | 2 MB |
+| 3D diagram | GLB, GLTF, OBJ, FBX, STL, BLEND; for now also JPG, JPEG, PNG, WEBP, SVG (shown as a flat picture in 3D) | 2 MB |
 | Manual | PDF | 5 MB |
 
 The limits are `MAX_FILE_SIZE` and `MAX_PDF_SIZE` in `src/lib/files.ts`.

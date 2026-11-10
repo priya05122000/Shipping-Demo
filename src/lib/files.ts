@@ -24,11 +24,13 @@ export const FILE_RULES = {
   },
   model3d: {
     kind: "model3d",
-    extensions: ["glb", "gltf", "obj", "fbx", "stl", "blend"],
+    // For now an image is accepted too, until objects have real 3D models. The viewer's ObjectModel3D shows it as a
+    // flat picture. Images still count as kind "image" (fileKindFromExtension checks the image rule first).
+    extensions: ["glb", "gltf", "obj", "fbx", "stl", "blend", "jpg", "jpeg", "png", "webp", "svg"],
     // Browsers report inconsistent or empty MIME types for 3D formats, so only the extension is checked.
     mimeTypes: [],
     maxSize: MAX_FILE_SIZE,
-    label: "GLB, GLTF, OBJ, FBX, STL, BLEND",
+    label: "GLB, GLTF, OBJ, FBX, STL, BLEND, or for now an image (JPG, PNG, WEBP, SVG)",
   },
   pdf: {
     kind: "pdf",
