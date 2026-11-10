@@ -115,15 +115,16 @@ export function CodegenPanel({ projectId, section, shipDir, onChanged }: Codegen
     }
   }
 
-  async function run(action: "generate" | "stop") {
+  async function run(action: "generate" | "retry-cli" | "stop") {
     setBusy(true);
     try {
       if (action === "generate") await generateCode(projectId, section.id);
+      else if (action === "retry-cli") await generateCode(projectId, section.id, "cli");
       else await stopCodeGeneration(projectId, section.id);
       await onChanged();
     } catch (error) {
       toast.error(
-        action === "generate" ? "Couldn't start generating code" : "Couldn't stop generating code",
+        action === "stop" ? "Couldn't stop generating code" : "Couldn't start generating code",
         error instanceof Error ? error.message : undefined,
       );
     } finally {
@@ -160,11 +161,26 @@ export function CodegenPanel({ projectId, section, shipDir, onChanged }: Codegen
         ) : (
           <>
             {codegen.mode && <p className="text-slate-700">{MODE_LABEL[codegen.mode]}.</p>}
+            {codegen.engine === "cli" && (
+              <p className="text-slate-600">Automatic Claude Code CLI run after a changed drawing was saved.</p>
+            )}
             {codegen.objects && <ObjectsNote objects={codegen.objects} />}
             {codegen.status === "queued" && (
               <p className="text-slate-500">Waiting for other generations to finish: they run one at a time, across ships.</p>
             )}
             {codegen.status === "running" && codegen.progress && <p className="text-indigo-700">{codegen.progress}…</p>}
+            {codegen.latestEvent && codegen.latestEvent !== codegen.progress && (
+              <p className="text-slate-500">Latest CLI event: {codegen.latestEvent}</p>
+            )}
+            {codegen.cliSessionId && (
+              <p className="text-xs text-slate-500">
+                Claude Code CLI session: <span className="font-mono">{codegen.cliSessionId}</span>
+              </p>
+            )}
+            {typeof codegen.exitCode === "number" && (
+              <p className="text-xs text-slate-500">Claude Code CLI exit code: {codegen.exitCode}</p>
+            )}
+            {codegen.validation === "passed" && <p className="text-emerald-700">Type check and viewer build passed.</p>}
             {codegen.limit && (
               <p className="text-red-700">
                 Stopped by its limit ({LIMIT_LABEL[codegen.limit]}); nothing it wrote was kept.
@@ -232,9 +248,16 @@ export function CodegenPanel({ projectId, section, shipDir, onChanged }: Codegen
                 Stop
               </Button>
             ) : (
-              <Button variant="secondary" size="sm" loading={busy} onClick={() => void run("generate")}>
-                {codegen ? "Generate again" : "Generate code"}
-              </Button>
+              <div className="flex gap-2">
+                {codegen?.engine === "cli" && (codegen.status === "failed" || codegen.status === "cancelled") && (
+                  <Button variant="secondary" size="sm" loading={busy} onClick={() => void run("retry-cli")}>
+                    Retry CLI
+                  </Button>
+                )}
+                <Button variant="secondary" size="sm" loading={busy} onClick={() => void run("generate")}>
+                  {codegen ? "Generate again (SDK)" : "Generate code (SDK)"}
+                </Button>
+              </div>
             )}
           </div>
         )}

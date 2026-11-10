@@ -27,6 +27,35 @@ function tscPath(): string {
   return createRequire(path.join(CHILD_DIR, "package.json")).resolve("typescript/bin/tsc");
 }
 
+function vitePath(): string {
+  const entry = createRequire(path.join(CHILD_DIR, "package.json")).resolve("vite");
+  return path.resolve(path.dirname(entry), "../../bin/vite.js");
+}
+
+/** Bundles a staged viewer with the trusted Vite configuration and installed child dependencies. */
+export async function buildViewer(shipDir: string, signal?: AbortSignal): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    execFile(
+      process.execPath,
+      [vitePath(), "build"],
+      { cwd: shipDir, timeout: TIMEOUT_MS, maxBuffer: 16 * 1024 * 1024, windowsHide: true, signal },
+      (error, stdout, stderr) => {
+        if (error) {
+          const output = `${stdout}\n${stderr}`
+            .replaceAll(shipDir, "the staged viewer")
+            .trim()
+            .split(/\r?\n/)
+            .slice(-12)
+            .join("\n");
+          reject(new Error(`The viewer build failed${output ? `:\n${output}` : `: ${error.message}`}`));
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
+}
+
 /**
  * Type-checks a ship's project the way its build does (tsconfig.app.json, so src/), without writing anything.
  * Aborting `signal` stops tsc.

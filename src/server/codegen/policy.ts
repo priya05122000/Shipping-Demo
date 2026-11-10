@@ -447,6 +447,16 @@ export class FileJournal {
 
   constructor(private readonly policy: CodegenPolicy) {}
 
+  /** Records a stage file's pre-generation contents when an external agent is diffed after it exits. */
+  async recordOriginal(target: string, content: Buffer | null) {
+    if (!this.originals.has(target)) {
+      this.originals.set(target, {
+        content,
+        ...(content === null ? { existingDir: await deepestExisting(path.dirname(target)) } : {}),
+      });
+    }
+  }
+
   async remember(target: string) {
     if (this.originals.has(target)) return;
     try {
