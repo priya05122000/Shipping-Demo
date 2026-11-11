@@ -13,12 +13,16 @@ import type { Diagram, Section, SectionView } from "./types";
  *                  useManualData() (e.g. the piping diagrams of @shipdocs/viewer-core/pipeline)
  *   diagram.ts     optional: hotspots, as `export default defineDiagram({...})` (from @shipdocs/viewer-core/diagram)
  *   data.json      optional: details per hotspot item ID
- *   Icon.tsx       optional: the section's sidebar icon, a default-exported component
- *   Diagram2D.tsx, Diagram3D.tsx
- *                  optional: the 2D and 3D views generated from the line diagram by Ship Docs (with AI), each
- *                  default-exporting a component that takes SectionViewProps, with the geometry they draw (e.g.
- *                  schematic.ts). Shared parts are in the shared viewer (e.g. ../pipeline) or the ship's
- *                  src/shared/schematic.
+ *   v1/, v2/…      the versions of the code Ship Docs generated from the line diagram (with AI), each in a folder of
+ *                  its own; section.json's `codegenVersion` names the one in use. Each holds:
+ *     Diagram2D.tsx, Diagram3D.tsx
+ *                  the 2D and 3D views, each default-exporting a component that takes SectionViewProps, with the
+ *                  geometry they draw (e.g. schematic.ts). Shared parts are in the shared viewer (e.g. ../pipeline) or
+ *                  the ship's src/shared/schematic.
+ *     Icon.tsx     optional: the section's sidebar icon, a default-exported component
+ *   Diagram2D.tsx, Diagram3D.tsx, Icon.tsx
+ *                  the same, directly in the section's folder, for code written by hand (or generated before version
+ *                  folders): used when the section has no version in use.
  * Folders are found automatically (see ../ship/manifest.ts): adding, changing or removing one updates the viewer.
  */
 
@@ -46,6 +50,15 @@ function lazyView(views: SectionFiles["views2d"], key: string): SectionView | un
   return view;
 }
 
+/**
+ * Where a section's views are, as a glob key prefix: its version in use's folder ("./engine-room/v3") if that has a 2D
+ * view, else the section's folder ("./engine-room"), for code written by hand.
+ */
+function codeFolder(views2d: SectionFiles["views2d"], folder: string, version: number | undefined): string {
+  const versioned = `./${folder}/v${version}`;
+  return version !== undefined && `${versioned}/Diagram2D.tsx` in views2d ? versioned : `./${folder}`;
+}
+
 /** Every drawing the viewer can show, in menu order (oldest first, as in the Library). */
 export function buildSections(files: SectionFiles, objects: SharedObject[]): Section[] {
   const { metas, urls, diagrams, details, icons = {}, manualData = {}, views2d, views3d } = files;
@@ -56,6 +69,8 @@ export function buildSections(files: SectionFiles, objects: SharedObject[]): Sec
     })
     .sort(byCreation)
     .map(({ id, folder, meta }): Section => {
+      const codeVersion = typeof meta.codegenVersion === "number" ? meta.codegenVersion : undefined;
+      const code = codeFolder(views2d, folder, codeVersion);
       const diagram = diagrams[`./${folder}/diagram.ts`];
       return {
         id,
@@ -65,14 +80,14 @@ export function buildSections(files: SectionFiles, objects: SharedObject[]): Sec
         diagram: isHotspots(diagram) ? diagram : undefined,
         data: details[`./${folder}/data.json`] ?? { items: {} },
         loadManualData: manualData[`./${folder}/manual-data.json`],
-        Icon: icons[`./${folder}/Icon.tsx`],
+        Icon: icons[`${code}/Icon.tsx`],
         // An ID whose object was removed (e.g. by hand) is skipped.
         objects: (Array.isArray(meta.objectIds) ? meta.objectIds : []).flatMap(
           (objectId) => objects.find((object) => object.id === objectId) ?? [],
         ),
-        view2d: lazyView(views2d, `./${folder}/Diagram2D.tsx`),
-        view3d: lazyView(views3d, `./${folder}/Diagram3D.tsx`),
-        codeVersion: typeof meta.codegenVersion === "number" ? meta.codegenVersion : undefined,
+        view2d: lazyView(views2d, `${code}/Diagram2D.tsx`),
+        view3d: lazyView(views3d, `${code}/Diagram3D.tsx`),
+        codeVersion,
       };
     });
 }

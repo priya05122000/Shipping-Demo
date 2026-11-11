@@ -72,10 +72,10 @@ const manifest = {
     urls: import.meta.glob("./*/*.{png,jpg,jpeg,webp,svg,pdf}", { base: ${sections}, eager: true, query: "?url", import: "default" }),
     diagrams: import.meta.glob("./*/diagram.ts", { base: ${sections}, eager: true, import: "default" }),
     details: import.meta.glob("./*/data.json", { base: ${sections}, eager: true, import: "default" }),
-    icons: import.meta.glob("./*/Icon.tsx", { base: ${sections}, eager: true, import: "default" }),
+    icons: import.meta.glob(["./*/Icon.tsx", "./*/v*/Icon.tsx"], { base: ${sections}, eager: true, import: "default" }),
     manualData: import.meta.glob("./*/manual-data.json", { base: ${sections}, import: "default" }),
-    views2d: import.meta.glob("./*/Diagram2D.tsx", { base: ${sections} }),
-    views3d: import.meta.glob("./*/Diagram3D.tsx", { base: ${sections} }),
+    views2d: import.meta.glob(["./*/Diagram2D.tsx", "./*/v*/Diagram2D.tsx"], { base: ${sections} }),
+    views3d: import.meta.glob(["./*/Diagram3D.tsx", "./*/v*/Diagram3D.tsx"], { base: ${sections} }),
   },
   objects: {
     metas: import.meta.glob("./*/object.json", { base: ${objects}, eager: true, import: "default" }),
@@ -162,7 +162,7 @@ export function defineShipConfig(overrides = {}) {
       build: {
         // Manuals and 3D models stay files, however small: browsers won't show a data: URL PDF in an iframe.
         assetsInlineLimit: (filePath) => (/\.(pdf|glb|gltf|obj|fbx|stl|blend)$/i.test(filePath) ? false : undefined),
-        // A generated 3D view (src/sections/*/Diagram3D.tsx) is a lazily loaded chunk with three.js, about 1 MB.
+        // A generated 3D view (src/sections/*/v*/Diagram3D.tsx) is a lazily loaded chunk with three.js, about 1 MB.
         chunkSizeWarningLimit: 1500,
       },
     }),

@@ -2,16 +2,19 @@ import type { CodegenStatus, CodegenVersion, SectionCodegen } from "@/types/reco
 
 /**
  * Where the AI-generated React code goes in a ship's project (child/ships/<ship>/), shared by the server, which
- * writes it, and the Library, which shows it. The ship's viewer loads the two entry files from each section's folder.
+ * writes it, and the Library, which shows it. Each generation writes the section's code in a version folder of its
+ * own, inside the section's folder: src/sections/<folder>/v1/, v2/… The ship's viewer loads the two entry files from
+ * the version in use (section.json's `codegenVersion`), or from the section's folder itself for code written by hand.
  */
 export const CODEGEN_ENTRY_2D = "Diagram2D.tsx";
 export const CODEGEN_ENTRY_3D = "Diagram3D.tsx";
 /** The ship's shared schematic components, created by its first generation and reused by later ones. */
 export const CODEGEN_SHARED_DIR = "src/shared/schematic";
 /**
- * In the ship's folder, outside src/ so the viewer never builds it:
+ * In the ship's folder, outside src/ so the viewer never builds it, Ship Docs' records of its generations:
  *   codegen/generations.json        the ship's finished generations, which decide between the first and second prompt
- *   codegen/<section ID>/v<N>/      each version of a section's generated files
+ *   codegen/usage.jsonl             every generation's status, tokens and turns
+ * (Ships from before version folders kept each version's files in codegen/<section ID>/v<N>/.)
  */
 export const CODEGEN_DIR = "codegen";
 export const CODEGEN_STATE_FILE = `${CODEGEN_DIR}/generations.json`;
@@ -25,9 +28,19 @@ export const CODEGEN_USAGE_FILE = `${CODEGEN_DIR}/usage.jsonl`;
  */
 export const OBJECT_CARD_FILE = "card.json";
 
-/** Where a version's files are kept, relative to the ship's folder, e.g. "codegen/SEC-001/v3". */
-export function codegenVersionDir(sectionId: string, version: number): string {
-  return `${CODEGEN_DIR}/${sectionId}/v${version}`;
+/** A version folder's name, inside its section's folder: "v1", "v2"… */
+const VERSION_FOLDER = /^v([1-9]\d*)$/;
+
+/** The folder a version of a section's generated code is in, relative to the section's folder, e.g. "v3". */
+export function codegenVersionFolder(version: number): string {
+  return `v${version}`;
+}
+
+/** The version a folder in a section's folder holds (3 for "v3"), or undefined if it isn't a version folder. */
+export function parseVersionFolder(name: string): number | undefined {
+  const match = VERSION_FOLDER.exec(name);
+  const version = match ? Number(match[1]) : NaN;
+  return Number.isSafeInteger(version) ? version : undefined;
 }
 
 const STATUSES: readonly CodegenStatus[] = ["queued", "running", "done", "failed", "cancelled"];

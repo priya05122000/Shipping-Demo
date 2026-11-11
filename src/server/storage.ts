@@ -695,7 +695,7 @@ export function deleteRecord(slug: CollectionSlug, id: string, projectId?: strin
     } catch (error) {
       console.warn(`Deleted ${id}, but couldn't remove everything in child/${scope.dir}/${existing.folder}:`, error);
     }
-    // A section's code versions are kept in the ship's codegen folder, by section ID.
+    // A section's code versions are in its folder (v1/, v2/…); ships from before kept them in codegen/<section ID>/.
     if (slug === "sections" && scope.projectFolder) {
       const versions = path.join(CHILD_DIR, ...projectDir(scope.projectFolder).split("/"), CODEGEN_DIR, id);
       await removeFolder(versions).catch((error) => console.warn(`Deleted ${id}, but couldn't remove its code versions:`, error));
@@ -711,7 +711,7 @@ export interface CodegenState {
   codegen?: SectionCodegen;
   /** Oldest first. */
   versions: CodegenVersion[];
-  /** The version whose files are in the section's folder. */
+  /** The version the viewer shows, from the section's v<N>/ folder. */
   activeVersion?: number;
 }
 

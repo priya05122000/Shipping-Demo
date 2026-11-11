@@ -66,8 +66,8 @@ Where new code goes:
   3D if it uses three.js, so 2D views never load it.
 - A change for one ship only: that ship's `src/custom/` (layer 2), not `core/`.
 
-The `exports` in `core/package.json` are what ships and their generated code (including the versions kept in each
-ship's `codegen/`) import, so keep their names and what they export. The files behind them can move; if
+The `exports` in `core/package.json` are what ships and their generated code (every version of it, in each section's
+`v1/`, `v2/`… folders, all of which are built) import, so keep their names and what they export. The files behind them can move; if
 `sections/types.ts` does, update `VIEW_CONTRACT_FILE` in the parent's `src/server/codegen/structure.ts`, which code
 generation must read first.
 
@@ -79,11 +79,19 @@ section uses it the way the viewer shows every section, through its generated vi
 
 | File in `src/sections/<folder>/` | Written by | What |
 | --- | --- | --- |
-| `section.json`, line diagram, manual (PDF) | the Library | As for any section; `objectIds` are the Library objects picked for it |
+| `section.json`, line diagram, manual (PDF) | the Library | As for any section; `objectIds` are the Library objects picked for it; `codegenVersion` is the version in use |
 | `manual-data.json` | the Library, from the manual | The section's data: one record per component (its engineering tag as `id`), with `specifications`, `troubleshooting`, `simulation` |
-| `schematic.ts` | code generation or people | The geometry: `export default definePipeline({...})`, with its pipes and parts, what the drawing shows about each part, and the Library objects that draw them |
-| `Diagram2D.tsx` | code generation or people | `export default (props: SectionViewProps) => <PipelineView2D schematic={schematic} {...props} />` |
-| `Diagram3D.tsx` | code generation or people | The same with `PipelineView3D`, from `@shipdocs/viewer-core/pipeline/3d` (so the 2D view never loads three.js) |
+| `v<N>/schematic.ts` | code generation or people | The geometry: `export default definePipeline({...})`, with its pipes and parts, what the drawing shows about each part, and the Library objects that draw them |
+| `v<N>/Diagram2D.tsx` | code generation or people | `export default (props: SectionViewProps) => <PipelineView2D schematic={schematic} {...props} />` |
+| `v<N>/Diagram3D.tsx` | code generation or people | The same with `PipelineView3D`, from `@shipdocs/viewer-core/pipeline/3d` (so the 2D view never loads three.js) |
+
+Each generation writes its code in the section's next version folder (`v1/`, `v2/`…); the viewer loads the one
+`section.json`'s `codegenVersion` names. Code written by hand can sit directly in the section's folder instead (as
+`ships/sample-ship`'s `bunker` does); it's used while the section has no version in use.
+
+**Pipe ends:** a pipe end that doesn't finish at a part, a tank or another pipe is never left plain: it ends in a
+decoration at exactly that pipe's first or last point, `{ type: "ring", at }` for an open end (or a line leaving the
+sheet), or `{ type: "cap", at, orient }` for a joinable flanged or blanked end (`orient: "v"` on a horizontal pipe).
 
 ```ts
 // schematic.ts (abridged): the drawing, and what it shows about each part. A valve's engineering data isn't here:

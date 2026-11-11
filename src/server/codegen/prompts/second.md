@@ -1,6 +1,6 @@
 <!--
 Later-generation task for a ship that already has generated sections.
-Placeholders: {{shipName}} {{sectionName}} {{sectionId}} {{sectionDir}} {{drawing}} {{generatedSections}} {{previousCode}} {{projectTree}} {{coreDir}} {{coreTree}} {{childDir}} {{objects}}
+Placeholders: {{shipName}} {{sectionName}} {{sectionId}} {{sectionDir}} {{codeDir}} {{version}} {{drawing}} {{generatedSections}} {{previousCode}} {{projectTree}} {{coreDir}} {{coreTree}} {{childDir}} {{objects}}
 This comment is not sent.
 -->
 
@@ -8,9 +8,11 @@ This comment is not sent.
 
 Create a new section for ship {{shipName}} named {{sectionName}} (ID {{sectionId}}) from the supplied drawing: {{drawing}}.
 
+This is version {{version}} of the section's code. Generate all of it inside the section, in its version folder `{{codeDir}}/`.
+
 ## 1. Inspect Existing Architecture
 
-Before coding, inspect the ship's actual files and folder structure. Use the project tree and prior-generation context to locate existing sections, then read at least one representative existing piping section in full. Prefer the most recently generated section that uses shared code. Inspect its section files, schematic/geometry, 2D and 3D views, object references, and any relevant `src/shared/schematic/` components. Also inspect the target section folder and its `section.json`, drawing, `manual-data.json`, or generated files when present.
+Before coding, inspect the ship's actual files and folder structure. Use the project tree and prior-generation context to locate existing sections, then read at least one representative existing piping section in full: a generated section's code in use is in its version folder (listed below). Prefer the most recently generated section that uses shared code. Inspect its section files, schematic/geometry, 2D and 3D views, object references, and any relevant `src/shared/schematic/` components. Also inspect the target section folder and its `section.json`, drawing, `manual-data.json`, and the version folder `{{codeDir}}/` with any code already copied into it.
 
 Use the existing ship section as the pattern for folder structure, imports, component reuse, styling, types, and viewer integration. Reuse and extend the ship's established shared code when appropriate. Do not start from a generic design or copy the sample ship blindly. Keep section-specific geometry, identities, and engineering facts grounded in this new section's drawing and records; do not copy values or connections from another section.
 
@@ -20,6 +22,7 @@ Ship sections and prior code context:
 - Previous generated code: {{previousCode}}
 - Ship project structure: {{projectTree}}
 - Target section: `{{sectionDir}}/`
+- This version's code folder (write the section's code here): `{{codeDir}}/`
 
 ## Inspect the shared viewer and available objects
 
@@ -46,11 +49,13 @@ Add only the new section and necessary backward-compatible ship-level shared cod
 
 Follow the existing ship section's working pattern and the shared viewer's intended extension points. If the ship uses the core piping engine, use its established schematic and 2D/3D view pattern. Reuse the viewer's rendering, styling, overview, details, selection, and interactions instead of building duplicate functionality.
 
-Trace the new drawing's equipment, tags, layout, pipes, branches, junctions, crossings, and flow directions. Match components to engineering records and Library objects using tags and evidence. Keep all views backed by the same section data and geometry. Add or update ship-level shared code only when needed, and preserve compatibility with the ship's existing sections.
+Trace the new drawing's equipment, tags, layout, pipes, branches, junctions, crossings, and flow directions. Match components to engineering records and Library objects using tags and evidence. Keep all views backed by the same section data and geometry. Add or update ship-level shared code only when needed, and preserve compatibility with the ship's existing sections and every earlier version of them.
+
+End every free pipe end with a ring or a joinable flanged (`cap`) end fitting, as the shared rules describe. No plain pipe ends.
 
 ## Constraints
 
-- Write only the new section's necessary generated files and, when needed, reusable code under this ship's `src/shared/schematic/`.
+- Write only the new section's necessary generated files, in `{{codeDir}}/`, and, when needed, reusable code under this ship's `src/shared/schematic/`. Never change the section's earlier version folders.
 - Do not modify the shared viewer, ship configuration, `src/custom/`, uploaded assets, Library-owned files, or unrelated sections.
 - Do not edit or directly import `manual-data.json` into generated code.
 - Do not guess component identities, dimensions, specifications, operating states, or pipe connections. Report uncertainty and leave dependent work unresolved when evidence is insufficient.

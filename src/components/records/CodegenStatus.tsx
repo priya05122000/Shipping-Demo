@@ -143,7 +143,10 @@ function VersionList({ section, shipDir, onRestore, blocked = false }: VersionLi
       <p className="text-xs text-slate-500">
         {shipDir ? (
           <>
-            Versions, kept in <span className="font-mono">child/{shipDir}/codegen/{section.id}/</span>
+            Versions, each in its own folder:{" "}
+            <span className="font-mono">
+              child/{shipDir}/src/sections/{section.folder}/v1/, v2/…
+            </span>
           </>
         ) : (
           "Versions"
@@ -459,9 +462,8 @@ function VersionRow({ version, inUse, blocked, onRestore }: VersionRowProps) {
       {confirming && !inUse && (
         <div className="mt-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-900 ring-1 ring-amber-200">
           <p>
-            Replace this section&apos;s generated files with v{version.version}&apos;s? Changes made to them since are
-            lost. The ship&apos;s shared components stay as they are, so v{version.version} is only restored if it still
-            works with them.
+            Show v{version.version} in this section&apos;s views? Nothing is deleted: each version stays in its own
+            folder, so you can switch back at any time.
           </p>
           <div className="mt-2 flex justify-end gap-2">
             <Button variant="secondary" size="sm" disabled={busy} onClick={() => setConfirming(false)}>

@@ -9,14 +9,15 @@ and writes the ship's data into it:
   `diagram.ts` and `data.json` there to make parts of the line diagram clickable (`defineDiagram` is in
   `@shipdocs/viewer-core/diagram`). An optional `Icon.tsx` (default-exporting a 20×20 SVG in `currentColor`) is the
   section's icon in the sidebar.
-- `src/sections/<folder>/Diagram2D.tsx` and `Diagram3D.tsx`: the drawing's 2D and 3D views, generated from its line
-  diagram with AI when it's uploaded (they use three.js through `@react-three/fiber`), with the geometry they draw
-  (e.g. `schematic.ts`). They can be live piping diagrams from the shared viewer: `PipelineView2D` and
-  `PipelineView3D` (`@shipdocs/viewer-core/pipeline` and `/pipeline/3d`) draw a `definePipeline({...})` schematic
-  with the Library objects it names and the section's `manual-data.json` (see child/README.md, "Piping diagrams").
-  Other shared parts are in `src/shared/schematic/`. They're ordinary code: edit them like any other file.
-- `codegen/`: the generated code's history, kept by Ship Docs: each version of a section's generated files, and the
-  ship's finished generations. It's outside `src/`, so it isn't part of the build.
+- `src/sections/<folder>/v1/`, `v2/`…: each version of the drawing's code, generated from its line diagram with AI
+  when it's uploaded, one folder per generation: `Diagram2D.tsx` and `Diagram3D.tsx` (the 2D and 3D views; they use
+  three.js through `@react-three/fiber`), `Icon.tsx`, and the geometry they draw (e.g. `schematic.ts`).
+  `section.json`'s `codegenVersion` is the version the viewer shows. They can be live piping diagrams from the shared
+  viewer: `PipelineView2D` and `PipelineView3D` (`@shipdocs/viewer-core/pipeline` and `/pipeline/3d`) draw a
+  `definePipeline({...})` schematic with the Library objects it names and the section's `manual-data.json` (see
+  child/README.md, "Piping diagrams"). Other shared parts are in `src/shared/schematic/`. They're ordinary code: edit
+  them like any other file. Views written by hand can go directly in the section's folder instead.
+- `codegen/`: Ship Docs' records of the ship's code generations. It's outside `src/`, so it isn't part of the build.
 - `src/objects/<id>/`: one folder per object, with its `object.json`, 3D model and line diagram.
 
 - `src/custom/`: this ship's **customizations**, UI and functionality for this ship only: its theme, labels, replaced

@@ -28,6 +28,10 @@ export interface PromptValues {
   sectionId: string;
   /** The section's folder, relative to the ship's, e.g. "src/sections/engine-room". */
   sectionDir: string;
+  /** This generation's version folder, where the section's code goes, e.g. "src/sections/engine-room/v3". */
+  codeDir: string;
+  /** Its version number, e.g. "3". */
+  version: string;
   /** Where the drawing is, e.g. "attached to this message (it's also saved as `…`)". */
   drawing: string;
   /** The other sections that already have generated code (names quoted), for the second prompt. */

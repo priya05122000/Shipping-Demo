@@ -40,7 +40,7 @@ export interface SectionMeta {
   lineDiagram?: StoredFileMeta;
   manual?: StoredFileMeta;
   objectIds?: string[];
-  /** The version of the generated code in the folder (Diagram2D.tsx, Diagram3D.tsx). */
+  /** The version of the generated code in use: the viewer loads its views from the section's v<N>/ folder. */
   codegenVersion?: number;
 }
 
@@ -64,14 +64,17 @@ export interface SectionFiles {
   diagrams: Record<string, unknown>;
   /** Optional item details: ./<folder>/data.json */
   details: Record<string, SectionData>;
-  /** Optional sidebar icons: ./<folder>/Icon.tsx. Missing from manifests made before them. */
+  /** Optional sidebar icons: ./<folder>/v<N>/Icon.tsx, or ./<folder>/Icon.tsx. Missing from manifests made before them. */
   icons?: Record<string, ComponentType>;
   /**
    * What the Library read from each section's manual: ./<folder>/manual-data.json, loaded when a view first asks for
    * it (useManualData). Missing from manifests made before them.
    */
   manualData?: Record<string, () => Promise<unknown>>;
-  /** Generated views, loaded when first shown: ./<folder>/Diagram2D.tsx and Diagram3D.tsx */
+  /**
+   * Generated views, loaded when first shown: each version's ./<folder>/v<N>/Diagram2D.tsx and Diagram3D.tsx, and
+   * hand-written ./<folder>/Diagram2D.tsx and Diagram3D.tsx
+   */
   views2d: Record<string, () => Promise<{ default: SectionView }>>;
   views3d: Record<string, () => Promise<{ default: SectionView }>>;
 }

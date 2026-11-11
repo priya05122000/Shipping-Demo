@@ -183,8 +183,8 @@ export interface SharedChange {
 }
 
 /**
- * A finished generation of a section's code: numbered 1, 2, 3… per section, and kept (its files are copied to
- * child/ships/<ship>/codegen/<section ID>/v<version>/) so the section can be switched back to it.
+ * A finished generation of a section's code: numbered 1, 2, 3… per section, and written in a folder of its own,
+ * child/ships/<ship>/src/sections/<folder>/v<version>/, so the section can be switched to any version.
  */
 export interface CodegenVersion {
   version: number;
@@ -193,7 +193,7 @@ export interface CodegenVersion {
   mode: CodegenMode;
   /** Original file name of the line diagram it was generated from, e.g. "fuel-oil-rev2.png". */
   lineDiagramName: string;
-  /** The section's generated files at that version, relative to the section's folder, e.g. "Diagram2D.tsx". */
+  /** The version's code files, relative to its folder, e.g. "Diagram2D.tsx". */
   files: string[];
 }
 
@@ -209,7 +209,7 @@ export interface Section extends BaseRecord {
   codegen?: SectionCodegen;
   /** The section's code versions, oldest first. */
   codegenVersions?: CodegenVersion[];
-  /** The version whose files are in the section's folder now: the latest, or one switched back to. */
+  /** The version the viewer shows (its v<N>/ folder): the latest, or one switched back to. */
   codegenVersion?: number;
 }
 

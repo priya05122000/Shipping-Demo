@@ -10,7 +10,7 @@ import { toLabel } from "./policy";
 
 /** Folders never listed: installed packages, build output and Git. */
 const SKIP_ANYWHERE = new Set(["node_modules", "dist", ".git"]);
-/** Top-level folders never listed: earlier versions of generated code, which the agent can't read (see policy.ts). */
+/** Top-level folders never listed: Ship Docs' records of code generations, which the agent can't read (see policy.ts). */
 const SKIP_AT_TOP = new Set([CODEGEN_DIR]);
 /** The most lines in the tree; a bigger project is cut off, and the agent can use Glob for the rest. */
 const MAX_LINES = 400;
@@ -23,9 +23,10 @@ export const VIEW_CONTRACT_FILE = "src/sections/types.ts";
 
 /**
  * A project folder (a ship's, or the shared viewer's) as an indented tree: folders first (ending in "/"), then files,
- * each sorted by name. Symlinks and junctions are left out.
+ * each sorted by name. Symlinks and junctions are left out. A folder in `collapsed` (absolute path → note, e.g. a
+ * section's earlier version) is listed with its note instead of its files.
  */
-export async function projectTree(projectDir: string): Promise<string> {
+export async function projectTree(projectDir: string, collapsed: ReadonlyMap<string, string> = new Map()): Promise<string> {
   const lines: string[] = [];
   let cutOff = false;
 
@@ -42,8 +43,10 @@ export async function projectTree(projectDir: string): Promise<string> {
         cutOff = true;
         return;
       }
-      lines.push(`${"  ".repeat(depth)}${entry.name}${entry.isDirectory() ? "/" : ""}`);
-      if (entry.isDirectory()) await walk(path.join(dir, entry.name), depth + 1);
+      const full = path.join(dir, entry.name);
+      const note = entry.isDirectory() ? collapsed.get(full) : undefined;
+      lines.push(`${"  ".repeat(depth)}${entry.name}${entry.isDirectory() ? "/" : ""}${note ? `  (${note})` : ""}`);
+      if (entry.isDirectory() && !note) await walk(full, depth + 1);
     }
   }
 

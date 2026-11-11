@@ -19,7 +19,7 @@ import {
  *
  * Read from the drawing:
  *   - One vertical F.O line, from the flanged "F.O" connection at the top down past the bottom of the sheet (where it
- *     goes is not shown). No flow arrows are drawn; the F.O connection is taken as the supply because it is the
+ *     goes is not shown, so it ends in a ring end there). No flow arrows are drawn; the F.O connection is taken as the supply because it is the
  *     line's flanged end in a "Filling & Transfer" system (manual-data.json), which is what the engine's flow needs.
  *   - T-001's leg runs down the left, takes V-001's branch from the main line, and turns right through V-002 to T-002.
  *   - V-002's line meets the main line at a plain four-way intersection with no dot or hop. Drawn here as a CROSSING
@@ -69,6 +69,8 @@ pipe({
 });
 part({ tag: "F.O", kind: "MC", at: [MAIN_X, FO_Y], hoseDir: -1, label: "top" });
 part({ tag: "V-004", kind: "BFV", at: [MAIN_X, V004_Y], rot: -90, label: "right" });
+// Where the main line leaves the sheet: a ring end, not a plain one. The drawing doesn't say what it joins there.
+decorations.push({ type: "ring", at: [MAIN_X, BOTTOM_Y] });
 
 // ── T-001, V-001 and V-002, T-002 ───────────────────────────────────────────
 pipe({

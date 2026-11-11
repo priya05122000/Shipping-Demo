@@ -21,9 +21,8 @@ export async function POST(request: Request, { params }: Context) {
 }
 
 /**
- * Switch a section's code to one of its versions, from JSON `{ "version": 2 }`. Responds once its files are in place;
- * 409 if that version doesn't type-check with the ship's current shared components (nothing is changed then), or
- * while the ship's code is being generated.
+ * Switch a section's views to one of its versions (src/sections/<folder>/v<N>/), from JSON `{ "version": 2 }`. 409 if
+ * that version's entry files are missing, or while the section's code is being generated.
  */
 export async function PUT(request: Request, { params }: Context) {
   return respond(async () => {

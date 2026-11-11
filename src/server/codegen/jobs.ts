@@ -6,13 +6,21 @@ import {
   CODEGEN_SHARED_DIR,
   CODEGEN_STATE_FILE,
   CODEGEN_USAGE_FILE,
-  codegenVersionDir,
+  codegenVersionFolder,
   isCodegenActive,
+  parseVersionFolder,
   readCodegen,
 } from "@/lib/codegen";
 import { getExtension } from "@/lib/files";
 import { CHILD_DIR, errorCode, writeAtomic } from "@/server/child-dir";
-import { ApiError, findCodegenTarget, patchSectionCodegen, type CodegenState, type CodegenTarget } from "@/server/storage";
+import {
+  ApiError,
+  findCodegenTarget,
+  patchSectionCodegen,
+  type CodegenSection,
+  type CodegenState,
+  type CodegenTarget,
+} from "@/server/storage";
 import type { CodegenLimit, CodegenMode, CodegenObjects, CodegenUsage, CodegenVersion, SectionCodegen } from "@/types/records";
 import { AgentError, IMAGE_MEDIA_TYPES, MODEL, runAgent, type AgentImage } from "./agent";
 import { checkCards, objectAccess, objectImages, objectReads, objectsPrompt, planObjects, settleCards, type ObjectPlan } from "./objects";
@@ -20,9 +28,9 @@ import { PlanLimitError, planLimitUntil, setPlanWait, sleepUntil, UNKNOWN_RESET_
 import { assertPlainPath, CodegenPolicy, FileJournal, listGeneratedFiles, pathProblem, toLabel } from "./policy";
 import { renderPrompt, type PromptValues } from "./prompts";
 import { queueRun, runtime, type Job } from "./runtime";
-import { applyStage, createStage, discardStage, discardStaleStages, removeTree, type AppliedStage, type Stage } from "./staging";
+import { applyStage, createStage, discardStage, discardStaleStages, type AppliedStage, type Stage } from "./staging";
 import { projectTree, requiredReads } from "./structure";
-import { diagnosticsBlock, formatDiagnostics, newDiagnostics, typecheck, TypeChecker, type Diagnostic } from "./typecheck";
+import { diagnosticsBlock, formatDiagnostics, TypeChecker, type Diagnostic } from "./typecheck";
 import { dataBlock, quoteText } from "./untrusted";
 
 /**
@@ -34,21 +42,25 @@ import { dataBlock, quoteText } from "./untrusted";
  *      codegen/generations.json decides the prompt: "first" if it lists no finished generation, "second" if it does.
  *      The prompt includes the file trees of the ship's project and of the shared viewer (child/core), and the agent
  *      must read the files its code builds on before it writes anything (structure.ts).
- *   3. The agent writes the code into the ship's project: the section's Diagram2D.tsx and Diagram3D.tsx, and shared
- *      components in src/shared/schematic/. It builds on the shared viewer (@shipdocs/viewer-core), which it reads but
- *      can't change: it's every ship's, maintained by people, so a generation for one ship never changes another
- *      (policy.ts). After each file it writes, the ship's new type errors are sent back to it; when it wants to
- *      finish, anything still wrong (a missing entry file, new type errors in the ship) sends it back to fix it, a few
- *      times at most. The job then checks once more, so the ship's build keeps working: both entry files, and no new
- *      type errors in the ship. Otherwise everything fails.
+ *   3. The agent writes the code into the ship's project: the section's next version, in a folder of its own inside
+ *      the section's folder (src/sections/<folder>/v<N>/: Diagram2D.tsx, Diagram3D.tsx and what they use), and shared
+ *      components in src/shared/schematic/. The code in use, if the section has some, is copied into the new folder
+ *      first, for the agent to change; earlier version folders can't be written, so they stay as they were. It builds
+ *      on the shared viewer (@shipdocs/viewer-core), which it reads but can't change: it's every ship's, maintained by
+ *      people, so a generation for one ship never changes another (policy.ts). After each file it writes, the ship's
+ *      new type errors are sent back to it (every version of every section is in the ship's src/, so each is checked
+ *      and keeps working with the shared components); when it wants to finish, anything still wrong (a missing entry
+ *      file, new type errors in the ship) sends it back to fix it, a few times at most. The job then checks once more,
+ *      so the ship's build keeps working: both entry files, and no new type errors in the ship. Otherwise everything
+ *      fails.
  *   3b. The section's objects (picked in the Library): the agent looks at an object's image only the first time a
  *      generation uses it, and writes its card; later generations get the card as text instead (objects.ts). The
  *      code draws objects with the viewer's ObjectSymbol2D and ObjectModel3D, which show their files at runtime.
  *   4. The agent works on a copy of the ship (its stage, staging.ts), so the real one only changes once everything
  *      passed: the stage's changes are then applied (each path checked again; nothing at all if a real file changed
- *      meanwhile), and the section's generated files become its next version (v1, v2…): copied to
- *      codegen/<section ID>/v<N>/ and listed in section.json, so restoreCodegenVersion can switch back to it. If it
- *      fails, is stopped, or reaches a limit (turns, fix rounds), the stage is discarded and nothing changes.
+ *      meanwhile), and the new version is listed in section.json and becomes the one in use (`codegenVersion`, which
+ *      names the folder the viewer loads), so restoreCodegenVersion can switch to any version. If it fails, is
+ *      stopped, or reaches a limit (turns, fix rounds), the stage is discarded and nothing changes.
  *   4b. It runs on the Claude plan Claude Code is signed in with (plan.ts). While the plan's usage limit is reached,
  *      the generation waits for it to reset (status "queued", with `waitingUntil`), then starts: checked before it
  *      starts, and when the agent reaches the limit while working, its stage is discarded and it starts again, on a
@@ -131,8 +143,6 @@ function finished(job: Job): Promise<void> {
  */
 export async function stopCodegen(projectId: string, sectionId: string, reason: string): Promise<boolean> {
   const key = jobKey(projectId, sectionId);
-  // A restore takes seconds and can't be stopped halfway, so it's waited for.
-  await runtime.restores.get(key);
   const job = runtime.jobs.get(key);
   if (!job) return false;
   cancel(job, reason);
@@ -140,12 +150,11 @@ export async function stopCodegen(projectId: string, sectionId: string, reason: 
   return true;
 }
 
-/** Stops every job of a ship (before it's deleted), and waits until they've rolled back and its restores are done. */
+/** Stops every job of a ship (before it's deleted), and waits until they've rolled back. */
 export async function stopShipCodegen(projectId: string, reason: string) {
   const jobs = [...runtime.jobs.values()].filter((job) => job.projectId === projectId);
   for (const job of jobs) cancel(job, reason);
-  const restores = [...runtime.restores].filter(([key]) => key.startsWith(`${projectId}/`)).map(([, done]) => done);
-  await Promise.all([...jobs.map(finished), ...restores]);
+  await Promise.all(jobs.map(finished));
 }
 
 function startJob(projectId: string, sectionId: string, runId: string) {
@@ -162,7 +171,7 @@ function startJob(projectId: string, sectionId: string, runId: string) {
     replaced: earlier ? finished(earlier) : Promise.resolve(),
   };
   runtime.jobs.set(key, job);
-  // Waits for the ship's earlier jobs and restores, and for every earlier job of any ship, since jobs run one at a time.
+  // Waits for the ship's earlier jobs, and for every earlier job of any ship, since jobs run one at a time.
   const previous = Promise.all([runtime.queues.get(projectId), runtime.jobChain]).then(() => undefined);
   job.done = runJob(job, previous)
     .catch((error) => console.error(`Code generation for ${key} failed unexpectedly:`, error))
@@ -331,8 +340,16 @@ async function generate(job: Job, target: CodegenTarget, runMode: CodegenMode, a
     await discardStaleStages();
     const workStage = await createStage(job.runId, target.shipDir, section.dir);
     stage = workStage;
-    const policy = await CodegenPolicy.open({ ship: workStage.ship, section: workStage.section, stage: workStage.dir });
+    // The section's next version gets a folder of its own, beside the earlier ones, which stay as they are. The
+    // section's versions only change in its own jobs, which run one at a time, so the number can't be taken.
+    const version = await nextVersion(section);
+    const folder = codegenVersionFolder(version);
+    const output = path.join(workStage.section, folder);
+    const policy = await CodegenPolicy.open({ ship: workStage.ship, section: workStage.section, output, stage: workStage.dir });
     const runJournal = new FileJournal(policy);
+    // The code in use is where the new version starts from: copied into its folder for the agent to change.
+    const base = await codeInUse(section);
+    if (base) await copyCode(path.join(workStage.section, path.relative(section.dir, base.dir)), output, policy, runJournal);
 
     // The objects new to the ship's code are looked at (and get cards); the others are described by their cards.
     setProgress(job, "Looking up the section's objects");
@@ -345,9 +362,9 @@ async function generate(job: Job, target: CodegenTarget, runMode: CodegenMode, a
     const shipChecker = await TypeChecker.open(workStage.ship, { signal });
     signal.throwIfAborted();
     // The section's code must be right, or the generation fails.
-    const ownProblems = () => findProblems(workStage.section, () => shipChecker.fresh());
+    const ownProblems = () => findProblems(output, () => shipChecker.fresh());
 
-    const values = await promptValues(target, workStage, policy, objectPlan);
+    const values = await promptValues(target, workStage, policy, objectPlan, { version, output, base });
     const [system, prompt] = await Promise.all([renderPrompt("rules", values), renderPrompt(runMode, values)]);
     const drawing = await readImage(section.dir, lineDiagram.storedName);
     const outcome = await runAgent({
@@ -361,7 +378,7 @@ async function generate(job: Job, target: CodegenTarget, runMode: CodegenMode, a
       errorsAfterWrite: () => shipChecker.fresh(),
       readFirst: [...(await requiredReads(workStage.ship, CODEGEN_SHARED_DIR, policy.core)), ...objectReads(objectPlan, policy)],
       verify: async () => ({
-        own: describeProblems(await ownProblems(), values.sectionDir),
+        own: describeProblems(await ownProblems(), values.codeDir),
         cards: await checkCards(objectPlan, runJournal, policy),
       }),
       stop: (reason) => {
@@ -394,19 +411,18 @@ async function generate(job: Job, target: CodegenTarget, runMode: CodegenMode, a
     // all if a real file changed meanwhile.
     signal.throwIfAborted();
     setProgress(job, "Applying the checked changes");
-    const realPolicy = await CodegenPolicy.open({ ship: target.shipDir, section: section.dir });
+    const realOutput = path.join(section.dir, folder);
+    const realPolicy = await CodegenPolicy.open({ ship: target.shipDir, section: section.dir, output: realOutput });
     applied = await applyStage(workStage, runJournal, realPolicy);
     const files = applied.files.map((file) => path.relative(target.shipDir, file).split(path.sep).join("/")).sort();
 
     const finishedAt = now();
-    // The section's versions only change in its own jobs, which run one at a time, so the number can't be taken.
-    const version = Math.max(0, ...section.versions.map((entry) => entry.version)) + 1;
     const entry: CodegenVersion = {
       version,
       finishedAt,
       mode: runMode,
       lineDiagramName: lineDiagram.name,
-      files: await keepVersion(target.shipDir, section.id, section.dir, version),
+      files: await listGeneratedFiles(realOutput),
     };
     await recordGeneration(target.shipDir, { sectionId: section.id, section: section.name, version, mode: runMode, finishedAt, files });
     const summary = outcome.summary.trim().slice(0, SUMMARY_MAX);
@@ -524,19 +540,20 @@ interface Problems {
   fresh: Diagnostic[];
 }
 
-async function findProblems(sectionDir: string, freshErrors: () => Promise<Diagnostic[]>): Promise<Problems> {
+/** `codeDir` is the version folder the generation writes. */
+async function findProblems(codeDir: string, freshErrors: () => Promise<Diagnostic[]>): Promise<Problems> {
   const missing: string[] = [];
   for (const name of [CODEGEN_ENTRY_2D, CODEGEN_ENTRY_3D]) {
-    if (!(await isFile(path.join(sectionDir, name)))) missing.push(name);
+    if (!(await isFile(path.join(codeDir, name)))) missing.push(name);
   }
   return { missing, fresh: await freshErrors() };
 }
 
-/** Problems as the agent is told them when it wants to finish, or null if there are none. */
-function describeProblems({ missing, fresh }: Problems, sectionDir: string): string | null {
+/** Problems as the agent is told them when it wants to finish, or null if there are none. `codeDir` as the agent sees it. */
+function describeProblems({ missing, fresh }: Problems, codeDir: string): string | null {
   const parts: string[] = [];
   if (missing.length) {
-    parts.push(`Missing: ${missing.map((name) => `\`${sectionDir}/${name}\``).join(" and ")}. The viewer loads both entry files.`);
+    parts.push(`Missing: ${missing.map((name) => `\`${codeDir}/${name}\``).join(" and ")}. The viewer loads both entry files from this version's folder.`);
   }
   if (fresh.length) {
     parts.push(`${fresh.length} type error(s) in this ship's project that weren't there before you started:\n${diagnosticsBlock(fresh)}`);
@@ -556,34 +573,135 @@ async function readImage(sectionDir: string, storedName: string): Promise<AgentI
   return { caption: "The section's line diagram, to turn into code:", mediaType, data: (await fs.readFile(file)).toString("base64") };
 }
 
+/** Where a section's code in use is, if it has some (see codeInUse). */
+interface CodeInUse {
+  /** Absolute: its version's folder, or the section's folder itself. */
+  dir: string;
+  /** The version, unless it's in the section's folder itself. */
+  version?: number;
+}
+
+/**
+ * Where a section's code in use is, as the viewer finds it: the folder of its version in use (`codegenVersion`) if
+ * that has the 2D entry file; otherwise the section's folder itself if it has one (code written by hand, or from
+ * before version folders). Null if it has none.
+ */
+async function codeInUse(section: CodegenSection): Promise<CodeInUse | null> {
+  if (section.activeVersion !== undefined) {
+    const dir = path.join(section.dir, codegenVersionFolder(section.activeVersion));
+    if (await isFile(path.join(dir, CODEGEN_ENTRY_2D))) return { dir, version: section.activeVersion };
+  }
+  return (await isFile(path.join(section.dir, CODEGEN_ENTRY_2D))) ? { dir: section.dir } : null;
+}
+
+/** The version folders in a section's folder, by version number. */
+async function versionFolders(sectionDir: string): Promise<Map<number, string>> {
+  const folders = new Map<number, string>();
+  for (const entry of await fs.readdir(sectionDir, { withFileTypes: true }).catch(() => [])) {
+    const version = entry.isDirectory() ? parseVersionFolder(entry.name.toLowerCase()) : undefined;
+    if (version !== undefined) folders.set(version, path.join(sectionDir, entry.name));
+  }
+  return folders;
+}
+
+/**
+ * The section's next version: after every version it lists, and every version folder in its folder (one left there
+ * by hand, say), so a new version never lands in a folder that's already there.
+ */
+async function nextVersion(section: CodegenSection): Promise<number> {
+  const onDisk = [...(await versionFolders(section.dir)).keys()];
+  return Math.max(0, ...section.versions.map((entry) => entry.version), ...onDisk) + 1;
+}
+
+/**
+ * Copies the code in use (in the stage) into the new version's folder, so the agent changes it there rather than
+ * starting over. Written through the run's journal, so the copies are applied with the agent's own changes; the same
+ * checks as the agent's writes.
+ */
+async function copyCode(from: string, to: string, policy: CodegenPolicy, journal: FileJournal) {
+  for (const file of await listGeneratedFiles(from)) {
+    const source = path.join(from, ...file.split("/"));
+    await assertPlainPath(CHILD_DIR, source);
+    const checked = await policy.checkWrite(path.join(to, ...file.split("/")));
+    if ("refused" in checked) throw new Error(`The section's code in use can't be copied into its new version (${file}): ${checked.refused}`);
+    await journal.remember(checked.target);
+    await fs.mkdir(path.dirname(checked.target), { recursive: true });
+    await assertPlainPath(CHILD_DIR, checked.target);
+    await fs.copyFile(source, checked.target);
+  }
+}
+
+/**
+ * The version folders the project tree lists with a note instead of their files (absolute, in the stage): the
+ * section's own earlier versions, and the other sections' versions that aren't in use. Other sections' code in use,
+ * and the new version, are listed in full.
+ */
+async function collapsedVersions(target: CodegenTarget, stage: Stage, output: string): Promise<Map<string, string>> {
+  const notes = new Map<string, string>();
+  const newFolder = path.basename(output);
+  for (const section of target.sections) {
+    const own = section.id === target.section.id;
+    const dir = path.join(stage.ship, path.relative(target.shipDir, section.dir));
+    for (const [version, folder] of await versionFolders(dir)) {
+      if (folder === output) continue;
+      if (version !== section.activeVersion) notes.set(folder, "an earlier version, kept as it was: not in use");
+      else if (own) notes.set(folder, `the version in use, copied into ${newFolder}/ for you to change`);
+    }
+  }
+  return notes;
+}
+
+/** What promptValues needs to know about this generation's version. */
+interface VersionContext {
+  version: number;
+  /** Its folder, in the stage. */
+  output: string;
+  /** The code in use it starts from (real paths), if any. */
+  base: CodeInUse | null;
+}
+
 /**
  * The prompts' values. Text that came from people (names typed in the Library, file names) is quoted or fenced as data
  * (untrusted.ts), so it can't pass for instructions.
  */
-async function promptValues(target: CodegenTarget, stage: Stage, policy: CodegenPolicy, objectPlan: ObjectPlan): Promise<PromptValues> {
+async function promptValues(
+  target: CodegenTarget,
+  stage: Stage,
+  policy: CodegenPolicy,
+  objectPlan: ObjectPlan,
+  { version, output, base }: VersionContext,
+): Promise<PromptValues> {
   const { section, shipDir } = target;
   const folderOf = (dir: string) => path.relative(shipDir, dir).split(path.sep).join("/");
   const sectionDir = folderOf(section.dir);
+  const codeDir = `${sectionDir}/${path.basename(output)}`;
   const imagePath = `${sectionDir}/${section.lineDiagram?.storedName}`;
   const generated: string[] = [];
   for (const other of target.sections) {
-    if (other.id !== section.id && (await isFile(path.join(other.dir, CODEGEN_ENTRY_2D)))) {
-      generated.push(`${quoteText(other.name)} (\`${folderOf(other.dir)}/\`)`);
-    }
+    const code = other.id === section.id ? null : await codeInUse(other);
+    if (code) generated.push(`${quoteText(other.name)} (code in use: \`${folderOf(code.dir)}/\`)`);
+  }
+  let previousCode = "";
+  if (base) {
+    const where = `\`${folderOf(base.dir)}/\``;
+    previousCode =
+      `This section already has code, made from an earlier drawing: ${base.version ? `version ${base.version}, in ${where}` : `in ${where}`}. ` +
+      `Its files have been copied into \`${codeDir}/\`, this version's folder: read them there first, then change them to match this ` +
+      `drawing, keeping what still fits. Leave ${where} as it is.`;
   }
   return {
     shipName: quoteText(target.shipName),
     sectionName: quoteText(section.name),
     sectionId: /^[A-Z]+-\d+$/.test(section.id) ? section.id : quoteText(section.id),
     sectionDir,
+    codeDir,
+    version: String(version),
     drawing: IMAGE_MEDIA_TYPES[getExtension(imagePath)]
       ? `attached to this message (it's also saved as \`${imagePath}\`)`
       : `an SVG file, \`${imagePath}\`: read it with the Read tool`,
     generatedSections: generated.length ? generated.join(", ") : "none at the moment",
-    previousCode: (await isFile(path.join(section.dir, CODEGEN_ENTRY_2D)))
-      ? "This section already has generated code, made from an earlier drawing: read it first, then change it to match this one, keeping what still fits."
-      : "",
-    projectTree: dataBlock(await projectTree(stage.ship)),
+    previousCode,
+    projectTree: dataBlock(await projectTree(stage.ship, await collapsedVersions(target, stage, output))),
     coreDir: policy.label(policy.core),
     coreTree: dataBlock(await projectTree(policy.core)),
     childDir: toLabel(policy.child),
@@ -640,102 +758,30 @@ async function recordGeneration(shipDir: string, generation: Generation) {
   await writeAtomic(file, `${JSON.stringify({ generations }, null, 2)}\n`);
 }
 
-function versionDir(shipDir: string, sectionId: string, version: number) {
-  return path.join(shipDir, ...codegenVersionDir(sectionId, version).split("/"));
-}
-
 /**
- * Copies the section's generated files to codegen/<section ID>/v<version>/, replacing anything left there (e.g. by a
- * generation that failed after copying). Returns the files, relative to the section's folder. Every source and
- * destination path is checked first.
- */
-async function keepVersion(shipDir: string, sectionId: string, sectionDir: string, version: number): Promise<string[]> {
-  const dir = versionDir(shipDir, sectionId, version);
-  const files = await listGeneratedFiles(sectionDir);
-  await assertPlainPath(CHILD_DIR, dir);
-  await removeTree(dir);
-  for (const file of files) {
-    const source = path.join(sectionDir, ...file.split("/"));
-    const target = path.join(dir, ...file.split("/"));
-    await assertPlainPath(CHILD_DIR, source);
-    await fs.mkdir(path.dirname(target), { recursive: true });
-    await assertPlainPath(CHILD_DIR, target);
-    await fs.copyFile(source, target);
-  }
-  return files;
-}
-
-/**
- * Switches a section's code to one of its versions: its generated files are replaced by that version's, and the
- * ship must still type-check, or everything is put back and an ApiError (409) says why. Only the section's own files
- * change: the shared components stay as they are, since the ship's other sections use them. Hand edits to the
- * section's generated files are replaced too. Refused while the ship's code is being generated or restored.
+ * Switches a section's views to one of its versions. Nothing is copied: each version's code stays in its own folder
+ * (src/sections/<folder>/v<N>/), and section.json's `codegenVersion` names the one the viewer loads. Every version is
+ * in the ship's src/, so each generation's type check covers them all, and an earlier version keeps working with the
+ * ship's current shared components. Refused while the section's code is being generated: that switches to the new
+ * version when it's done.
  */
 export async function restoreCodegenVersion(projectId: string, sectionId: string, version: number) {
-  const key = jobKey(projectId, sectionId);
-  if (runtime.queues.has(projectId)) {
-    throw new ApiError(409, "This ship's code is being generated or restored. Try again once that's finished.");
+  if (runtime.jobs.has(jobKey(projectId, sectionId))) {
+    throw new ApiError(409, "This section's code is being generated. Try again once that's finished.");
   }
-  const work = restoreVersion(projectId, sectionId, version);
-  // Takes the ship's turn, so a generation started meanwhile waits until the files are in place.
-  const settled = work.then(
-    () => undefined,
-    () => undefined,
-  );
-  runtime.restores.set(key, settled);
-  const tail: Promise<void> = settled.then(() => {
-    if (runtime.queues.get(projectId) === tail) runtime.queues.delete(projectId);
-    if (runtime.restores.get(key) === settled) runtime.restores.delete(key);
-  });
-  runtime.queues.set(projectId, tail);
-  return work;
-}
-
-async function restoreVersion(projectId: string, sectionId: string, version: number) {
   const target = await findCodegenTarget(projectId, sectionId);
   if (!target) throw new ApiError(404, `${sectionId} no longer exists.`);
-  const { section, shipDir } = target;
-  const entry = section.versions.find((other) => other.version === version);
-  if (!entry) throw new ApiError(404, `${sectionId} has no version ${version}.`);
+  const { section } = target;
+  if (!section.versions.some((other) => other.version === version)) throw new ApiError(404, `${sectionId} has no version ${version}.`);
   if (section.activeVersion === version) return;
-  const dir = versionDir(shipDir, sectionId, version);
-  for (const file of entry.files) {
-    if (!(await isFile(path.join(dir, ...file.split("/"))))) {
-      throw new ApiError(409, `Version ${version}'s files are missing from child/ships/${path.basename(shipDir)}/${codegenVersionDir(sectionId, version)}/.`);
+  const dir = path.join(section.dir, codegenVersionFolder(version));
+  for (const name of [CODEGEN_ENTRY_2D, CODEGEN_ENTRY_3D]) {
+    const file = path.join(dir, name);
+    if ((await pathProblem(CHILD_DIR, file)) || !(await isFile(file))) {
+      throw new ApiError(409, `Version ${version} can't be used: child/${toLabel(path.relative(CHILD_DIR, file))} is missing.`);
     }
   }
-
-  const policy = await CodegenPolicy.open({ ship: shipDir, section: section.dir });
-  const journal = new FileJournal(policy);
-  const baseline = await typecheck(shipDir);
-  try {
-    for (const file of await listGeneratedFiles(section.dir)) {
-      const checked = await policy.checkWrite(path.join(section.dir, ...file.split("/")));
-      if ("target" in checked) await journal.remove(checked.target);
-    }
-    for (const file of entry.files) {
-      // The same rules as the agent's writes, in case the kept files were changed by hand, for where they go and
-      // where they come from.
-      const checked = await policy.checkWrite(path.join(section.dir, ...file.split("/")));
-      if ("refused" in checked) throw new ApiError(409, `Version ${version} has a file that can't be restored (${file}): ${checked.refused}`);
-      const source = path.join(dir, ...file.split("/"));
-      const sourceProblem = await pathProblem(CHILD_DIR, source);
-      if (sourceProblem) throw new ApiError(409, `Version ${version} has a file that can't be restored (${file}): ${sourceProblem}`);
-      await journal.remember(checked.target);
-      await fs.mkdir(path.dirname(checked.target), { recursive: true });
-      await assertPlainPath(CHILD_DIR, checked.target);
-      await writeAtomic(checked.target, await fs.readFile(source));
-    }
-    const fresh = newDiagnostics(baseline, await typecheck(shipDir));
-    if (fresh.length) {
-      throw new ApiError(
-        409,
-        `Version ${version} doesn't type-check with the ship's current shared components, so it wasn't restored:\n${formatDiagnostics(fresh.slice(0, 5))}`,
-      );
-    }
-  } catch (error) {
-    await journal.restore();
-    throw error;
-  }
-  await patchSectionCodegen(projectId, sectionId, () => ({ activeVersion: version }));
+  await patchSectionCodegen(projectId, sectionId, ({ versions }) =>
+    versions.some((other) => other.version === version) ? { activeVersion: version } : undefined,
+  );
 }

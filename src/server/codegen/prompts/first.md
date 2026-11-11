@@ -1,6 +1,6 @@
 <!--
 First-generation task for a ship with no completed code generation.
-Placeholders: {{shipName}} {{sectionName}} {{sectionId}} {{sectionDir}} {{drawing}} {{generatedSections}} {{previousCode}} {{projectTree}} {{coreDir}} {{coreTree}} {{childDir}} {{objects}}
+Placeholders: {{shipName}} {{sectionName}} {{sectionId}} {{sectionDir}} {{codeDir}} {{version}} {{drawing}} {{generatedSections}} {{previousCode}} {{projectTree}} {{coreDir}} {{coreTree}} {{childDir}} {{objects}}
 This comment is not sent.
 -->
 
@@ -8,11 +8,13 @@ This comment is not sent.
 
 Create a new section for ship {{shipName}} named {{sectionName}} (ID {{sectionId}}) from the supplied drawing: {{drawing}}.
 
+This is version {{version}} of the section's code. Generate all of it inside the section, in its version folder `{{codeDir}}/`.
+
 ## Before coding
 
 Inspect the actual files and folder structure. Use the supplied project tree as a starting point, not as proof that a file exists.
 
-- Read the target section folder `{{sectionDir}}`, including `section.json`, the drawing, any existing `manual-data.json`, and generated files.
+- Read the target section folder `{{sectionDir}}`, including `section.json`, the drawing, and any existing `manual-data.json`, and the version folder `{{codeDir}}/` with any code already copied into it.
 - Read the sample ship's piping section and its `schematic.ts`, `Diagram2D.tsx`, and `Diagram3D.tsx` to follow the working folder layout and coding style.
 - Read the relevant exports and implementation in the shared viewer `{{coreDir}}/`, especially `@shipdocs/viewer-core/pipeline`, `@shipdocs/viewer-core/pipeline/3d`, `@shipdocs/viewer-core/diagram`, and the object APIs used by the sample.
 - Inspect and use the Library objects selected/uploaded for this section in its `src/objects/` folders. Match the section's `section.json` `objectIds` and the supplied object cards/assets: {{objects}}. Prefer these actual objects over generic substitutes.
@@ -31,12 +33,14 @@ Reuse the existing shared viewer as the engine for this section. Do not rebuild 
 
 Follow the existing core architecture and the sample ship. The shared viewer already provides the piping diagram engine, styling, overview, selection, details, and 2D/3D rendering. Add a section that uses these existing features; do not build another viewer or copy core files into the ship.
 
-For a piping section, follow the sample's pattern:
+For a piping section, follow the sample's pattern, with every file in `{{codeDir}}/` (the sample keeps them directly in its section folder; yours go in the version folder):
 
 - `schematic.ts` defines the drawing with `definePipeline` from `@shipdocs/viewer-core/pipeline`.
 - `Diagram2D.tsx` renders that schematic with `PipelineView2D`.
 - `Diagram3D.tsx` renders the same schematic with `PipelineView3D` from `@shipdocs/viewer-core/pipeline/3d`.
+- `Icon.tsx` is the section's sidebar icon.
 - Reuse the section's Library objects and existing viewer styles and interactions.
+- End every free pipe end with a ring or a joinable flanged (`cap`) end fitting, as the shared rules describe. No plain pipe ends.
 
 Use the section's `manual-data.json` records for available component names, specifications, operating status, troubleshooting details, and other values the viewer displays. Match each schematic part's `component` field to the exact engineering record `id`; the shared pipeline viewer loads and uses this file. Build the schematic's pipe network, part-to-pipe connections, valve starting positions, and system definitions from verified drawing/manual evidence so the core can calculate readings and trace/animate flow. Use the core's existing calculations and flow behavior; do not create a competing simulation or invent missing values.
 
@@ -46,7 +50,7 @@ Update the existing ship-level object index if one was found. If none exists, cr
 
 ## Follow Strict Project Restrictions
 
-- Write only the new section's necessary generated files and, when needed, reusable code or the object index under this ship's `src/shared/schematic/`.
+- Write only the new section's necessary generated files, in `{{codeDir}}/`, and, when needed, reusable code or the object index under this ship's `src/shared/schematic/`.
 - Never modify `{{coreDir}}/`, ship configuration, `src/custom/`, uploaded assets, other sections, or Library-owned files.
 - `manual-data.json` may be inspected as reference, but do not edit or import it directly into generated code. Do not invent engineering facts; preserve unknown values as unknown.
 - Do not guess component identities, dimensions, specifications, flow states, or pipe connections. Clearly report uncertainty and leave dependent implementation unresolved when evidence is insufficient.
@@ -59,6 +63,7 @@ Check the affected files for type and import errors. Run the ship's documented t
 Project context:
 
 - Target section: `{{sectionDir}}/`
+- This version's code folder (write the section's code here): `{{codeDir}}/`
 - Shared viewer (read-only): `{{coreDir}}/`
 - Other ship projects (read-only): `{{childDir}}/`
 - Existing ship structure: {{projectTree}}

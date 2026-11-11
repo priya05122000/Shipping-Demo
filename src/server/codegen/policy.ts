@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { CODEGEN_DIR, OBJECT_CARD_FILE } from "@/lib/codegen";
+import { CODEGEN_DIR, OBJECT_CARD_FILE, parseVersionFolder } from "@/lib/codegen";
 import { COLLECTIONS, COUNTER_FILE, MANUAL_DATA_FILE } from "@/lib/collection-defs";
 import { VIEW_FILE_NAME } from "@/lib/files";
 import { CHILD_DIR, CORE_DIR, errorCode, SHIP_TEMPLATE_DIR, writeAtomic } from "@/server/child-dir";
@@ -14,7 +14,10 @@ import { CHILD_DIR, CORE_DIR, errorCode, SHIP_TEMPLATE_DIR, writeAtomic } from "
  *     ship changes only when the job applies the finished, checked changes. The viewer every ship runs (child/core,
  *     @shipdocs/viewer-core) and the template are read-only: a generation for one ship can never change another, and
  *     shared UI is changed by people, in child/core, where it reaches every ship.
- *   - It may read anything in child/ except earlier versions of generated code (each ship's codegen/), other stages,
+ *   - In the ships' section folders, it may write only in its own version folder (`output`, e.g.
+ *     src/sections/engine-room/v3/): earlier versions (v1/, v2/…) stay as they were, so the section can be switched
+ *     back to any of them, and other sections aren't its to change.
+ *   - It may read anything in child/ except Ship Docs' records of generations (each ship's codegen/), other stages,
  *     and the ships' objects' uploaded files (images and 3D models): an object's card describes it instead, and the
  *     viewer draws its files. The only exceptions are the images a generation allows (see allowObjects).
  *   - Paths are taken as they are: one with "..", one that passes through a symlink or junction (even inside
@@ -28,28 +31,38 @@ const HAND_WRITTEN = new Set(["diagram.ts"]);
 const CODE_EXTENSION = /\.(ts|tsx)$/;
 
 /**
- * Whether a file in a section's folder (relative to it, with forward slashes) is generated code: what a version of the
- * section keeps, and what restoring one replaces.
+ * Whether a file in a code folder (a version folder, or a section's folder with code written by hand; relative to it,
+ * with forward slashes) is the section's code, as opposed to a hand-written hotspots file.
  */
 export function isGeneratedSectionFile(relPath: string): boolean {
   return CODE_EXTENSION.test(relPath) && !HAND_WRITTEN.has(relPath);
 }
 
-/** The section's generated files, relative to its folder, with forward slashes, sorted. Links are never followed. */
-export async function listGeneratedFiles(sectionDir: string): Promise<string[]> {
+/** Whether a folder name is a version folder (v1, v2…), without case, as Windows compares names. */
+function isVersionFolder(name: string): boolean {
+  return parseVersionFolder(name.toLowerCase()) !== undefined;
+}
+
+/**
+ * The code in a code folder (a version folder, or a section's folder with code written by hand), relative to it, with
+ * forward slashes, sorted. Version folders directly in it are left out: each is a version of its own. Links are never
+ * followed.
+ */
+export async function listGeneratedFiles(codeDir: string): Promise<string[]> {
   const files: string[] = [];
-  async function walk(dir: string) {
+  async function walk(dir: string, top: boolean) {
     for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
       const full = path.join(dir, entry.name);
       // Symlinks and junctions are neither, so they're never followed.
-      if (entry.isDirectory()) await walk(full);
-      else if (entry.isFile()) {
-        const rel = path.relative(sectionDir, full).split(path.sep).join("/");
+      if (entry.isDirectory()) {
+        if (!(top && isVersionFolder(entry.name))) await walk(full, false);
+      } else if (entry.isFile()) {
+        const rel = path.relative(codeDir, full).split(path.sep).join("/");
         if (isGeneratedSectionFile(rel)) files.push(rel);
       }
     }
   }
-  await walk(sectionDir);
+  await walk(codeDir, true);
   return files.sort();
 }
 
@@ -90,14 +103,21 @@ const ENTRY_FILES = new Set(["src/main.tsx", "src/env.d.ts", "src/styles.css"]);
 const CUSTOM_DIR = "src/custom";
 /** A project's objects folder, as names from the project's folder down, in lower case: ["src", "objects"]. */
 const OBJECTS_DIR = COLLECTIONS.objects.dir.toLowerCase().split("/");
+/** A project's sections folder, likewise: ["src", "sections"]. */
+const SECTIONS_DIR = COLLECTIONS.sections.dir.toLowerCase().split("/");
+
+/** The names below `top` (names from the project's folder down, in lower case), or null for a path outside it. */
+function below(top: string[], lower: string[]): string[] | null {
+  if (lower.length <= top.length || !top.every((name, i) => lower[i] === name)) return null;
+  return lower.slice(top.length);
+}
 
 /**
  * For a path in a project's objects folder (names from the project's folder down, in lower case): the names below
  * that folder, e.g. ["obj-001", "card.json"] or ["objects.ts"]. Null for a path outside it.
  */
 function objectsPart(lower: string[]): string[] | null {
-  if (lower.length <= OBJECTS_DIR.length || !OBJECTS_DIR.every((name, i) => lower[i] === name)) return null;
-  return lower.slice(OBJECTS_DIR.length);
+  return below(OBJECTS_DIR, lower);
 }
 
 /** A path as a key to compare by: without case on Windows, as its file system does. */
@@ -114,7 +134,7 @@ function protectedReason(names: string[]): string | null {
   const [top] = lower;
   const name = names[names.length - 1];
   const lowerName = lower[lower.length - 1];
-  if (lower.length > 1 && top === CODEGEN_DIR) return `${CODEGEN_DIR}/ holds earlier versions of generated code, kept by Ship Docs.`;
+  if (lower.length > 1 && top === CODEGEN_DIR) return `${CODEGEN_DIR}/ holds Ship Docs' records of this ship's code generations.`;
   if (lower.length > 1 && top === "dist") return "dist/ is build output.";
   if (lower.includes("node_modules")) return "Installed packages can't be changed.";
   if (lower.length === 1 && BUILD_FILE.test(name)) return `${name} decides how the project is built and checked, so it can't be changed.`;
@@ -220,10 +240,15 @@ export async function scanForLinks(dir: string, max = 20_000): Promise<string | 
 export const STAGES_DIR_NAME = ".codegen-stage";
 
 export interface PolicyDirs {
-  /** The ship's project folder the agent works in (its working directory): the stage's copy during a generation, the real one for the server's own changes (applying, restoring a version). */
+  /** The ship's project folder the agent works in (its working directory): the stage's copy during a generation, the real one for the server's own changes (applying the stage). */
   ship: string;
   /** The section's folder, inside `ship`. */
   section: string;
+  /**
+   * The version folder, inside `section`, that this generation writes the section's code in (e.g. …/engine-room/v3):
+   * the only place in the ship's section folders that can be written.
+   */
+  output: string;
   /** The stage's folder, during a generation. */
   stage?: string;
 }
@@ -257,9 +282,14 @@ export class CodegenPolicy {
       await assertPlainPath(child, located);
       return located;
     };
+    const ship = await plain(dirs.ship);
+    const section = await plain(dirs.section);
+    const output = await plain(dirs.output);
+    if (!isInside(section, output)) throw new Error(`${toLabel(output)} isn't a folder in ${toLabel(section)}.`);
     return new CodegenPolicy(child, path.join(child, COLLECTIONS.projects.dir), path.join(child, STAGES_DIR_NAME), {
-      ship: await plain(dirs.ship),
-      section: await plain(dirs.section),
+      ship,
+      section,
+      output,
       stage: dirs.stage ? await plain(dirs.stage) : undefined,
     });
   }
@@ -271,6 +301,11 @@ export class CodegenPolicy {
 
   get section(): string {
     return this.dirs.section;
+  }
+
+  /** The version folder this generation writes the section's code in. */
+  get output(): string {
+    return this.dirs.output;
   }
 
   /** The viewer every ship runs (child/core), which the agent reads but never changes. */
@@ -335,8 +370,8 @@ export class CodegenPolicy {
     return pathProblem(this.childDir, target);
   }
 
-  /** Whether an absolute path is a ship's earlier versions of generated code (child/ships/<ship>/codegen/), or in them. */
-  private inVersions(target: string): boolean {
+  /** Whether an absolute path is a ship's records of its generations (child/ships/<ship>/codegen/), or in them. */
+  private inRecords(target: string): boolean {
     if (!isInside(this.shipsDir, target)) return false;
     const names = path.relative(this.shipsDir, target).split(path.sep);
     return names.length >= 2 && names[1].toLowerCase() === CODEGEN_DIR;
@@ -347,8 +382,8 @@ export class CodegenPolicy {
     const resolved = await this.resolve(requested);
     if ("refused" in resolved) return resolved;
     const { target } = resolved;
-    // Earlier versions of sections' code aren't part of a project, and could be mistaken for it.
-    if (this.inVersions(target)) return { refused: `${CODEGEN_DIR}/ holds earlier versions, not the project's code.` };
+    // Ship Docs' records of generations (and, in older ships, copies of earlier versions) aren't the project's code.
+    if (this.inRecords(target)) return { refused: `${CODEGEN_DIR}/ holds Ship Docs' records of code generations, not the project's code.` };
     if (isSameOrInside(this.stagesDir, target) && !(this.dirs.stage && isSameOrInside(this.dirs.stage, target))) {
       return { refused: "That's another generation's working copy." };
     }
@@ -373,6 +408,22 @@ export class CodegenPolicy {
     if (found === "too-big") return { refused: "That folder is too big to search. Search a smaller one, e.g. its src/." };
     if (found) return { refused: `${toLabel(found)} is a link or a hard-linked file, so ${this.label(checked.target)} can't be searched.` };
     return checked;
+  }
+
+  /**
+   * Why a file in the ship's sections folder (given as its names from the ship's folder down) can't be written, or
+   * null: only this generation's version folder can be. Earlier versions are kept as they were, and the rest of the
+   * section folders is the Library's files, code written by hand, and other sections.
+   */
+  private sectionsReason(names: string[], target: string): string | null {
+    const inSections = below(SECTIONS_DIR, names.map((name) => name.toLowerCase()));
+    if (!inSections || isInside(this.dirs.output, target)) return null;
+    const output = this.label(this.dirs.output);
+    if (inSections.length > 2 && isVersionFolder(inSections[1]) && isInside(this.dirs.section, target)) {
+      const version = names.slice(0, SECTIONS_DIR.length + 2).join("/");
+      return `${version}/ is an earlier version of this section's generated code, kept as it was so the section can be switched back to it. Write this section's code in ${output}/.`;
+    }
+    return `Only this generation's version folder can be written in the sections' folders: write this section's code in ${output}/.`;
   }
 
   /** A file the agent wants to create or change: its absolute path, or why it's refused. */
@@ -402,7 +453,7 @@ export class CodegenPolicy {
     if (!names.every((name) => SAFE_NAME.test(name) && !name.endsWith("."))) {
       return { refused: "Use plain file and folder names: letters, digits, '.', '_' and '-'." };
     }
-    const refused = protectedReason(names);
+    const refused = protectedReason(names) ?? this.sectionsReason(names, target);
     if (refused) return { refused };
     if (objectsPart(names.map((name) => name.toLowerCase()))) {
       if (this.objectAccess && !this.objectAccess.cardDirs.has(pathKey(path.dirname(target)))) {
@@ -446,8 +497,8 @@ async function deepestExisting(dir: string): Promise<string> {
 
 /**
  * Remembers each file's content from before its first change, so changes can be listed (what a generation changed in
- * its stage) and undone (applying a stage, restoring a version): changed files get their old content back, and new
- * files are removed, with the folders created for them. Every path is checked before it's written.
+ * its stage) and undone (applying a stage): changed files get their old content back, and new files are removed, with
+ * the folders created for them. Every path is checked before it's written.
  */
 export class FileJournal {
   /** By absolute path, in the order they were first written. */
@@ -463,14 +514,6 @@ export class FileJournal {
       if (!isMissing(error)) throw error;
       this.originals.set(target, { content: null, existingDir: await deepestExisting(path.dirname(target)) });
     }
-  }
-
-  /** Deletes a file in the section's folder (and the folders there it leaves empty), remembering it first so restore() can put it back. */
-  async remove(target: string) {
-    await assertPlainPath(this.policy.child, target);
-    await this.remember(target);
-    await fs.rm(target, { force: true });
-    await removeEmptyFolders(path.dirname(target), this.policy.section);
   }
 
   /** Whether a file in `dir` (absolute) was written, or about to be. */

@@ -4,8 +4,9 @@ import type { CatalogKind } from "./catalog";
 import type { SectionData } from "./details";
 
 /**
- * Props of a section's generated views: the default exports of Diagram2D.tsx and Diagram3D.tsx in its folder, which
- * Ship Docs generates from the line diagram with AI. Both views share the selection.
+ * Props of a section's generated views: the default exports of Diagram2D.tsx and Diagram3D.tsx in its version folder
+ * (src/sections/<folder>/v<N>/, one per generation), which Ship Docs generates from the line diagram with AI. Both
+ * views share the selection.
  */
 export interface SectionViewProps {
   /** Tag of the selected piece of equipment, e.g. "P-101", or null. */
@@ -58,9 +59,9 @@ export interface Section {
   Icon?: ComponentType;
   /** The ship's objects picked for this section in the Library, in the order they were picked. */
   objects: SharedObject[];
-  /** The generated 2D view (the folder's Diagram2D.tsx), loaded when it's first shown. */
+  /** The generated 2D view (Diagram2D.tsx of the version in use, v<N>/), loaded when it's first shown. */
   view2d?: SectionView;
-  /** The generated 3D view (the folder's Diagram3D.tsx), loaded when it's first shown. */
+  /** The generated 3D view (Diagram3D.tsx of the version in use, v<N>/), loaded when it's first shown. */
   view3d?: SectionView;
   /** Which version of the generated code the views are (1, 2, 3…), from section.json. */
   codeVersion?: number;

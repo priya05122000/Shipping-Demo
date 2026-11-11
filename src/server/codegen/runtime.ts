@@ -31,18 +31,13 @@ interface Runtime {
   runs: Map<string, { progress?: string }>;
   /** Jobs by Job.key. */
   jobs: Map<string, Job>;
-  /**
-   * The last job of each ship, by project ID: a ship's jobs run one at a time, since they share its components. A
-   * restore of a section's version takes the ship's turn too.
-   */
+  /** The last job of each ship, by project ID: a ship's jobs run one at a time, since they share its components. */
   queues: Map<string, Promise<void>>;
   /**
    * Settles once every job started so far, of any ship, has finished: jobs run one at a time across ships too, so
    * generations don't compete for the machine. Never rejects.
    */
   jobChain: Promise<void>;
-  /** Restores of a section's version in progress, by Job.key; each settles when it has finished or rolled back. */
-  restores: Map<string, Promise<void>>;
   /** The Claude plan's usage, as last read (plan.ts), and when that read started. */
   planUsage?: { read: Promise<PlanUsage>; at: number };
   /** ISO time generations wait until, while the Claude plan's usage limit is reached (plan.ts). */
@@ -54,7 +49,6 @@ const shared = ((globalThis as { __shipCodegen?: Partial<Runtime> }).__shipCodeg
 shared.runs ??= new Map();
 shared.jobs ??= new Map();
 shared.queues ??= new Map();
-shared.restores ??= new Map();
 shared.jobChain ??= Promise.resolve();
 export const runtime = shared as Runtime;
 
