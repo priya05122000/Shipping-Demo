@@ -1,8 +1,8 @@
 import type { ActionContext, CustomAction } from "../../customization";
 
 const VARIANTS = {
-  primary: "bg-accent-600 text-white shadow-sm hover:bg-accent-700 disabled:bg-slate-300",
-  secondary: "bg-white text-slate-700 shadow-sm ring-1 ring-slate-300 ring-inset hover:bg-slate-50 disabled:text-slate-400",
+  primary: "border-accent bg-accent text-on-accent hover:opacity-90 disabled:opacity-50",
+  secondary: "border-line bg-panel-2 text-ink hover:border-accent disabled:text-muted disabled:opacity-60 disabled:hover:border-line",
 } as const;
 
 interface SectionActionsProps {
@@ -32,7 +32,7 @@ export function SectionActions({ actions, context, call }: SectionActionsProps) 
             data-action={action.id}
             data-variant={variant}
             onClick={() => call(`"${action.label}" action`, () => action.onClick(context), undefined)}
-            className={`inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-600 disabled:cursor-not-allowed ${VARIANTS[variant]}`}
+            className={`inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-full border px-3 text-[13px] font-[550] transition-[border-color,color,opacity] duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-not-allowed ${VARIANTS[variant]}`}
           >
             {action.icon}
             {action.label}

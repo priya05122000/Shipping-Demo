@@ -22,8 +22,9 @@ import type { DiagramItem, Section } from "./shared/diagram";
  * over the viewer's Tailwind classes.
  *   data-ui="viewer"                 the whole viewer
  *   data-ui="header"                 the header (standalone only)
- *   data-ui="section-nav"            the list of drawings; its heading "section-nav-heading"; each button
- *                                    "section-nav-item", with data-section="<ID>" and data-active when it's open
+ *   data-ui="section-nav"            the sidebar of sections, with data-collapsed while it shows only icons; its
+ *                                    heading "section-nav-heading"; its collapse button "section-nav-toggle"; each
+ *                                    button "section-nav-item", with data-section="<ID>" and data-active when it's open
  *   data-ui="section-toolbar"        the row with the section's title ("section-title"), summary ("section-summary"),
  *                                    actions and view switcher
  *   data-ui="view-switcher"          the view buttons: each "view-switcher-button", with data-value ("2d", "3d",
@@ -54,7 +55,7 @@ export interface HeaderProps {
   logo: string;
 }
 
-/** The list of drawings in the sidebar. */
+/** The sidebar of sections (the viewer's own is collapsible, and shows each section's Icon.tsx). */
 export interface SectionNavProps {
   sections: Section[];
   activeId: string;
@@ -118,7 +119,7 @@ export interface CustomAction {
   label: string;
   /** Shown before the label, e.g. an icon from @shipdocs/viewer-core/customize. */
   icon?: ReactNode;
-  /** "primary": filled with the accent colour; "secondary" (the default): white, with an outline. */
+  /** "primary": filled with the accent colour; "secondary" (the default): light, with an outline. */
   variant?: "primary" | "secondary";
   /** Shown as the button's tooltip. */
   title?: string;
@@ -152,9 +153,9 @@ export interface CustomView {
 
 export interface ShipTheme {
   /**
-   * The accent colour (active and selected things), replacing the viewer's indigo: a CSS hex, rgb() or hsl() colour,
+   * The accent colour (active and selected things), replacing the viewer's charcoal: a CSS hex, rgb() or hsl() colour,
    * e.g. "#0f766e". Its lighter and darker shades are made from it. Objects' selection outlines (ObjectSymbol2D,
-   * ObjectModel3D) use it too.
+   * ObjectModel3D) use it too; a piping diagram's own hover and selection marks keep the viewer's.
    */
   accent?: string;
   /** URL of the logo, e.g. an image imported in src/custom (`import logo from "./logo.svg"`). */

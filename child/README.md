@@ -36,6 +36,51 @@ A ship's folder also has a few small files that start the viewer, the same in ev
 module that `core/vite.js` writes for each ship: its `import.meta.glob`s find that ship's sections, objects and
 `src/custom/index.tsx`, wherever the ship is.
 
+## Piping diagrams (`@shipdocs/viewer-core/pipeline`)
+
+The shared viewer has a live piping diagram engine that any section of any ship can use for its 2D and 3D views: the
+drawing, the 3D scene, the flow simulation with start/stop procedures, the system overview and the part details. A
+section uses it the way the viewer shows every section, through its generated views (`ships/sample-ship` has one):
+
+| File in `src/sections/<folder>/` | Written by | What |
+| --- | --- | --- |
+| `section.json`, line diagram, manual (PDF) | the Library | As for any section; `objectIds` are the Library objects picked for it |
+| `manual-data.json` | the Library, from the manual | The section's data: one record per component (its engineering tag as `id`), with `specifications`, `troubleshooting`, `simulation` |
+| `schematic.ts` | code generation or people | The geometry: `export default definePipeline({...})`, with its pipes and parts, what the drawing shows about each part, and the Library objects that draw them |
+| `Diagram2D.tsx` | code generation or people | `export default (props: SectionViewProps) => <PipelineView2D schematic={schematic} {...props} />` |
+| `Diagram3D.tsx` | code generation or people | The same with `PipelineView3D`, from `@shipdocs/viewer-core/pipeline/3d` (so the 2D view never loads three.js) |
+
+```ts
+// schematic.ts (abridged): the drawing, and what it shows about each part. A valve's engineering data isn't here:
+// `component` is its tag in manual-data.json, which gives its type, specifications, troubleshooting and position.
+export default definePipeline({
+  id: "bunker", title: "F.O & D.O Bunkering System", subtitle: "…", width: 2040, height: 1130,
+  pipes: [{ id: "do-header", fluid: "DO", line: "FB100-100A", size: "main", pts: [[128, 220], [560, 220]] }, …],
+  parts: [
+    { tag: "BFV-DT01", kind: "BFV", at: [300, 220], label: "top", name: "D.O Tank No.1 Valve", fluid: "DO",
+      component: "FB112", pipes: { in: "do-header", out: "do-header" }, related: ["TANK_DO_001"] },
+    { tag: "TK-DO1", kind: "TK", at: [128, 260], label: "left", tank: { capacityM3: 120, levelPct: 34, … } },
+    …
+  ],
+  objects: { BFV: "OBJ-001", TK: "OBJ-008", … },          // the Library objects drawing each kind of part
+  systems: { tanks: { TANK_DO_001: { name: "D.O tanks", fluid: "DO", system: "…", tags: ["TK-DO1"] } } },
+  flowTitle: "Bunkering flow",
+});
+```
+
+- **Data** comes from the section's `manual-data.json`, read as the Library writes it, so a new manual simply brings
+  new data. A part whose `component` has no record there has no engineering data, and the browser console says so in
+  development, as it does for other places where the schematic and its objects or records disagree.
+- **Pictures** are the Library objects the schematic names (`objects` for a kind, or a part's own `object`), drawn
+  with `ObjectSymbol2D` from their 2D file; a missing one is a dashed placeholder. How a kind's picture sits on its
+  pipe is in `core/src/pipeline/diagram/partSpecs.ts`. The 3D view builds its own models of each kind.
+- **Selection** is the section's, shared with every view (`selectedId`, `onSelect`); the switches and the plant's
+  state (a flow under way) carry over between 2D and 3D.
+
+Any section view can use what this builds on, from `@shipdocs/viewer-core/diagram`: `useSection()` (the section),
+`useManualData()` (its `manual-data.json` records; it suspends until they've loaded, and the viewer renders views in
+Suspense) and `useSectionState(key, initial)` (state kept for the section while its views change).
+
 ## Customizing one ship (layer 2)
 
 A ship's `src/custom/index.tsx` default-exports its customizations (the template's is empty). Every part is optional
@@ -101,7 +146,7 @@ export default defineShipCustomization({
 
 | Part | What it changes |
 | --- | --- |
-| `theme` | `accent`: a CSS hex, `rgb()` or `hsl()` colour, replacing the viewer's indigo (its shades are made from it; in code, the Tailwind classes `accent-50` to `accent-800`); `logo`: the header's and the browser tab's |
+| `theme` | `accent`: a CSS hex, `rgb()` or `hsl()` colour, replacing the viewer's charcoal (its shades are made from it; in code, the Tailwind classes `accent-50` to `accent-800`); `logo`: the header's and the browser tab's |
 | `labels` | `subtitle`: the line under the ship's name; `views`: the view buttons' labels (`"2d"`, `"3d"`, `"drawing"`, `"manual"`) |
 | `components` | `Header`, `SectionNav`, `ViewSwitcher` (the view buttons), `ItemDetails`, `NoSections`. One that throws falls back to the viewer's own, with the error in the console |
 | `views` | `{ id, label, component, appliesTo? }`: `component` gets the ship, the section and the shared selection (`selectedId`, `onSelect`), like the 2D and 3D views. One that throws shows a message instead |
@@ -127,7 +172,7 @@ component. Plain rules (outside a CSS layer) win over the viewer's Tailwind clas
 | --- | --- | --- |
 | `viewer` | the whole viewer | |
 | `header` | the header (standalone only) | |
-| `section-nav`, `section-nav-heading`, `section-nav-item` | the list of drawings, its heading, each drawing's button | `data-section="<ID>"`, `data-active` |
+| `section-nav`, `section-nav-heading`, `section-nav-toggle`, `section-nav-item` | the sidebar of sections, its heading, its collapse button, each section's button | `data-collapsed` (the sidebar, while it shows only icons), `data-section="<ID>"`, `data-active` |
 | `section-toolbar`, `section-title`, `section-summary` | the row above the view, the section's title and summary | |
 | `view-switcher`, `view-switcher-button` | the view buttons | `data-value` (`2d`, `3d`, `drawing`, `manual`, `custom:<id>`), `data-selected` |
 | `section-actions`, `action-button` | the ship's own buttons (`actions`) | `data-action="<id>"`, `data-variant` |

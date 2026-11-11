@@ -1,0 +1,37 @@
+{
+  "id": "SEC-001",
+  "name": "Bunkering",
+  "createdAt": "2026-11-11T05:06:42.000Z",
+  "updatedAt": "2026-11-11T05:40:53.513Z",
+  "objectIds": [
+    "OBJ-001",
+    "OBJ-002",
+    "OBJ-003",
+    "OBJ-004",
+    "OBJ-005",
+    "OBJ-006",
+    "OBJ-007",
+    "OBJ-008",
+    "OBJ-009"
+  ],
+  "lineDiagram": {
+    "name": "line-diagram.png",
+    "size": 182397,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "lineDiagram-4d397312.png",
+    "uploadedAt": "2026-11-11T05:06:42.000Z"
+  },
+  "manual": {
+    "name": "Valve_and_Diesel_Tank_Data.pdf",
+    "size": 1227058,
+    "type": "application/pdf",
+    "extension": "pdf",
+    "storedName": "manual-5d85e658.pdf",
+    "uploadedAt": "2026-11-11T05:40:53.513Z"
+  },
+  "manualData": {
+    "components": 47,
+    "extractedAt": "2026-11-07T05:03:23.229Z"
+  }
+}

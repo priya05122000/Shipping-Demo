@@ -72,6 +72,8 @@ const manifest = {
     urls: import.meta.glob("./*/*.{png,jpg,jpeg,webp,svg,pdf}", { base: ${sections}, eager: true, query: "?url", import: "default" }),
     diagrams: import.meta.glob("./*/diagram.ts", { base: ${sections}, eager: true, import: "default" }),
     details: import.meta.glob("./*/data.json", { base: ${sections}, eager: true, import: "default" }),
+    icons: import.meta.glob("./*/Icon.tsx", { base: ${sections}, eager: true, import: "default" }),
+    manualData: import.meta.glob("./*/manual-data.json", { base: ${sections}, import: "default" }),
     views2d: import.meta.glob("./*/Diagram2D.tsx", { base: ${sections} }),
     views3d: import.meta.glob("./*/Diagram3D.tsx", { base: ${sections} }),
   },

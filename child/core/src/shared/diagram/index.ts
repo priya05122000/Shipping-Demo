@@ -6,3 +6,4 @@ export {
   type SectionView,
   type SectionViewProps,
 } from "./section";
+export { SectionProvider, useManualData, useSection, useSectionState, type ManualRecord } from "./context";

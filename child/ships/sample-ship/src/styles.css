@@ -1,0 +1,3 @@
+/* The viewer's styles, and Tailwind's classes for this ship's own code (its generated views in src/). */
+@import "@shipdocs/viewer-core/styles.css";
+@source "./";

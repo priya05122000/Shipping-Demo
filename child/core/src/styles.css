@@ -9,23 +9,100 @@
 @source "./";
 
 /*
- * The accent colour of active and selected things (bg-accent-50, text-accent-700…): indigo, unless a ship's theme sets
- * its own (src/theme.ts replaces these variables at run time, so it can't be `@theme inline`).
+ * The accent palette (bg-accent-50, text-accent-700…): the viewer's charcoal, unless a ship's theme sets its own
+ * (src/theme.ts replaces these variables at run time, so it can't be `@theme inline`).
  */
 @theme {
-  --color-accent-50: oklch(96.2% 0.018 272.314);
-  --color-accent-100: oklch(93% 0.034 272.788);
-  --color-accent-200: oklch(87% 0.065 274.039);
-  --color-accent-500: oklch(58.5% 0.233 277.117);
-  --color-accent-600: oklch(51.1% 0.262 276.966);
-  --color-accent-700: oklch(45.7% 0.24 277.023);
-  --color-accent-800: oklch(39.8% 0.195 277.366);
+  --color-accent-50: color-mix(in oklab, #242121 8%, white);
+  --color-accent-100: color-mix(in oklab, #242121 16%, white);
+  --color-accent-200: color-mix(in oklab, #242121 32%, white);
+  --color-accent-500: color-mix(in oklab, #242121 85%, white);
+  --color-accent-600: #242121;
+  --color-accent-700: color-mix(in oklab, #242121 85%, black);
+  --color-accent-800: color-mix(in oklab, #242121 70%, black);
+}
+
+/*
+ * The UI colours. None are set here: they live in src/pipeline/components/theme.ts, which src/theme.ts puts on the page
+ * at startup as CSS variables (--page, --panel, …). Each becomes a Tailwind colour of the same name, so bg-panel,
+ * text-ink, border-line, bg-panel/90 and the rest follow theme.ts. Tailwind's own palette (slate…) stays available.
+ */
+@theme inline {
+  --color-page: var(--page);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-hover: var(--hover);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-heading: var(--heading);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-highlight: var(--highlight);
+  --color-open: var(--open);
+  --color-warn: var(--warn);
+  --color-alarm: var(--alarm);
+}
+
+@theme static {
+  --font-sans: Inter, "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+  /* Below this width a piping diagram's info panel goes under the diagram (max-wide:…). */
+  --breakpoint-wide: 980px;
+  /* The sidebar and the info panel open and close with this (duration-250 ease-slide). */
+  --ease-slide: cubic-bezier(0.2, 0, 0, 1);
+  --animate-fade-in: fade-in 0.15s ease 0.2s both;
+  --animate-sel-dash: sel-dash 1s linear infinite;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes sel-dash {
+    to {
+      stroke-dashoffset: -10;
+    }
+  }
+}
+
+/* Flowing pipes (pipeline/components/FlowLines.tsx): the fuel front running along a pipe, then streaks moving with the flow. */
+@keyframes flow-fill {
+  from {
+    stroke-dashoffset: var(--flow-len);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes flow-show {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes flow-move {
+  to {
+    stroke-dashoffset: calc(-1 * var(--flow-step));
+  }
 }
 
 /* Light-only, matching the parent dashboard. */
-html {
-  color-scheme: light;
-  background-color: var(--color-slate-50);
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  /* The browser's line height, which the piping diagrams' layout was made with, instead of Tailwind's 1.5. */
+  html {
+    line-height: normal;
+  }
+  body {
+    @apply bg-page text-[14px] text-ink antialiased;
+  }
 }
 
 /* Diagram hotspots (shared/view2d): invisible until hovered, focused or selected. Colour comes from `color` on the <g>. */
@@ -55,6 +132,9 @@ html {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .flow-anim {
+    animation: none !important;
+  }
   *,
   *::before,
   *::after {

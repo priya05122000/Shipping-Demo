@@ -1,6 +1,7 @@
+import type { ComponentType } from "react";
 import type { ShipCustomization } from "./customization";
 import type { SectionData } from "./shared/data";
-import type { Diagram, SectionView } from "./shared/diagram";
+import type { SectionView } from "./shared/diagram";
 import type { StoredFileMeta } from "./shared/records";
 
 /**
@@ -56,10 +57,20 @@ export interface SectionFiles {
   metas: Record<string, SectionMeta>;
   /** URLs of the uploaded images and manuals: ./<folder>/<file> */
   urls: Record<string, string>;
-  /** Optional hand-written hotspots: ./<folder>/diagram.ts */
-  diagrams: Record<string, Diagram>;
+  /**
+   * Optional hand-written hotspots: ./<folder>/diagram.ts (`defineDiagram`). Checked when read, since a section's code
+   * may use the name for something else.
+   */
+  diagrams: Record<string, unknown>;
   /** Optional item details: ./<folder>/data.json */
   details: Record<string, SectionData>;
+  /** Optional sidebar icons: ./<folder>/Icon.tsx. Missing from manifests made before them. */
+  icons?: Record<string, ComponentType>;
+  /**
+   * What the Library read from each section's manual: ./<folder>/manual-data.json, loaded when a view first asks for
+   * it (useManualData). Missing from manifests made before them.
+   */
+  manualData?: Record<string, () => Promise<unknown>>;
   /** Generated views, loaded when first shown: ./<folder>/Diagram2D.tsx and Diagram3D.tsx */
   views2d: Record<string, () => Promise<{ default: SectionView }>>;
   views3d: Record<string, () => Promise<{ default: SectionView }>>;

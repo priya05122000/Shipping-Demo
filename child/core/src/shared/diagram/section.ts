@@ -49,6 +49,13 @@ export interface Section {
   diagram?: Diagram;
   /** Item details, from the folder's optional data.json. */
   data: SectionData;
+  /**
+   * Loads the folder's manual-data.json (what the Library read from its manual); undefined when it has none. Views
+   * read it with useManualData().
+   */
+  loadManualData?: () => Promise<unknown>;
+  /** The sidebar icon: the folder's optional Icon.tsx. */
+  Icon?: ComponentType;
   /** The ship's objects picked for this section in the Library, in the order they were picked. */
   objects: SharedObject[];
   /** The generated 2D view (the folder's Diagram2D.tsx), loaded when it's first shown. */

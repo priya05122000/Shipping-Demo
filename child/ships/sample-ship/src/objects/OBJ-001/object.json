@@ -1,0 +1,24 @@
+{
+  "id": "OBJ-001",
+  "name": "Butterfly Valve",
+  "createdAt": "2026-11-11T05:40:23.513Z",
+  "updatedAt": "2026-11-11T05:40:23.513Z",
+  "model": {
+    "name": "butterfly-valve-front.png",
+    "size": 204658,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "butterfly-valve-3d-d9b81c98.png",
+    "uploadedAt": "2026-11-11T05:40:23.513Z",
+    "view": "3d"
+  },
+  "lineDiagram": {
+    "name": "butterfly-valve-front.png",
+    "size": 204658,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "butterfly-valve-2d-c577b15f.png",
+    "uploadedAt": "2026-11-11T05:40:23.513Z",
+    "view": "2d"
+  }
+}

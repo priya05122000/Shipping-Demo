@@ -1,7 +1,7 @@
 import { lazy } from "react";
 import type { SectionFiles, SectionMeta } from "../manifest";
 import type { SharedObject } from "../objects/registry";
-import type { Section, SectionView } from "../shared/diagram";
+import type { Diagram, Section, SectionView } from "../shared/diagram";
 import { byCreation, fileUrl, folderOf } from "../shared/records";
 
 /*
@@ -9,14 +9,23 @@ import { byCreation, fileUrl, folderOf } from "../shared/records";
  * section's name, holding:
  *   section.json   ID, name, files and the IDs of the ship's objects it uses (written by the Library)
  *   one line diagram image and one manual (PDF), uploaded in the Library
+ *   manual-data.json  written by the Library from the manual: its component records, which views read with
+ *                  useManualData() (e.g. the piping diagrams of @shipdocs/viewer-core/pipeline)
  *   diagram.ts     optional: hotspots, as `export default defineDiagram({...})` (from @shipdocs/viewer-core/diagram)
  *   data.json      optional: details per hotspot item ID
+ *   Icon.tsx       optional: the section's sidebar icon, a default-exported component
  *   Diagram2D.tsx, Diagram3D.tsx
  *                  optional: the 2D and 3D views generated from the line diagram by Ship Docs (with AI), each
- *                  default-exporting a component that takes SectionViewProps. Shared parts are in the ship's
- *                  src/shared/schematic.
+ *                  default-exporting a component that takes SectionViewProps, with the geometry they draw (e.g.
+ *                  schematic.ts). Shared parts are in the shared viewer or the ship's src/shared/schematic.
  * Folders are found automatically (see ../manifest.ts): adding, changing or removing one updates the viewer.
  */
+
+/** A diagram.ts default export that is hotspots (`defineDiagram`); a section may use the file name for other code. */
+function isHotspots(value: unknown): value is Diagram {
+  const diagram = value as Partial<Diagram> | null;
+  return !!diagram && typeof diagram === "object" && Array.isArray(diagram.items);
+}
 
 /**
  * One lazy component per view file (by its glob key), so a hot update of the ship's data (a section added or renamed)
@@ -38,26 +47,31 @@ function lazyView(views: SectionFiles["views2d"], key: string): SectionView | un
 
 /** Every drawing the viewer can show, in menu order (oldest first, as in the Library). */
 export function buildSections(files: SectionFiles, objects: SharedObject[]): Section[] {
-  const { metas, urls, diagrams, details, views2d, views3d } = files;
+  const { metas, urls, diagrams, details, icons = {}, manualData = {}, views2d, views3d } = files;
   return Object.entries(metas)
     .map(([key, meta]: [string, SectionMeta]) => {
       const folder = folderOf(key);
       return { id: meta.id ?? folder, folder, createdAt: meta.createdAt, meta };
     })
     .sort(byCreation)
-    .map(({ id, folder, meta }) => ({
-      id,
-      title: meta.name ?? folder,
-      image: fileUrl(urls, folder, meta.lineDiagram),
-      manual: fileUrl(urls, folder, meta.manual),
-      diagram: diagrams[`./${folder}/diagram.ts`],
-      data: details[`./${folder}/data.json`] ?? { items: {} },
-      // An ID whose object was removed (e.g. by hand) is skipped.
-      objects: (Array.isArray(meta.objectIds) ? meta.objectIds : []).flatMap(
-        (objectId) => objects.find((object) => object.id === objectId) ?? [],
-      ),
-      view2d: lazyView(views2d, `./${folder}/Diagram2D.tsx`),
-      view3d: lazyView(views3d, `./${folder}/Diagram3D.tsx`),
-      codeVersion: typeof meta.codegenVersion === "number" ? meta.codegenVersion : undefined,
-    }));
+    .map(({ id, folder, meta }): Section => {
+      const diagram = diagrams[`./${folder}/diagram.ts`];
+      return {
+        id,
+        title: meta.name ?? folder,
+        image: fileUrl(urls, folder, meta.lineDiagram),
+        manual: fileUrl(urls, folder, meta.manual),
+        diagram: isHotspots(diagram) ? diagram : undefined,
+        data: details[`./${folder}/data.json`] ?? { items: {} },
+        loadManualData: manualData[`./${folder}/manual-data.json`],
+        Icon: icons[`./${folder}/Icon.tsx`],
+        // An ID whose object was removed (e.g. by hand) is skipped.
+        objects: (Array.isArray(meta.objectIds) ? meta.objectIds : []).flatMap(
+          (objectId) => objects.find((object) => object.id === objectId) ?? [],
+        ),
+        view2d: lazyView(views2d, `./${folder}/Diagram2D.tsx`),
+        view3d: lazyView(views3d, `./${folder}/Diagram3D.tsx`),
+        codeVersion: typeof meta.codegenVersion === "number" ? meta.codegenVersion : undefined,
+      };
+    });
 }

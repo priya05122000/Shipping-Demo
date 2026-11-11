@@ -1,0 +1,24 @@
+{
+  "id": "OBJ-009",
+  "name": "Red Glass Tank",
+  "createdAt": "2026-11-11T05:40:31.513Z",
+  "updatedAt": "2026-11-11T05:40:31.513Z",
+  "model": {
+    "name": "glass-cylinder-red.png",
+    "size": 34244,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "red-glass-tank-3d-e77a3aa1.png",
+    "uploadedAt": "2026-11-11T05:40:31.513Z",
+    "view": "3d"
+  },
+  "lineDiagram": {
+    "name": "glass-cylinder-red.png",
+    "size": 34244,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "red-glass-tank-2d-c79a7f52.png",
+    "uploadedAt": "2026-11-11T05:40:31.513Z",
+    "view": "2d"
+  }
+}

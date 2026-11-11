@@ -1,0 +1,24 @@
+{
+  "id": "OBJ-003",
+  "name": "Globe Valve",
+  "createdAt": "2026-11-11T05:40:25.513Z",
+  "updatedAt": "2026-11-11T05:40:25.513Z",
+  "model": {
+    "name": "globe-valve.png",
+    "size": 247162,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "globe-valve-3d-a1930b35.png",
+    "uploadedAt": "2026-11-11T05:40:25.513Z",
+    "view": "3d"
+  },
+  "lineDiagram": {
+    "name": "globe-valve.png",
+    "size": 247162,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "globe-valve-2d-b8c10014.png",
+    "uploadedAt": "2026-11-11T05:40:25.513Z",
+    "view": "2d"
+  }
+}

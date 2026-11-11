@@ -8,6 +8,8 @@
     ".": "./src/index.tsx",
     "./customize": "./src/customize.ts",
     "./diagram": "./src/shared/diagram/index.ts",
+    "./pipeline": "./src/pipeline/index.ts",
+    "./pipeline/3d": "./src/pipeline/3d.ts",
     "./objects": "./src/objects/index.ts",
     "./objects/model3d": "./src/objects/ObjectModel3D.tsx",
     "./catalog": "./src/shared/catalog/index.ts",
@@ -29,8 +31,10 @@
   "dependencies": {
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
+    "@react-three/postprocessing": "^3.2.2",
     "@tailwindcss/vite": "^4",
     "@vitejs/plugin-react": "^6",
+    "postprocessing": "^6.39.6",
     "tailwindcss": "^4",
     "three": "^0.187.0"
   },

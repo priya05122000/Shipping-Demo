@@ -1,7 +1,8 @@
 import type { ShipTheme } from "./customization";
+import { PALETTE, uiVariables } from "./pipeline/components/theme";
 
-/** The viewer's accent colour when a ship doesn't set its own (Tailwind's indigo-600). */
-export const DEFAULT_ACCENT = "#4f46e5";
+/** The viewer's accent colour when a ship doesn't set its own: the charcoal of its UI (pipeline/components/theme.ts). */
+export const DEFAULT_ACCENT: string = PALETTE.charcoal;
 
 /**
  * The accent palette (styles.css: --color-accent-*), made from one colour: each shade mixed with white or black, as
@@ -18,13 +19,17 @@ const SHADES: Record<string, string> = {
 };
 
 /**
- * Applies a ship's theme to the page: its accent colour replaces the viewer's (styles.css' defaults), or the defaults
- * come back when it has none, e.g. after a hot update removes it.
+ * Puts the viewer's colours on the page: its UI colours (--page, --panel, --ink, --accent…, which styles.css makes
+ * Tailwind colours), and a ship's accent colour in place of the viewer's, or the defaults again when it has none, e.g.
+ * after a hot update removes it.
  */
 export function applyTheme(theme: ShipTheme | undefined) {
   const style = document.documentElement.style;
+  for (const [name, value] of Object.entries(uiVariables())) style.setProperty(name, value);
   if (theme?.accent) {
     style.setProperty("--ship-accent", theme.accent);
+    // The UI's accent too: the open section, the selected view, switches that are on, focus rings.
+    style.setProperty("--accent", theme.accent);
     for (const [shade, value] of Object.entries(SHADES)) style.setProperty(`--color-accent-${shade}`, value);
   } else {
     style.removeProperty("--ship-accent");
