@@ -33,13 +33,11 @@
     "uploadedAt": "2026-11-10T09:34:42.643Z"
   },
   "codegen": {
-    "runId": "a3963bbb0b2d",
-    "status": "cancelled",
+    "runId": "445bfdb47470",
+    "status": "running",
     "lineDiagram": "lineDiagram-a413b9fc.png",
-    "requestedAt": "2026-11-11T07:37:34.142Z",
+    "requestedAt": "2026-11-11T11:25:12.202Z",
     "mode": "first",
-    "startedAt": "2026-11-11T07:37:34.173Z",
-    "finishedAt": "2026-11-11T07:37:38.157Z",
-    "error": "Stopped."
+    "startedAt": "2026-11-11T11:25:12.229Z"
   }
 }

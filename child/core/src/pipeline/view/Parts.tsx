@@ -2,8 +2,8 @@ import { memo, type ComponentType } from 'react';
 import { ObjectSymbol2D } from '../../objects/ObjectSymbol2D';
 import type { Reading } from '../data/readings';
 import { BOX_TANK_2D, GAUGE_RADIUS, TANK_INTERIOR, VALVE_KINDS, isBoxTank, partBox, placementOf } from '../model/partSpecs';
-import { FLUIDS, type Decoration, type PartDef, type PartKind } from '../model/types';
-import { FLUID_STYLE, GAUGE, MATERIAL, PAINT, SHADE, STATUS_COLOR, STEEL, UI } from './theme';
+import { FLUIDS, type Decoration, type PartDef, type PartKind, type PipeDef, type Pt } from '../model/types';
+import { FLUID_STYLE, GAUGE, MATERIAL, PAINT, SHADE, STATUS_COLOR, STEEL, UI, pipeWidth } from './theme';
 
 /** Shared gradients for parts. */
 export function PartDefs() {
@@ -385,7 +385,53 @@ export function GroupBoxes({ items }: { items: Decoration[] }) {
   );
 }
 
-export function Decorations({ items }: { items: Decoration[] }) {
+/** How far a fitting's point may be from a pipe's end and still be on it, as in 3D (../3d/scene/pipes.ts). */
+const END_EPS = 0.5;
+
+/** The pipe that ends at `at`, with the angle (degrees) it runs at into that end. */
+function pipeEndAt(pipes: PipeDef[], at: Pt): { pipe: PipeDef; angle: number } | undefined {
+  for (const pipe of pipes) {
+    const n = pipe.pts.length;
+    if (n < 2) continue;
+    for (const [end, inner] of [
+      [0, 1],
+      [n - 1, n - 2],
+    ]) {
+      const [ex, ey] = pipe.pts[end];
+      if (Math.hypot(ex - at[0], ey - at[1]) > END_EPS) continue;
+      const [ix, iy] = pipe.pts[inner];
+      return { pipe, angle: (Math.atan2(ey - iy, ex - ix) * 180) / Math.PI };
+    }
+  }
+  return undefined;
+}
+
+/**
+ * A ring end seen from above, as the 2D diagram is a plan: the collar round the pipe's open end shows as a rounded
+ * band across the pipe, the size of the 3D one (a ring of tube radius 1.8 round the pipe, 1.6 clear of it). Turned to
+ * the pipe that ends at `at`; one that isn't on a pipe's end is drawn across a horizontal pipe, as in 3D.
+ */
+function RingEnd({ at, pipes }: { at: Pt; pipes: PipeDef[] }) {
+  const end = pipeEndAt(pipes, at);
+  const tube = 1.8;
+  const half = (end ? pipeWidth(end.pipe) : 11) / 2 + 1.6 + tube;
+  const band = { x: -tube, y: -half, width: tube * 2, height: half * 2, rx: tube };
+  const angle = end?.angle ?? 0;
+  return (
+    <g transform={`translate(${at[0]} ${at[1]})`}>
+      {/* Its shadow falls the way the pipes' does. */}
+      <rect {...band} transform={`translate(2 2) rotate(${angle})`} fill={SHADE.shadow} opacity={0.4} />
+      <g transform={`rotate(${angle})`}>
+        {/* Shaded along the pipe, across the band's thickness, so it reads as a round tube. */}
+        <rect {...band} fill="url(#metal-v)" stroke={STEEL.outline} strokeWidth={0.5} />
+        <line x1={-tube * 0.35} y1={-half + tube} x2={-tube * 0.35} y2={half - tube} stroke={SHADE.shine} strokeWidth={0.6} opacity={0.7} />
+      </g>
+    </g>
+  );
+}
+
+/** End fittings, drains and labels on the pipes. `pipes` turns a ring end to the pipe it's on. */
+export function Decorations({ items, pipes }: { items: Decoration[]; pipes: PipeDef[] }) {
   return (
     <g className="decorations">
       {items.map((d, i) => {
@@ -406,12 +452,7 @@ export function Decorations({ items }: { items: Decoration[] }) {
               <rect key={i} x={x - 10} y={y - 3} width={20} height={5} rx={1} fill="url(#metal)" stroke={STEEL.outline} strokeWidth={0.5} />
             );
           case 'ring':
-            return (
-              <g key={i}>
-                <circle cx={x} cy={y} r={7} fill={UI.page} stroke="url(#metal)" strokeWidth={3} />
-                <circle cx={x} cy={y} r={8.6} fill="none" stroke={STEEL.outline} strokeWidth={0.5} />
-              </g>
-            );
+            return <RingEnd key={i} at={d.at} pipes={pipes} />;
           case 'nub':
             return <rect key={i} x={x + 7} y={y - 3.5} width={6} height={7} rx={1} fill="url(#metal-v)" stroke={STEEL.outline} strokeWidth={0.5} />;
           case 'fluidLabel':

@@ -119,7 +119,7 @@ export function PipelineDiagram({ def, crossings, data, readings, runs, showValu
 
         <GlassPipes def={def} crossings={crossings} />
         <FlowLines runs={runs} crossings={crossings} />
-        <Decorations items={def.decorations} />
+        <Decorations items={def.decorations} pipes={def.pipes} />
 
         {showTags &&
           def.labels
