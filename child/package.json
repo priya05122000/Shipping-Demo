@@ -10,8 +10,8 @@
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc -p tsconfig.json && npm run typecheck -w @shipdocs/viewer-core",
-    "build": "node build-ships.mjs",
-    "serve": "node serve-ships.mjs",
+    "build": "node scripts/build-ships.mjs",
+    "serve": "node scripts/serve-ships.mjs",
     "migrate": "node scripts/migrate-ship.mjs"
   },
   "dependencies": {

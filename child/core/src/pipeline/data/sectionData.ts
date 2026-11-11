@@ -1,6 +1,6 @@
-import { placementOf } from '../diagram/partSpecs';
-import { FLUIDS, type DiagramDef, type DiagramLayout, type Fluid, type PartDef, type PartKind } from '../diagram/types';
-import type { ComponentData, Plant, SystemPump, SystemTank, TroubleshootingGuide } from '../operations/types';
+import { placementOf } from '../model/partSpecs';
+import { FLUIDS, type DiagramDef, type DiagramLayout, type Fluid, type PartDef, type PartKind } from '../model/types';
+import type { ComponentData, Plant, SystemPump, SystemTank, TroubleshootingGuide } from '../simulation/types';
 
 /*
  * The engine's own shape of a section's data, read from its schematic and its manual-data.json (see read.ts).

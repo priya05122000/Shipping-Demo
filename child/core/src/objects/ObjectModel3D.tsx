@@ -14,7 +14,7 @@ import {
 } from "three";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
-import { accentColor } from "../ship";
+import { accentColor } from "../ship/store";
 import { findObject } from "./lookup";
 
 export type ObjectModel3DProps = Omit<ThreeElements["group"], "children" | "id"> & {

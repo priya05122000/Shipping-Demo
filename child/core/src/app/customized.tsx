@@ -1,9 +1,9 @@
 import { Component, Suspense, type ComponentType, type ReactNode } from "react";
-import type { CustomView, CustomViewProps, Slot } from "../customization";
-import { DocumentIcon, EmptyState } from "../shared/ui";
+import type { CustomView, CustomViewProps, Slot } from "../customize/types";
+import { DocumentIcon, EmptyState } from "../ui";
 
 /*
- * How the viewer uses a ship's customizations (layer 2, see ../customization.ts). A customization is the ship's own
+ * How the viewer uses a ship's customizations (layer 2, see ../customize/types.ts). A customization is the ship's own
  * code, so one that fails falls back to the viewer's own behaviour, with the error in the console, rather than breaking
  * the viewer.
  */

@@ -10,7 +10,7 @@
 
 /*
  * The accent palette (bg-accent-50, text-accent-700…): the viewer's charcoal, unless a ship's theme sets its own
- * (src/theme.ts replaces these variables at run time, so it can't be `@theme inline`).
+ * (src/theme/apply.ts replaces these variables at run time, so it can't be `@theme inline`).
  */
 @theme {
   --color-accent-50: color-mix(in oklab, #242121 8%, white);
@@ -23,9 +23,9 @@
 }
 
 /*
- * The UI colours. None are set here: they live in src/pipeline/components/theme.ts, which src/theme.ts puts on the page
- * at startup as CSS variables (--page, --panel, …). Each becomes a Tailwind colour of the same name, so bg-panel,
- * text-ink, border-line, bg-panel/90 and the rest follow theme.ts. Tailwind's own palette (slate…) stays available.
+ * The UI colours. None are set here: they live in src/theme/colors.ts, which src/theme/apply.ts puts on the page at
+ * startup as CSS variables (--page, --panel, …). Each becomes a Tailwind colour of the same name, so bg-panel,
+ * text-ink, border-line, bg-panel/90 and the rest follow colors.ts. Tailwind's own palette (slate…) stays available.
  */
 @theme inline {
   --color-page: var(--page);
@@ -66,7 +66,7 @@
   }
 }
 
-/* Flowing pipes (pipeline/components/FlowLines.tsx): the fuel front running along a pipe, then streaks moving with the flow. */
+/* Flowing pipes (pipeline/2d/FlowLines.tsx): the fuel front running along a pipe, then streaks moving with the flow. */
 @keyframes flow-fill {
   from {
     stroke-dashoffset: var(--flow-len);
@@ -105,7 +105,7 @@
   }
 }
 
-/* Diagram hotspots (shared/view2d): invisible until hovered, focused or selected. Colour comes from `color` on the <g>. */
+/* Diagram hotspots (app/views/DrawingView.tsx): invisible until hovered, focused or selected. Colour comes from `color` on the <g>. */
 .hotspot {
   cursor: pointer;
   outline: none;

@@ -32,7 +32,7 @@ const nextConfig: NextConfig = {
   },
   // Each ship's viewer is served on this origin under /child/<ship>/, proxied to wherever it's hosted, so the viewer
   // and this app can talk with postMessage on one origin. Nothing from child/ is part of this app's build.
-  // Its responses, caching headers included, are the ships' host's (see child/serve-ships.mjs).
+  // Its responses, caching headers included, are the ships' host's (see child/scripts/serve-ships.mjs).
   async rewrites() {
     if (!SHIP_VIEWER_URL) return [];
     return {

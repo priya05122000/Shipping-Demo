@@ -11,7 +11,7 @@ const PORT = Number(process.env.CHILD_DEV_PORT ?? 5173);
  * here at /child/<ship>/, so a ship added in the Library works without starting anything. Every ship runs the viewer in
  * ./core (@shipdocs/viewer-core), so editing it updates every ship at once.
  *   dev   Ship Docs (the parent) proxies /child/* to this server (see ../next.config.ts)
- *   build each ship is built on its own, with its own vite.config.ts, into ./dist/<ship>/ (see build-ships.mjs)
+ *   build each ship is built on its own, with its own vite.config.ts, into ./dist/<ship>/ (see scripts/build-ships.mjs)
  */
 export default defineConfig({
   root: SHIPS_DIR,

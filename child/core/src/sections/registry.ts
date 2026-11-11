@@ -1,8 +1,8 @@
 import { lazy } from "react";
-import type { SectionFiles, SectionMeta } from "../manifest";
+import type { SectionFiles, SectionMeta } from "../ship/manifest";
 import type { SharedObject } from "../objects/registry";
-import type { Diagram, Section, SectionView } from "../shared/diagram";
-import { byCreation, fileUrl, folderOf } from "../shared/records";
+import { byCreation, fileUrl, folderOf } from "../ship/records";
+import type { Diagram, Section, SectionView } from "./types";
 
 /*
  * Each section is a folder in the ship's src/sections, created from the Library (the parent app) and named from the
@@ -17,8 +17,9 @@ import { byCreation, fileUrl, folderOf } from "../shared/records";
  *   Diagram2D.tsx, Diagram3D.tsx
  *                  optional: the 2D and 3D views generated from the line diagram by Ship Docs (with AI), each
  *                  default-exporting a component that takes SectionViewProps, with the geometry they draw (e.g.
- *                  schematic.ts). Shared parts are in the shared viewer or the ship's src/shared/schematic.
- * Folders are found automatically (see ../manifest.ts): adding, changing or removing one updates the viewer.
+ *                  schematic.ts). Shared parts are in the shared viewer (e.g. ../pipeline) or the ship's
+ *                  src/shared/schematic.
+ * Folders are found automatically (see ../ship/manifest.ts): adding, changing or removing one updates the viewer.
  */
 
 /** A diagram.ts default export that is hotspots (`defineDiagram`); a section may use the file name for other code. */

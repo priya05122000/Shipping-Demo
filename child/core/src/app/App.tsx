@@ -2,25 +2,14 @@ import { useEffect, useEffectEvent, useReducer, type ReactNode } from "react";
 import { isEmbedded, postToParent, useParentCommands } from "./bridge";
 import { callHook, customViewMode, CustomViewHost, Slotted } from "./customized";
 import type { SelectedItem } from "./protocol";
-import type { ActionContext, CustomAction, CustomView, ShipLabels, ViewOption } from "../customization";
-import { useShip } from "../ship";
-import defaultLogo from "../shared/assets/logo.svg";
-import {
-  GeneratedView,
-  ItemDetails,
-  NoSections,
-  SectionActions,
-  SectionLayout,
-  SectionNav,
-  ShipHeader,
-  ViewSwitcher,
-} from "../shared/components";
-import { SectionProvider, type Section } from "../shared/diagram";
-import { ManualView } from "../shared/manual";
-import { initialViewerState, viewerReducer, type ViewerState, type ViewMode } from "../shared/operations";
-import { CubeIcon, DiagramIcon } from "../shared/ui";
-import { View2D } from "../shared/view2d";
-import { View3D } from "../shared/view3d";
+import { initialViewerState, viewerReducer, type ViewerState, type ViewMode } from "./state";
+import { ItemDetails, NoSections, SectionActions, SectionLayout, SectionNav, ShipHeader, ViewSwitcher } from "./components";
+import { DrawingView, GeneratedView, ManualView, ObjectListView } from "./views";
+import defaultLogo from "../assets/logo.svg";
+import type { ActionContext, CustomAction, CustomView, ShipLabels, ViewOption } from "../customize/types";
+import { SectionProvider, type Section } from "../sections";
+import { useShip } from "../ship/store";
+import { CubeIcon, DiagramIcon } from "../ui";
 
 const BUILT_IN_VIEWS = [
   { value: "2d", label: "2D" },
@@ -116,13 +105,13 @@ function toSelectedItem(section: Section, itemId: string | null): SelectedItem |
 
 /**
  * The viewer (layer 1): the sidebar of sections beside the open section, with the ship's customizations (layer 2: its
- * components, views, actions, theme, labels and hooks, see ../customization.ts) applied to the ship's content (layer 3).
+ * components, views, actions, theme, labels and hooks, see ../customize/types.ts) applied to the ship's content (layer 3).
  * Every section is shown the same way: its line diagram (with any hotspots), its generated 2D and 3D views
- * (Diagram2D.tsx, Diagram3D.tsx, e.g. piping diagrams from ../pipeline), its objects and its manual. Its views get the
- * section, its manual-data.json and state they share through SectionProvider (../shared/diagram/context.tsx).
+ * (Diagram2D.tsx, Diagram3D.tsx, e.g. piping diagrams from ../pipeline), its objects and its manual (./views). Its views
+ * get the section, its manual-data.json and state they share through SectionProvider (../sections/context.tsx).
  */
 export function App() {
-  // A new value only when a dev hot update changes the ship's data or customizations (see ../ship.ts).
+  // A new value only when a dev hot update changes the ship's data or customizations (see ../ship/store.ts).
   const { ship, sections, customization } = useShip();
   const { components, hooks, labels, theme } = customization;
   const customViews = customization.views ?? NO_VIEWS;
@@ -262,7 +251,7 @@ export function App() {
           onSelect={selectItem}
         />
       ) : (
-        <View3D section={current} />
+        <ObjectListView section={current} />
       );
     }
     if (!showsDrawing && current.view2d) {
@@ -277,7 +266,7 @@ export function App() {
         />
       );
     }
-    return <View2D section={current} selectedId={state.selectedItemId} onSelect={selectItem} />;
+    return <DrawingView section={current} selectedId={state.selectedItemId} onSelect={selectItem} />;
   }
 
   return (

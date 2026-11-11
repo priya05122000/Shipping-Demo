@@ -19,7 +19,7 @@ const MAX_LINES = 400;
  * The viewer's contract for a section's views (SectionViewProps), in the shared viewer (child/core), which generated
  * code imports as "@shipdocs/viewer-core/diagram".
  */
-export const VIEW_CONTRACT_FILE = "src/shared/diagram/section.ts";
+export const VIEW_CONTRACT_FILE = "src/sections/types.ts";
 
 /**
  * A project folder (a ship's, or the shared viewer's) as an indented tree: folders first (ending in "/"), then files,

@@ -1,4 +1,4 @@
-import { findObject } from "../ship";
+import { findObject } from "../ship/store";
 import type { ObjectBox } from "./registry";
 
 export { findObject };

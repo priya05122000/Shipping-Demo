@@ -24,7 +24,7 @@ const GLOBAL_ERROR = /^error (TS\d+): (.*)$/;
 const SHOWN_MAX = 60;
 
 /**
- * tsc from the child app's own install (child/node_modules), as child/build-ships.mjs runs it. Ships import the shared
+ * tsc from the child app's own install (child/node_modules), as child/scripts/build-ships.mjs runs it. Ships import the shared
  * viewer from there too, so without that install they can't be checked at all.
  */
 function tscPath(): string {

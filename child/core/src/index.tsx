@@ -1,9 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
-import type { ShipManifest } from "./manifest";
-import defaultLogo from "./shared/assets/logo.svg";
-import { getShip, setShip } from "./ship";
+import type { ShipManifest } from "./ship/manifest";
+import defaultLogo from "./assets/logo.svg";
+import { getShip, setShip } from "./ship/store";
 
 /** The icon in the browser tab: the ship's logo (its theme's) or the viewer's, unless index.html sets its own. */
 function addFavicon(href: string) {
@@ -24,7 +24,7 @@ function addFavicon(href: string) {
  *   mountShip(manifest);
  *
  * so a change here reaches every ship the next time it's built (or at once, in the dev server), and a ship's
- * customizations reach that ship only. See customization.ts.
+ * customizations reach that ship only. See customize/types.ts.
  */
 export function mountShip(manifest: ShipManifest, container: HTMLElement | null = document.getElementById("root")) {
   if (!container) throw new Error("The ship viewer needs an element with id \"root\" to render into.");
@@ -37,6 +37,6 @@ export function mountShip(manifest: ShipManifest, container: HTMLElement | null 
   );
 }
 
-export { setShip, useShip, type LoadedShip, type ShipInfo } from "./ship";
-export type { ShipManifest, ShipMeta, SectionMeta, ObjectMeta, SectionFiles, ObjectFiles } from "./manifest";
-export type { ShipCustomization } from "./customization";
+export { setShip, useShip, type LoadedShip, type ShipInfo } from "./ship/store";
+export type { ShipManifest, ShipMeta, SectionMeta, ObjectMeta, SectionFiles, ObjectFiles } from "./ship/manifest";
+export type { ShipCustomization } from "./customize/types";

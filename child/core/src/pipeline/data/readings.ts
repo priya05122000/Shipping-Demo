@@ -1,6 +1,6 @@
-import { VALVE_KINDS } from '../diagram/partSpecs';
-import { fluidInfo, type DiagramDef, type PartDef } from '../diagram/types';
-import type { ComponentState } from '../operations/types';
+import { VALVE_KINDS } from '../model/partSpecs';
+import { fluidInfo, type DiagramDef, type PartDef } from '../model/types';
+import type { ComponentState } from '../simulation/types';
 import type { SectionData } from './sectionData';
 
 /** open is also a running pump: both show green. */

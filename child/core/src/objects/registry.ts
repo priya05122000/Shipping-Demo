@@ -1,5 +1,5 @@
-import type { ObjectFiles, ObjectMeta } from "../manifest";
-import { byCreation, fileUrl, folderOf, type StoredFileMeta } from "../shared/records";
+import type { ObjectFiles, ObjectMeta } from "../ship/manifest";
+import { byCreation, fileUrl, folderOf, type StoredFileMeta } from "../ship/records";
 import { readCard, type ObjectCard } from "./card";
 
 /** A 3D model with its line diagram, shared by every section of the ship. */

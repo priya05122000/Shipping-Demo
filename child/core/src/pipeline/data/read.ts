@@ -1,5 +1,5 @@
-import type { ComponentData, ComponentPipe, TroubleshootingGuide } from '../operations/types';
-import type { DiagramDef, PartDef } from '../diagram/types';
+import type { ComponentData, ComponentPipe, TroubleshootingGuide } from '../simulation/types';
+import type { DiagramDef, PartDef } from '../model/types';
 import { GROUP_OF, type PartDetails, type SectionData } from './sectionData';
 
 /*

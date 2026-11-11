@@ -11,7 +11,7 @@
 // The ship's data (ship.json, sections, objects), src/shared/schematic and codegen/ stay. Run it on a clean Git tree,
 // so `git diff` shows what changed: a ship whose copy of the viewer was changed by hand loses those changes, which
 // then belong in child/core (for every ship) or in the ship's src/custom/ (for that ship only).
-// Every ship without a src/custom/ (its customizations, layer 2 of child/core/src/customization.ts) also gets the
+// Every ship without a src/custom/ (its customizations, layer 2 of child/core/src/customize/types.ts) also gets the
 // template's empty one; one it has is never changed.
 import fs from "node:fs";
 import path from "node:path";

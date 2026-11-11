@@ -12,15 +12,15 @@
  * The viewer shows them as the section's 2D and 3D views; the engine (drawing, 3D scene, simulation, overview) is here,
  * so every ship and section gets its changes.
  */
-import type { DiagramLayout } from './diagram/types';
+import type { DiagramLayout } from './model/types';
 
 /** Identity helper, so a section's schematic (`export default definePipeline({...})`) is checked against `DiagramLayout`. */
 export function definePipeline(schematic: DiagramLayout): DiagramLayout {
   return schematic;
 }
 
-export { PipelineView2D } from './components/PipelineView2D';
-export type { PipelineViewProps } from './components/PipelineView';
+export { PipelineView2D } from './2d/PipelineView2D';
+export type { PipelineViewProps } from './view/PipelineView';
 export type { ManualComponent } from './data/read';
 export {
   FLUID_INFO,
@@ -39,5 +39,5 @@ export {
   type Pt,
   type Side,
   type TextLabel,
-} from './diagram/types';
-export type { SystemPump, SystemTank } from './operations/types';
+} from './model/types';
+export type { SystemPump, SystemTank } from './simulation/types';

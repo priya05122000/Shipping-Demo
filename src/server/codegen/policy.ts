@@ -84,7 +84,7 @@ const BUILD_FILE = /^(package(-lock)?\.json|vite\.config\.[cm]?[jt]s|tsconfig(\.
  */
 const ENTRY_FILES = new Set(["src/main.tsx", "src/env.d.ts", "src/styles.css"]);
 /**
- * A ship's customizations (child/core/src/customization.ts: layer 2, the UI and functionality for that ship only),
+ * A ship's customizations (child/core/src/customize/types.ts: layer 2, the UI and functionality for that ship only),
  * made by people. The agent reads them, but its code (layer 3) never changes them.
  */
 const CUSTOM_DIR = "src/custom";
@@ -319,7 +319,7 @@ export class CodegenPolicy {
   async resolve(requested: string): Promise<{ target: string } | { refused: string }> {
     if (!requested || requested.includes("\0")) return { refused: "No usable path was given." };
     if (requested.split(/[\\/]/).includes("..")) {
-      return { refused: `Paths can't contain "..". Use the absolute path instead, e.g. ${toLabel(this.core)}/src/shared/diagram/section.ts.` };
+      return { refused: `Paths can't contain "..". Use the absolute path instead, e.g. ${toLabel(this.core)}/src/sections/types.ts.` };
     }
     const target = path.resolve(this.dirs.ship, requested);
     if (!isSameOrInside(this.childDir, target)) {

@@ -20,7 +20,7 @@ const MODEL_EXTENSIONS = ["glb", "gltf", "obj", "fbx", "stl", "blend"];
  */
 export const MODEL_ASSETS = MODEL_EXTENSIONS.map((extension) => `**/*.${extension}`);
 
-/** What a ship's src/main.tsx imports its data from (see src/manifest.ts). */
+/** What a ship's src/main.tsx imports its data from (see src/ship/manifest.ts). */
 const MANIFEST_ID = "virtual:ship-manifest";
 /** The manifest's module ID, one per ship: followed by the ship's folder relative to Vite's root, with "/". */
 const MANIFEST_PREFIX = "\0ship-manifest:";
@@ -82,7 +82,7 @@ const manifest = {
     urls: import.meta.glob("./*/*.{${MODEL_EXTENSIONS.join(",")},png,jpg,jpeg,webp,svg}", { base: ${objects}, eager: true, query: "?url", import: "default" }),
     cards: import.meta.glob("./*/card.json", { base: ${objects}, eager: true, import: "default" }),
   },
-  // Layer 2: this ship's customizations, if it has any (see src/customization.ts).
+  // Layer 2: this ship's customizations, if it has any (see src/customize/types.ts).
   customization: import.meta.glob("./index.{ts,tsx}", { base: ${custom}, eager: true, import: "default" }),
 };
 export default manifest;
@@ -92,7 +92,7 @@ if (import.meta.hot) import.meta.hot.accept((next) => next && setShip(next.defau
 }
 
 /**
- * "virtual:ship-manifest": the importing ship's data (see src/manifest.ts).
+ * "virtual:ship-manifest": the importing ship's data (see src/ship/manifest.ts).
  * @returns {import("vite").Plugin}
  */
 function shipManifest() {

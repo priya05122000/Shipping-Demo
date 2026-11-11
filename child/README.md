@@ -8,6 +8,7 @@ the parent's install, type check or build.
 core/       @shipdocs/viewer-core: the viewer every ship runs (layer 1)
 template/   what a new ship's folder is made from: the files below, without data
 ships/      one project per ship (layers 2 and 3)
+scripts/    building, serving and migrating the ships (npm run build, serve, migrate)
 dist/       the built ships, one static site each (git-ignored)
 ```
 
@@ -35,6 +36,40 @@ A ship's folder also has a few small files that start the viewer, the same in ev
 `tsconfig*.json` and `package.json`. Its content and customizations reach the viewer through `virtual:ship-manifest`, a
 module that `core/vite.js` writes for each ship: its `import.meta.glob`s find that ship's sections, objects and
 `src/custom/index.tsx`, wherever the ship is.
+
+## Inside `core/` (layer 1)
+
+`core/src/` is one folder per feature. Only `index.tsx` (the package's entry, `mountShip`) and `styles.css` (the styles
+every ship imports) are loose at its root. The folders are in layers: each builds only on the rows above it (except
+that `objects/` looks objects up in the loaded ship, `ship/store.ts`), so each can be reused without the ones below it:
+
+| Folder | What | Package entry |
+| --- | --- | --- |
+| `theme/` | The viewer's colours (`colors.ts`), the class strings its controls share (`classes.ts`, e.g. `FOCUS_RING`), and putting them and a ship's accent colour on the page (`apply.ts`) | |
+| `ui/` | UI primitives that know nothing of ships: `Badge`, `EmptyState`, `SegmentedControl`, icons | `/ui` (and `/customize`) |
+| `sections/`, `objects/` | The content model. What a section is (`types.ts`: `Section`, `SectionViewProps`, the views' contract) and what its views can ask for (`context.tsx`: `useSection`, `useManualData`, `useSectionState`); hotspots' kinds and details; the Library objects and `ObjectSymbol2D`, `ObjectModel3D`, `objectPort`. Each `registry.ts` reads them from a ship's manifest | `/diagram`, `/catalog`, `/data`, `/objects`, `/objects/model3d` |
+| `ship/` | The loaded ship (`store.ts`: `setShip`, `useShip`), the shape of the manifest `vite.js` writes for it (`manifest.ts`) and of the Library's files (`records.ts`) | `.` (and `/client`) |
+| `customize/` | The extension points of layer 2 (`types.ts`: `ShipCustomization`), and what a ship's `src/custom/` builds with (`index.ts`) | `/customize` |
+| `app/` | The viewer shell: `App.tsx`, its frame (`components/`: header, sidebar, toolbar, the slots' defaults), the views every section has (`views/`: generated, drawing, objects, manual), viewer state, applying a ship's customizations, the parent bridge | `.` |
+| `pipeline/` | An engine for section views: live piping diagrams (see "Piping diagrams" below). Nothing else in the viewer imports it; a section's generated views do | `/pipeline`, `/pipeline/3d` |
+
+Where new code goes:
+
+- A colour or a class string every control should share: `theme/`. A small control any view could use: `ui/`
+  (exported from `ui/index.ts`, and from `customize/index.ts` too if ships' customizations should have it).
+- Something every section view may ask the viewer for: `sections/context.tsx`, exported from `sections/index.ts`.
+- A view every section gets: `app/views/`, offered in `app/App.tsx`.
+- A new kind of diagram (e.g. electrical one-line, HVAC): an engine folder of its own beside `pipeline/`, laid out
+  like it (`model/`, `data/`, `simulation/` if it simulates anything, `view/` for what 2D and 3D share, `2d/`, `3d/`)
+  and built the same way: on `sections/` (`SectionViewProps`, `useManualData`, `useSectionState`), `objects/`, `ui/`
+  and `theme/`. Give it its own entries in `core/package.json`'s `exports`: `index.ts` for 2D, and `3d/index.ts` for
+  3D if it uses three.js, so 2D views never load it.
+- A change for one ship only: that ship's `src/custom/` (layer 2), not `core/`.
+
+The `exports` in `core/package.json` are what ships and their generated code (including the versions kept in each
+ship's `codegen/`) import, so keep their names and what they export. The files behind them can move; if
+`sections/types.ts` does, update `VIEW_CONTRACT_FILE` in the parent's `src/server/codegen/structure.ts`, which code
+generation must read first.
 
 ## Piping diagrams (`@shipdocs/viewer-core/pipeline`)
 
@@ -73,9 +108,24 @@ export default definePipeline({
   development, as it does for other places where the schematic and its objects or records disagree.
 - **Pictures** are the Library objects the schematic names (`objects` for a kind, or a part's own `object`), drawn
   with `ObjectSymbol2D` from their 2D file; a missing one is a dashed placeholder. How a kind's picture sits on its
-  pipe is in `core/src/pipeline/diagram/partSpecs.ts`. The 3D view builds its own models of each kind.
+  pipe is in `core/src/pipeline/model/partSpecs.ts`. The 3D view builds its own models of each kind.
 - **Selection** is the section's, shared with every view (`selectedId`, `onSelect`); the switches and the plant's
   state (a flow under way) carry over between 2D and 3D.
+- **Inside `core/src/pipeline/`:**
+
+  | Folder | What |
+  | --- | --- |
+  | `index.ts` | The `/pipeline` entry: `definePipeline`, `PipelineView2D` and the schematic's types |
+  | `model/` | The schematic's types (`types.ts`), each kind of part's geometry (`partSpecs.ts`), pipe crossings |
+  | `data/` | Reading the section's `manual-data.json` into the parts' data, and the live readings |
+  | `simulation/` | The plant: the flow through the pipes, start and stop procedures, troubleshooting (`useOperations`) |
+  | `view/` | What 2D and 3D share: `PipelineView` (legend, switches, overview), the info and operations panels, tooltips, the parts' glyphs, and the colours of lines and parts (`theme.ts`) |
+  | `2d/` | The SVG drawing: `PipelineView2D`, pipes, flow lines, callouts, zoom and pan |
+  | `3d/` | The `/pipeline/3d` entry (`index.ts`): `PipelineView3D` and its three.js scene (`scene/`) |
+
+  The fluids a line can carry (`FLUIDS`, `FLUID_INFO`) and the kinds of part (`PartKind`) are in `model/types.ts`,
+  and the fluids' colours in `view/theme.ts` (`FLUID_STYLE`): today they're those of fuel oil and bunkering, so a
+  system with other fluids (ballast, cooling water, steam) adds its own there first.
 
 Any section view can use what this builds on, from `@shipdocs/viewer-core/diagram`: `useSection()` (the section),
 `useManualData()` (its `manual-data.json` records; it suspends until they've loaded, and the viewer renders views in
@@ -84,7 +134,7 @@ Suspense) and `useSectionState(key, initial)` (state kept for the section while 
 ## Customizing one ship (layer 2)
 
 A ship's `src/custom/index.tsx` default-exports its customizations (the template's is empty). Every part is optional
-and type-checked against the common viewer's extension points (`core/src/customization.ts`):
+and type-checked against the common viewer's extension points (`core/src/customize/types.ts`):
 
 ```tsx
 import { defineShipCustomization, DocumentIcon, type CustomViewProps } from "@shipdocs/viewer-core/customize";
@@ -187,7 +237,7 @@ blocks from `@shipdocs/viewer-core/customize` (`EmptyState`, `Badge`, `Segmented
 types). Something no extension point covers belongs in layer 1: add an extension point (or the feature) to `core/`, so
 every ship can use it, rather than copying the viewer's code into a ship.
 
-When changing `core/src/customization.ts`, keep it backwards compatible (add optional fields): every ship's
+When changing `core/src/customize/types.ts`, keep it backwards compatible (add optional fields): every ship's
 customizations are type-checked against it, and a ship whose customizations no longer fit fails its own build only.
 
 ## Commands
