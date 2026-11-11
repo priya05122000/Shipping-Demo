@@ -8,11 +8,10 @@ This comment is not sent.
 
 ## 1. Project boundaries
 
-- Add or update only the current ship's generated section files and, when necessary, reusable code in that ship's `src/shared/schematic/` or explicitly supplied Library object cards.
+- Add or update only the current ship's generated section files, necessary reusable code or the shared Library object index in that ship's `src/shared/schematic/`, and explicitly supplied Library object cards.
 - Read the current ship's existing sections and the shared viewer to understand the project. Treat other ships and the template as read-only references.
 - The shared viewer at `{{coreDir}}/` is read-only. Import only APIs its `package.json` exports. Never copy the viewer into a ship or change it.
 - Never modify `src/custom/`, ship or section metadata, project configuration, uploaded drawings/manuals/models, `manual-data.json`, unrelated sections, or build and dependency folders.
-- Never read, inspect, use, import, or modify `data.json`.
 - Do not change the input-generation workflow, parent-child communication, or add dependencies without a clear need.
 - Use project-relative paths as supplied. Do not use `..`, follow links, or bypass filesystem/tool restrictions. Those restrictions take precedence over these instructions.
 
@@ -29,6 +28,7 @@ Before coding:
 - Read relevant shared viewer APIs, types, exports, and object cards. Use the actual installed project's interfaces; do not assume a file or API exists from prompt examples alone.
 - Inspect `manual-data.json` when available as reference. Do not edit it or import it directly into generated code; use the viewer's supported data access where needed.
 - Inspect the Library object information supplied with the task. Match objects to equipment using tags and evidence, and use the viewer's object components as intended.
+- If the ship has a shared Library object index, consult and maintain it for future section matching; extend the existing index instead of creating a duplicate.
 - Follow the task's Library-object instructions for `card.json`: write only cards for new objects explicitly supplied for review. Never change uploaded object files or existing cards that were not assigned for update.
 
 The common viewer already provides the application shell and shared rendering features. Add a section that fits it; do not build a second viewer, renderer, catalog, selection system, or animation engine. For piping sections, follow the ship's working example and the exported `@shipdocs/viewer-core/pipeline` APIs. Keep the 2D and 3D views on the same section schematic and component identities.

@@ -8,9 +8,9 @@ This comment is not sent.
 
 Create a new section for ship {{shipName}} named {{sectionName}} (ID {{sectionId}}) from the supplied drawing: {{drawing}}.
 
-## First inspect this ship's existing sections
+## 1. Inspect Existing Architecture
 
-Before coding, inspect the ship's actual files and folder structure. Use the project tree and prior-generation context to locate existing sections, then read at least one representative existing piping section in full. Prefer the most recently generated section that uses shared code. Inspect its section files, schematic/geometry, 2D and 3D views, object references, and any relevant `src/shared/schematic/` components. Also inspect the target section folder and its `section.json`, drawing, `manual-data.json`, or generated files when present. Do not open or use `data.json`.
+Before coding, inspect the ship's actual files and folder structure. Use the project tree and prior-generation context to locate existing sections, then read at least one representative existing piping section in full. Prefer the most recently generated section that uses shared code. Inspect its section files, schematic/geometry, 2D and 3D views, object references, and any relevant `src/shared/schematic/` components. Also inspect the target section folder and its `section.json`, drawing, `manual-data.json`, or generated files when present.
 
 Use the existing ship section as the pattern for folder structure, imports, component reuse, styling, types, and viewer integration. Reuse and extend the ship's established shared code when appropriate. Do not start from a generic design or copy the sample ship blindly. Keep section-specific geometry, identities, and engineering facts grounded in this new section's drawing and records; do not copy values or connections from another section.
 
@@ -33,6 +33,15 @@ Shared viewer structure: {{coreTree}}
 
 Other ship projects are available for read-only reference under `{{childDir}}/`; use them only if this ship has no useful precedent.
 
+## 2. Preserve Engineering Data
+
+- Treat `manual-data.json` as read-only. Use its component records through the viewer's supported data-loading behavior when displaying engineering details or using supported calculations and flow simulation.
+- Match each schematic part's `component` to the correct `manual-data.json` record ID using the exact engineering tag and verified evidence. Do not transfer values or connections from other sections, alter records, or invent values, dimensions, operating states, relationships, or pipe connections. Leave unavailable information unknown and report ambiguity.
+
+## 3. Preserve Existing Application Functionality
+
+Add only the new section and necessary backward-compatible ship-level shared code. Reuse the existing viewer, shared schematic components, styles, object integrations, and interaction behavior. Keep existing sections, project configuration, `src/custom/`, the shared viewer, and parent-child communication unchanged. Do not duplicate viewer features or introduce unnecessary dependencies.
+
 ## Implement the new section
 
 Follow the existing ship section's working pattern and the shared viewer's intended extension points. If the ship uses the core piping engine, use its established schematic and 2D/3D view pattern. Reuse the viewer's rendering, styling, overview, details, selection, and interactions instead of building duplicate functionality.
@@ -43,9 +52,13 @@ Trace the new drawing's equipment, tags, layout, pipes, branches, junctions, cro
 
 - Write only the new section's necessary generated files and, when needed, reusable code under this ship's `src/shared/schematic/`.
 - Do not modify the shared viewer, ship configuration, `src/custom/`, uploaded assets, Library-owned files, or unrelated sections.
-- Do not read or use `data.json`. `manual-data.json` may be inspected as reference, but do not edit or import it directly into generated code. Do not invent engineering facts.
+- Do not edit or directly import `manual-data.json` into generated code.
 - Do not guess component identities, dimensions, specifications, operating states, or pipe connections. Report uncertainty and leave dependent work unresolved when evidence is insufficient.
 - Follow the actual APIs, types, styling, and folder conventions you inspected. Do not add dependencies or duplicate existing core features.
+
+## 4. Test and Validate after Every File Creation
+
+Work incrementally. After creating or modifying each file, check its paths, imports, exports, types, and compatibility with the existing ship. Run the narrowest relevant check available and fix any errors introduced before creating the next file. After all changes, run the ship's documented typecheck. Run a build only when its outputs stay within the permitted ship project. Record checks that could not be run as not tested.
 
 ## Finish
 

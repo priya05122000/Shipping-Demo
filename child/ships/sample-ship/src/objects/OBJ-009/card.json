@@ -1,0 +1,18 @@
+{
+  "image": "red-glass-tank-2d-c79a7f52.png",
+  "kind": "tank",
+  "description": "Upright see-through glass cylinder with red-tinted glass and red top and bottom end plates. No nozzles are drawn; pipes are taken to its top or bottom centre.",
+  "aspect": 0.723,
+  "ports": [
+    {
+      "id": "top",
+      "x": 0.5,
+      "y": 0.04
+    },
+    {
+      "id": "bottom",
+      "x": 0.5,
+      "y": 0.97
+    }
+  ]
+}

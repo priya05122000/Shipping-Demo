@@ -1,0 +1,18 @@
+{
+  "image": "hydrant-landing-valve-2d-14beb2d6.png",
+  "kind": "hydrant landing valve",
+  "description": "Side view of a hydrant landing valve: salmon-red globe body, blue flange on the left, blue handwheel on top and a blue hose coupling on the right. The pipe enters at the left flange in the lower part of the picture; the coupling is the open hose outlet, so it sits at the end of a branch.",
+  "aspect": 1.333,
+  "ports": [
+    {
+      "id": "in",
+      "x": 0.18,
+      "y": 0.71
+    },
+    {
+      "id": "out",
+      "x": 0.88,
+      "y": 0.7
+    }
+  ]
+}

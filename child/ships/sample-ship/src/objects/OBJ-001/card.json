@@ -1,0 +1,18 @@
+{
+  "image": "butterfly-valve-2d-c577b15f.png",
+  "kind": "butterfly valve",
+  "description": "Front view (looking along the pipe) of a lug-type butterfly valve: narrow upright red body with blue seat rings and lug holes, a red gearbox on its neck and a large blue four-spoked handwheel at the top. The pipe passes through the body into the picture, so on a drawn pipe it sits across the line at the body's centre, in the lower part of the picture.",
+  "aspect": 0.667,
+  "ports": [
+    {
+      "id": "in",
+      "x": 0.34,
+      "y": 0.655
+    },
+    {
+      "id": "out",
+      "x": 0.66,
+      "y": 0.655
+    }
+  ]
+}

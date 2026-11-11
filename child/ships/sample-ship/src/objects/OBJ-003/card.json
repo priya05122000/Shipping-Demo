@@ -1,0 +1,18 @@
+{
+  "image": "globe-valve-2d-b8c10014.png",
+  "kind": "globe valve",
+  "description": "Side view of a flanged globe valve: red rounded body between two blue flanges, a blue bolted bonnet, a red yoke with a brass threaded stem, and a blue spoked handwheel on top. The pipe runs left to right through the flanges, in the lower part of the picture.",
+  "aspect": 1.07,
+  "ports": [
+    {
+      "id": "in",
+      "x": 0.16,
+      "y": 0.745
+    },
+    {
+      "id": "out",
+      "x": 0.84,
+      "y": 0.745
+    }
+  ]
+}

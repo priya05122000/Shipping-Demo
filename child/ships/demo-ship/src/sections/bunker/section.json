@@ -31,5 +31,15 @@
     "extension": "png",
     "storedName": "lineDiagram-a413b9fc.png",
     "uploadedAt": "2026-11-10T09:34:42.643Z"
+  },
+  "codegen": {
+    "runId": "a3963bbb0b2d",
+    "status": "cancelled",
+    "lineDiagram": "lineDiagram-a413b9fc.png",
+    "requestedAt": "2026-11-11T07:37:34.142Z",
+    "mode": "first",
+    "startedAt": "2026-11-11T07:37:34.173Z",
+    "finishedAt": "2026-11-11T07:37:38.157Z",
+    "error": "Stopped."
   }
 }

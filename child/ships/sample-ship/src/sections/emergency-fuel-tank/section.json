@@ -1,0 +1,96 @@
+{
+  "id": "SEC-002",
+  "name": "Emergency Fuel tank",
+  "createdAt": "2026-11-11T09:35:40.832Z",
+  "updatedAt": "2026-11-11T10:44:57.552Z",
+  "manual": {
+    "name": "Fuel_Oil_Component_Data.pdf",
+    "size": 23376,
+    "type": "application/pdf",
+    "extension": "pdf",
+    "storedName": "manual-1b9fa4e1.pdf",
+    "uploadedAt": "2026-11-11T09:35:40.829Z"
+  },
+  "manualData": {
+    "components": 7,
+    "extractedAt": "2026-11-11T09:35:39.757Z"
+  },
+  "objectIds": [
+    "OBJ-004",
+    "OBJ-003",
+    "OBJ-001",
+    "OBJ-009",
+    "OBJ-005"
+  ],
+  "lineDiagram": {
+    "name": "1 (3).png",
+    "size": 452933,
+    "type": "image/png",
+    "extension": "png",
+    "storedName": "lineDiagram-a3b41de8.png",
+    "uploadedAt": "2026-11-11T10:34:02.428Z"
+  },
+  "codegen": {
+    "runId": "f50e61b344d1",
+    "status": "done",
+    "lineDiagram": "lineDiagram-a3b41de8.png",
+    "requestedAt": "2026-11-11T10:45:02.720Z",
+    "mode": "second",
+    "startedAt": "2026-11-11T10:45:03.746Z",
+    "finishedAt": "2026-11-11T10:47:41.817Z",
+    "files": [
+      "src/objects/OBJ-005/card.json",
+      "src/sections/emergency-fuel-tank/schematic.ts",
+      "src/shared/schematic/object-index.md"
+    ],
+    "summary": "I've updated the Emergency Fuel tank section (SEC-002) to match the new drawing, and the full ship typecheck passes with no errors. I shortened OBJ-005's card description to two sentences (about 300 characters) to meet the 400-character limit. I did not run a build, so the section hasn't been checked in the running viewer.\n\n**What changed:** The new drawing has the same layout, tags and pipe routes as the earlier one. The real difference is that V-005 is now a Hydrant Landing Valve, drawn with OBJ-005, which has been added to this section's objects. The rectangle on the end of V-005's branch is the valve's hose coupling. The earlier code had marked V-005 as unresolved and drawn the rectangle as a plain cap; that stand-in is gone.\n\n**Files changed or created:**\n- `src/sections/emergency-fuel-tank/schematic.ts`:\n  - V-005 is now a hydrant/landing valve sitting where the drawing places it, with the coupling pointing right as drawn.\n  - It is linked to its V005 record in `manual-data.json`. Its outlet is left as an open end, because the drawing doesn't show what connects to the coupling.\n  - OBJ-005 now draws hydrant valves in this section.\n  - The cap and the \"V-005 (gate valve)\" note are removed, and the header comment is updated.\n- `src/objects/OBJ-005/card.json` (new): describes the valve's picture, with the inlet flange on the left at (0.18, 0.71) and the hose coupling outlet on the right at (0.88, 0.70).\n- `src/shared/schematic/object-index.md`: adds OBJ-005, marks it as used by both sections, and corrects the note about gate valves.\n\n**Kept as before:** everything else from the earlier generation still fits the drawing, so `Diagram2D.tsx`, `Diagram3D.tsx` and `Icon.tsx` are unchanged. The section still follows the same pattern as the Bunkering section and the shared viewer.\n\n**Open questions:**\n1. **V-005's valve type.** The manual record calls V005 a gate valve, but the drawing shows a valve with a hose coupling, and OBJ-005 was picked for this section. So the diagram shows a hydrant/landing valve, while its details still show the manual's \"GATE VALVE\". Please confirm which one is right.\n2. **V-002's line where it crosses the main line.** The lines meet in a plain four-way intersection with no dot or hop, so it's still drawn as a crossing, not a connection. If it is actually a junction, the tank inlet valves I chose (V-001 for T-001, V-002 for T-002) would need checking.\n3. **Things the drawing doesn't show, left unknown:** flow direction (I took the F.O connection as the supply), line numbers, pipe sizes, where the bottom of the main line goes, and what connects to V-005's coupling. The pressure gauge \"P\" still uses the engine's default range of 16 bar, because no range is given.",
+    "version": 2,
+    "usage": {
+      "model": "claude-haiku-5-5, claude-opus-5-5",
+      "inputTokens": 6018,
+      "outputTokens": 11907,
+      "cacheCreationInputTokens": 67127,
+      "cacheReadInputTokens": 828525,
+      "turns": 30
+    },
+    "objects": {
+      "learned": [
+        "OBJ-005"
+      ],
+      "reused": [
+        "OBJ-004",
+        "OBJ-003",
+        "OBJ-001",
+        "OBJ-009"
+      ],
+      "skipped": []
+    }
+  },
+  "codegenVersions": [
+    {
+      "version": 1,
+      "finishedAt": "2026-11-11T10:40:07.168Z",
+      "mode": "first",
+      "lineDiagramName": "1 (3).png",
+      "files": [
+        "Diagram2D.tsx",
+        "Diagram3D.tsx",
+        "Icon.tsx",
+        "schematic.ts"
+      ]
+    },
+    {
+      "version": 2,
+      "finishedAt": "2026-11-11T10:47:41.817Z",
+      "mode": "second",
+      "lineDiagramName": "1 (3).png",
+      "files": [
+        "Diagram2D.tsx",
+        "Diagram3D.tsx",
+        "Icon.tsx",
+        "schematic.ts"
+      ]
+    }
+  ],
+  "codegenVersion": 2
+}

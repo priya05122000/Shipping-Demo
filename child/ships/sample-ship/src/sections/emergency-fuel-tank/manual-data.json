@@ -1,0 +1,406 @@
+[
+  {
+    "id": "V001",
+    "component_name": "V001 - STOP VALVE (GLOBE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "V001"
+    },
+    "specifications": {
+      "valve_type": "STOP VALVE (GLOBE)",
+      "nominal_diameter": 50,
+      "material": "Body: cast steel; disc/stem: stainless steel; packing: graphite",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 8,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Stop Valve (Globe) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA546_F001",
+      "failure_condition": "Disc-seat leakage / stem packing leakage",
+      "symptoms": "Seat leakage, gland leakage, stiff handwheel, vibration/noise, unexpected pressure drop.",
+      "possible_causes": "Disc/seat wear, packing damage, deposits, bent stem, incorrect operation.",
+      "diagnostic_steps": "Check valve position, inspect bonnet and gland, verify smooth travel, compare upstream/downstream readings.",
+      "immediate_action": "Notify engineer, do not tighten or dismantle under pressure, follow approved isolation procedure.",
+      "operational_impact": "Reduced flow, Pressure loss Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after",
+      "verification_steps": "maintenance.",
+      "prevention_measures": "Inspect packing and seating surfaces, operate smoothly, maintain per maker recommendations.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA546_IN, PIPE_FA546_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "V002",
+    "component_name": "V002 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "V002"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 65,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 18,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA582_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop. Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow",
+      "diagnostic_steps": "with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after",
+      "verification_steps": "maintenance. Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance",
+      "prevention_measures": "schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA582_IN, PIPE_FA582_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "V003",
+    "component_name": "V003 - BALL VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "V003"
+    },
+    "specifications": {
+      "valve_type": "BALL VALVE",
+      "nominal_diameter": 80,
+      "material": "Body: carbon steel; ball: stainless steel; seat: PTFE",
+      "connection_type": "Flanged / screwed end",
+      "operation_type": "Manual lever",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 24,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Ball Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA572_F001",
+      "failure_condition": "Seat passing / stem seal leakage",
+      "symptoms": "Leakage through closed valve, stem/body leakage, stiff lever, incomplete quarter-turn, restricted flow.",
+      "possible_causes": "Damaged PTFE seat, debris in ball cavity, worn stem seal, corrosion, incorrect end-stop. Confirm lever/position indicator, inspect stem and body, check for external leakage, compare line pressure and flow",
+      "diagnostic_steps": "with normal values.",
+      "immediate_action": "Notify engineer, do not dismantle under pressure, isolate and make safe before maintenance.",
+      "operational_impact": "Reduced flow, Pressure loss Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after",
+      "verification_steps": "maintenance. Keep clean, inspect seat and stem seals, operate through full travel when permitted, follow maker maintenance",
+      "prevention_measures": "schedule.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA572_IN, PIPE_FA572_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "V004",
+    "component_name": "V004 - BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "V004"
+    },
+    "specifications": {
+      "valve_type": "BUTTERFLY VALVE (LUG, GEARBOX TYPE)",
+      "nominal_diameter": 100,
+      "material": "Body: ductile iron; disc: stainless steel; seat: EPDM",
+      "connection_type": "Lug type",
+      "operation_type": "Manual gearbox",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 39,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Butterfly Valve (Lug, Gearbox Type) for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA512_F001",
+      "failure_condition": "Gearbox jam / disc-seat leakage",
+      "symptoms": "Disc/seat passing, external shaft leakage, stiff gearbox, incomplete opening or closing.",
+      "possible_causes": "Worn or contaminated seat, damaged disc edge, gearbox wear, shaft misalignment, loose flange bolts. Check tag and line state, inspect body and shaft for leakage, compare gearbox indicator with disc position, verify",
+      "diagnostic_steps": "upstream/downstream pressure using approved instruments. Stop operation if abnormal leakage or binding occurs, notify the responsible engineer, isolate and depressurize under",
+      "immediate_action": "vessel procedure before inspection. Do not force the gearbox.",
+      "operational_impact": "Reduced flow, Pressure loss Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after",
+      "verification_steps": "maintenance.",
+      "prevention_measures": "Inspect gearbox, shaft, disc and seat, exercise only when permitted, follow maker lubrication and service intervals.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA512_IN, PIPE_FA512_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "V005",
+    "component_name": "V005 - GATE VALVE",
+    "component_type": "Valve",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Transfer Piping",
+      "line_number": "V005"
+    },
+    "specifications": {
+      "valve_type": "GATE VALVE",
+      "nominal_diameter": 100,
+      "material": "Body: cast steel; gate: stainless steel; seat: metal",
+      "connection_type": "Flanged end",
+      "operation_type": "Manual handwheel",
+      "pressure_rating": 16,
+      "valve_opening": 100,
+      "flow_rate": 52,
+      "flow_pressure": 4,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4
+    },
+    "usecase": "Gate Valve for Fuel Oil (F.O.) Filling & Transfer System.",
+    "troubleshooting": {
+      "fault_code": "FA542_F001",
+      "failure_condition": "Wedge stuck / seat passing",
+      "symptoms": "Valve passing when closed, handwheel hard to turn, stem leakage, high pressure drop when open.",
+      "possible_causes": "Wedge or seat wear, deposits, stem/nut wear, packing deterioration, corrosion. Verify fully open/closed indication, inspect stem and gland, check travel without excessive force, compare line",
+      "diagnostic_steps": "readings.",
+      "immediate_action": "Do not force handwheel or use as a throttling valve, inform engineer and isolate/depressurize before repair.",
+      "operational_impact": "Reduced flow, Pressure loss Confirm no leakage, verify correct valve position, check line pressure/flow stability, obtain engineer acceptance after",
+      "verification_steps": "maintenance.",
+      "prevention_measures": "Maintain stem and packing, avoid prolonged throttling, inspect and exercise periodically when permitted.",
+      "related_component_ids": ""
+    },
+    "simulation": {
+      "current_status": "CLOSED",
+      "current_position": 0,
+      "commanded_position": 0,
+      "flow_status": "NO_FLOW",
+      "flow_rate": 0,
+      "pressure_inlet": 4.2,
+      "pressure_outlet": 4,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "flow_state": false,
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_FA542_IN, PIPE_FA542_OUT",
+      "related_component_ids": ""
+    }
+  },
+  {
+    "id": "T-001",
+    "component_name": "T-001 - FUEL OIL STORAGE TANK",
+    "component_type": "Tank",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Oil Storage Area",
+      "line_number": "T-001"
+    },
+    "specifications": {
+      "tank_type": "Vertical cylindrical storage tank",
+      "capacity": 5000,
+      "capacity_unit": "Litres",
+      "material": "Carbon steel (mock value)",
+      "orientation": "Vertical",
+      "design_pressure": "Atmospheric (mock value)",
+      "operating_pressure": 0.1,
+      "pressure_unit": "bar",
+      "design_temperature": 60,
+      "temperature_unit": "°C",
+      "fluid_type": "Fuel Oil (F.O.)",
+      "inlet_connection": "DN80 flanged (mock value)",
+      "outlet_connection": "DN80 flanged (mock value)",
+      "vent_connection": "DN50 (mock value)",
+      "drain_connection": "DN25 (mock value)",
+      "level_measurement": "Level transmitter",
+      "high_level_alarm": "90%",
+      "low_level_alarm": "15% Stores Fuel Oil (F.O.) for the filling and transfer system. All tank specifications shown here are illustrative mock"
+    },
+    "usecase": "values.",
+    "troubleshooting": {
+      "fault_code": "T001_F001",
+      "failure_condition": "Abnormal tank level indication / suspected leakage (mock scenario)",
+      "symptoms": "Unexpected level variation, high/low level alarm, visible leakage, or abnormal filling duration.",
+      "possible_causes": "Level sensor fault, loose instrument connection, inlet/outlet valve issue, tank leakage, or incorrect level calibration. Compare local level indication with transmitter reading, inspect visible tank surfaces and connections, review alarm",
+      "diagnostic_steps": "history, and verify associated line-up. Inform the responsible engineer, follow vessel procedures, stop transfer if leakage or unsafe level is suspected, and",
+      "immediate_action": "do not enter the tank.",
+      "operational_impact": "Reduced storage availability, transfer interruption, or potential fuel loss. Confirm stable level indication, inspect for leakage, verify alarm operation, and obtain engineer acceptance after",
+      "verification_steps": "corrective work.",
+      "prevention_measures": "Inspect tank shell and connections, test level instruments and alarms, and follow the approved inspection schedule.",
+      "related_component_ids": "V001, V002 (mock associations)"
+    },
+    "simulation": {
+      "current_status": "STANDBY",
+      "current_level": 0,
+      "level_percentage": 0,
+      "capacity": 5000,
+      "remaining_capacity": 5000,
+      "inlet_status": "CLOSED",
+      "outlet_status": "CLOSED",
+      "inlet_flow_rate": 0,
+      "outlet_flow_rate": 0,
+      "pressure": 0.1,
+      "temperature": 25,
+      "high_level_alarm": false,
+      "low_level_alarm": true,
+      "leakage_status": false,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_T001_IN, PIPE_T001_OUT (mock IDs)",
+      "related_component_ids": "V001, V002 (mock IDs)"
+    }
+  },
+  {
+    "id": "T-002",
+    "component_name": "T-002 - FUEL OIL SERVICE TANK",
+    "component_type": "Tank",
+    "identification": {
+      "system_name": "Fuel Oil (F.O.) Filling & Transfer System",
+      "location": "Fuel Oil Service Area",
+      "line_number": "T-002"
+    },
+    "specifications": {
+      "tank_type": "Rectangular service tank",
+      "capacity": 3000,
+      "capacity_unit": "Litres",
+      "material": "Carbon steel (mock value)",
+      "orientation": "Horizontal / rectangular",
+      "design_pressure": "Atmospheric (mock value)",
+      "operating_pressure": 0.1,
+      "pressure_unit": "bar",
+      "design_temperature": 60,
+      "temperature_unit": "°C",
+      "fluid_type": "Fuel Oil (F.O.)",
+      "inlet_connection": "DN65 flanged (mock value)",
+      "outlet_connection": "DN65 flanged (mock value)",
+      "vent_connection": "DN40 (mock value)",
+      "drain_connection": "DN25 (mock value)",
+      "level_measurement": "Level transmitter with local gauge",
+      "high_level_alarm": "90%",
+      "low_level_alarm": "15% Provides a service/storage supply of Fuel Oil (F.O.) to the transfer system. All tank specifications shown here are"
+    },
+    "usecase": "illustrative mock values.",
+    "troubleshooting": {
+      "fault_code": "T002_F001",
+      "failure_condition": "Low tank level / restricted outlet flow (mock scenario)",
+      "symptoms": "Low-level alarm, reduced outlet flow, unstable downstream pressure, or unexpected level drop.",
+      "possible_causes": "Low tank inventory, outlet strainer restriction, closed or partially open outlet valve, level sensor error, or leakage. Verify local and remote level readings, inspect outlet line and strainer under approved procedure, confirm valve",
+      "diagnostic_steps": "position, and compare inlet/outlet flow readings. Notify the responsible engineer, verify available fuel quantity, and follow approved transfer/isolation procedures. Do",
+      "immediate_action": "not open or enter the tank.",
+      "operational_impact": "Reduced fuel supply, transfer interruption, or downstream equipment limitation. Confirm level indication, restore normal outlet flow, check pressure stability, and obtain engineer acceptance after",
+      "verification_steps": "maintenance. Monitor tank level, inspect outlet connections and strainers, test alarms, and maintain instruments per maker",
+      "prevention_measures": "recommendations.",
+      "related_component_ids": "V003, V004, V005 (mock associations)"
+    },
+    "simulation": {
+      "current_status": "STANDBY",
+      "current_level": 0,
+      "level_percentage": 0,
+      "capacity": 3000,
+      "remaining_capacity": 3000,
+      "inlet_status": "CLOSED",
+      "outlet_status": "CLOSED",
+      "inlet_flow_rate": 0,
+      "outlet_flow_rate": 0,
+      "pressure": 0.1,
+      "temperature": 25,
+      "high_level_alarm": false,
+      "low_level_alarm": true,
+      "leakage_status": false,
+      "fault_status": false,
+      "fault_code": null,
+      "animation_state": "IDLE",
+      "operating_hours": 0
+    },
+    "relationships": {
+      "connected_pipe_ids": "PIPE_T002_IN, PIPE_T002_OUT (mock IDs)",
+      "related_component_ids": "V003, V004, V005 (mock IDs)"
+    }
+  }
+]

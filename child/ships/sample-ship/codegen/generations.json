@@ -1,0 +1,34 @@
+{
+  "generations": [
+    {
+      "sectionId": "SEC-002",
+      "section": "Emergency Fuel tank",
+      "version": 1,
+      "mode": "first",
+      "finishedAt": "2026-11-11T10:40:07.168Z",
+      "files": [
+        "src/objects/OBJ-001/card.json",
+        "src/objects/OBJ-003/card.json",
+        "src/objects/OBJ-004/card.json",
+        "src/objects/OBJ-009/card.json",
+        "src/sections/emergency-fuel-tank/Diagram2D.tsx",
+        "src/sections/emergency-fuel-tank/Diagram3D.tsx",
+        "src/sections/emergency-fuel-tank/Icon.tsx",
+        "src/sections/emergency-fuel-tank/schematic.ts",
+        "src/shared/schematic/object-index.md"
+      ]
+    },
+    {
+      "sectionId": "SEC-002",
+      "section": "Emergency Fuel tank",
+      "version": 2,
+      "mode": "second",
+      "finishedAt": "2026-11-11T10:47:41.817Z",
+      "files": [
+        "src/objects/OBJ-005/card.json",
+        "src/sections/emergency-fuel-tank/schematic.ts",
+        "src/shared/schematic/object-index.md"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "image": "ball-valve-2d-c47cf267.png",
+  "kind": "ball valve",
+  "description": "Side view of a two-piece screwed ball valve: salmon-red body with blue hexagonal end connections either side, a stainless stem nut on top and a long blue-sleeved lever reaching out to the upper right. The pipe runs left to right through the end connections, in the lower part of the picture; the lever makes the picture much wider than the body.",
+  "aspect": 2.003,
+  "ports": [
+    {
+      "id": "in",
+      "x": 0.02,
+      "y": 0.715
+    },
+    {
+      "id": "out",
+      "x": 0.57,
+      "y": 0.715
+    }
+  ]
+}
